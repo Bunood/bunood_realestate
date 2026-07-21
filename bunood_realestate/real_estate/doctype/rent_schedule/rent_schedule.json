@@ -1,0 +1,178 @@
+{
+ "actions": [],
+ "autoname": "RSCH-.#####",
+ "creation": "2026-07-20 00:00:00",
+ "description": "One planned rent installment per (lease, period). Standalone & indexed (status/due_date/lease) so the daily invoice generator queries it directly without loading leases. base_amount is ex-VAT; the Sales Invoice applies the tax template at generation time.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "lease_contract",
+  "customer",
+  "property",
+  "company",
+  "column_break_head",
+  "period_no",
+  "period_start",
+  "period_end",
+  "due_date",
+  "amounts_section",
+  "base_amount",
+  "is_prorated",
+  "status",
+  "invoice_section",
+  "sales_invoice",
+  "invoice_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "lease_contract",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Lease Contract",
+   "options": "Lease Contract",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "lease_contract.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Tenant (Customer)",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "lease_contract.property",
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Property",
+   "options": "Property",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "period_no",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Period No"
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Period Start"
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End"
+  },
+  {
+   "description": "Installment falls due on the period start.",
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Due Date",
+   "search_index": 1
+  },
+  {
+   "fieldname": "amounts_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Rent for this period, excluding VAT (VAT is applied on the Sales Invoice by contract type).",
+   "fieldname": "base_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rent (ex-VAT)"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_prorated",
+   "fieldtype": "Check",
+   "label": "Prorated",
+   "read_only": 1
+  },
+  {
+   "default": "Planned",
+   "description": "Planned = not yet invoiced. Invoiced = a submitted Sales Invoice exists (see invoice_status for Unpaid/Overdue/Paid).",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Planned\nInvoiced\nCancelled\nFailed",
+   "search_index": 1
+  },
+  {
+   "fieldname": "invoice_section",
+   "fieldtype": "Section Break",
+   "label": "Invoice"
+  },
+  {
+   "description": "Set by the invoice generator (Phase 4).",
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
+  },
+  {
+   "description": "Reflects the Sales Invoice (Unpaid / Overdue / Paid). Source of truth is ERPNext, not stored here.",
+   "fieldname": "invoice_status",
+   "fieldtype": "Data",
+   "label": "Invoice Status",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Rent Schedule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

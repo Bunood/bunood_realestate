@@ -1,0 +1,141 @@
+{
+ "actions": [],
+ "autoname": "format:{property}-{unit_number}",
+ "creation": "2026-07-20 00:00:00",
+ "description": "A rentable unit inside a Property. shop/office/warehouse/land plot are commercial (VAT 15%) when the property is Mixed. Modeled after bunood_core real_estate.Unit.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "property",
+  "unit_number",
+  "unit_type",
+  "floor",
+  "is_furnished",
+  "column_break_u",
+  "area_sqm",
+  "rooms_count",
+  "bathrooms",
+  "market_rent",
+  "deposit_amount",
+  "status",
+  "current_lease"
+ ],
+ "fields": [
+  {
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Property",
+   "options": "Property",
+   "reqd": 1
+  },
+  {
+   "fieldname": "unit_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Unit Number",
+   "reqd": 1
+  },
+  {
+   "description": "shop / office / warehouse / land plot are treated as commercial (VAT 15%) when the property is Mixed.",
+   "fieldname": "unit_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Unit Type",
+   "options": "Apartment\nShop\nOffice\nVilla\nWarehouse\nLand Plot\nOther"
+  },
+  {
+   "fieldname": "floor",
+   "fieldtype": "Int",
+   "label": "Floor"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_furnished",
+   "fieldtype": "Check",
+   "label": "Furnished"
+  },
+  {
+   "fieldname": "column_break_u",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "area_sqm",
+   "fieldtype": "Float",
+   "label": "Area (sqm)"
+  },
+  {
+   "fieldname": "rooms_count",
+   "fieldtype": "Int",
+   "label": "Rooms"
+  },
+  {
+   "fieldname": "bathrooms",
+   "fieldtype": "Int",
+   "label": "Bathrooms"
+  },
+  {
+   "fieldname": "market_rent",
+   "fieldtype": "Currency",
+   "label": "Market Rent (Annual)"
+  },
+  {
+   "fieldname": "deposit_amount",
+   "fieldtype": "Currency",
+   "label": "Deposit"
+  },
+  {
+   "default": "Vacant",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Vacant\nOccupied\nReserved\nMaintenance"
+  },
+  {
+   "description": "Set automatically when a Lease Contract is submitted.",
+   "fieldname": "current_lease",
+   "fieldtype": "Link",
+   "label": "Current Lease",
+   "options": "Lease Contract",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Real Estate Unit",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

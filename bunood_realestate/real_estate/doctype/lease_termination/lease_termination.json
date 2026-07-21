@@ -1,0 +1,179 @@
+{
+ "actions": [],
+ "autoname": "TERM-.#####",
+ "creation": "2026-07-20 00:00:00",
+ "description": "Early termination / move-out settlement for a lease: cancels future planned rent, applies deposit deductions, refunds the net via a Journal Entry, and frees the units.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "lease_contract",
+  "company",
+  "customer",
+  "column_break_head",
+  "termination_date",
+  "status",
+  "deductions_section",
+  "deposit_held",
+  "deductions",
+  "totals_column",
+  "total_deductions",
+  "net_refund",
+  "refund_section",
+  "refund_account",
+  "refund_journal_entry",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "lease_contract",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lease Contract",
+   "options": "Lease Contract",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "lease_contract.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "lease_contract.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tenant (Customer)",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Future planned rent from this date on is cancelled.",
+   "fieldname": "termination_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Termination Date",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nSettled\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "deductions_section",
+   "fieldtype": "Section Break",
+   "label": "Deposit Settlement"
+  },
+  {
+   "description": "Held deposit = received - already refunded (from the lease).",
+   "fieldname": "deposit_held",
+   "fieldtype": "Currency",
+   "label": "Deposit Held",
+   "read_only": 1
+  },
+  {
+   "fieldname": "deductions",
+   "fieldtype": "Table",
+   "label": "Deductions",
+   "options": "Lease Deduction"
+  },
+  {
+   "fieldname": "totals_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_deductions",
+   "fieldtype": "Currency",
+   "label": "Total Deductions",
+   "read_only": 1
+  },
+  {
+   "description": "Deposit held minus deductions — refunded to the tenant.",
+   "fieldname": "net_refund",
+   "fieldtype": "Currency",
+   "label": "Net Refund",
+   "read_only": 1
+  },
+  {
+   "fieldname": "refund_section",
+   "fieldtype": "Section Break",
+   "label": "Refund"
+  },
+  {
+   "description": "Bank/Cash account the net refund is paid from (required when Net Refund > 0).",
+   "fieldname": "refund_account",
+   "fieldtype": "Link",
+   "label": "Refund From (Bank/Cash)",
+   "options": "Account"
+  },
+  {
+   "fieldname": "refund_journal_entry",
+   "fieldtype": "Link",
+   "label": "Settlement Entry",
+   "no_copy": 1,
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Lease Termination",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-20 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Lease Termination",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

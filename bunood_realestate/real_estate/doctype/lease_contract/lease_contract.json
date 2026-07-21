@@ -1,0 +1,340 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "LEASE-.#####",
+ "creation": "2026-07-20 00:00:00",
+ "description": "A rental lease linking a tenant (Customer) to one or more units. contract_type drives VAT (residential exempt / commercial 15%). Rent is flat across the term; increases happen only on renewal. Modeled after bunood_core Tenancy + TenancyExtended, delegating all money to ERPNext.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "contract_details_section",
+  "customer",
+  "property",
+  "company",
+  "contract_type",
+  "contract_subtype",
+  "column_break_cd",
+  "start_date",
+  "end_date",
+  "billing_cycle",
+  "status",
+  "tax_section",
+  "tenant_vat_number",
+  "ejar_contract_no",
+  "auto_renew",
+  "units_section",
+  "units",
+  "totals_column",
+  "annual_rent_total",
+  "deposit_amount",
+  "deposit_received",
+  "deposit_received_date",
+  "deposit_journal_entry",
+  "deposit_refunded",
+  "deposit_refund_journal_entry",
+  "fees_section",
+  "brokerage_fee",
+  "general_services_amount",
+  "column_break_fees",
+  "waste_removal_fee",
+  "engineering_supervision_fee",
+  "unit_finishing_fee",
+  "more_section",
+  "parent_lease",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "contract_details_section",
+   "fieldtype": "Section Break",
+   "label": "Contract"
+  },
+  {
+   "description": "The tenant IS an ERPNext Customer — statement of account, receivables and aging work natively.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tenant (Customer)",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Property",
+   "options": "Property"
+  },
+  {
+   "fetch_from": "property.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Residential",
+   "description": "VAT driver: Residential is exempt, Commercial is 15%.",
+   "fieldname": "contract_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Contract Type",
+   "options": "Residential\nCommercial",
+   "reqd": 1
+  },
+  {
+   "default": "New",
+   "fieldname": "contract_subtype",
+   "fieldtype": "Select",
+   "label": "Contract Subtype",
+   "options": "New\nRenewal\nTransfer"
+  },
+  {
+   "fieldname": "column_break_cd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "description": "Inclusive last-covered day of the lease.",
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "reqd": 1
+  },
+  {
+   "default": "Monthly",
+   "description": "Installments per year: Monthly=12, Quarterly=4, Semi-Annual=2, Annual=1.",
+   "fieldname": "billing_cycle",
+   "fieldtype": "Select",
+   "label": "Billing Cycle",
+   "options": "Monthly\nQuarterly\nSemi-Annual\nAnnual",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nActive\nExpired\nCancelled\nRenewed",
+   "read_only": 1
+  },
+  {
+   "description": "Saudi ZATCA VAT rule applies from contract_type.",
+   "fieldname": "tax_section",
+   "fieldtype": "Section Break",
+   "label": "Ejar / Tax"
+  },
+  {
+   "depends_on": "eval:doc.contract_type=='Commercial'",
+   "description": "Required for commercial leases. ZATCA format: 15 digits starting and ending with 3.",
+   "fieldname": "tenant_vat_number",
+   "fieldtype": "Data",
+   "label": "Tenant VAT Number"
+  },
+  {
+   "fieldname": "ejar_contract_no",
+   "fieldtype": "Data",
+   "label": "Ejar Contract No"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_renew",
+   "fieldtype": "Check",
+   "label": "Auto Renew"
+  },
+  {
+   "fieldname": "units_section",
+   "fieldtype": "Section Break",
+   "label": "Units & Rent"
+  },
+  {
+   "description": "One or more units. Total annual rent = sum of unit annual rents.",
+   "fieldname": "units",
+   "fieldtype": "Table",
+   "label": "Units",
+   "options": "Lease Unit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "totals_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Sum of unit annual rents (computed).",
+   "fieldname": "annual_rent_total",
+   "fieldtype": "Currency",
+   "label": "Annual Rent Total",
+   "read_only": 1
+  },
+  {
+   "description": "Agreed security deposit (held as a liability; settled at termination).",
+   "fieldname": "deposit_amount",
+   "fieldtype": "Currency",
+   "label": "Deposit (Agreed)"
+  },
+  {
+   "description": "Actually received (posted to the deposit liability via Journal Entry).",
+   "fieldname": "deposit_received",
+   "fieldtype": "Currency",
+   "label": "Deposit Received",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "deposit_received_date",
+   "fieldtype": "Date",
+   "label": "Deposit Received Date",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "deposit_journal_entry",
+   "fieldtype": "Link",
+   "label": "Deposit Entry",
+   "no_copy": 1,
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "deposit_refunded",
+   "fieldtype": "Currency",
+   "label": "Deposit Refunded",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.deposit_refunded",
+   "fieldname": "deposit_refund_journal_entry",
+   "fieldtype": "Link",
+   "label": "Refund Entry",
+   "no_copy": 1,
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "fees_section",
+   "fieldtype": "Section Break",
+   "label": "One-time Fees (optional)"
+  },
+  {
+   "description": "Brokerage / سعي.",
+   "fieldname": "brokerage_fee",
+   "fieldtype": "Currency",
+   "label": "Brokerage Fee"
+  },
+  {
+   "fieldname": "general_services_amount",
+   "fieldtype": "Currency",
+   "label": "General Services"
+  },
+  {
+   "fieldname": "column_break_fees",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "waste_removal_fee",
+   "fieldtype": "Currency",
+   "label": "Waste Removal"
+  },
+  {
+   "fieldname": "engineering_supervision_fee",
+   "fieldtype": "Currency",
+   "label": "Engineering Supervision"
+  },
+  {
+   "fieldname": "unit_finishing_fee",
+   "fieldtype": "Currency",
+   "label": "Unit Finishing"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "more_section",
+   "fieldtype": "Section Break",
+   "label": "More"
+  },
+  {
+   "description": "Set when this lease is a renewal of a prior one.",
+   "fieldname": "parent_lease",
+   "fieldtype": "Link",
+   "label": "Renewed From",
+   "options": "Lease Contract",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Lease Contract",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [
+  {
+   "group": "Rent",
+   "link_doctype": "Rent Schedule",
+   "link_fieldname": "lease_contract"
+  }
+ ],
+ "modified": "2026-07-20 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Lease Contract",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

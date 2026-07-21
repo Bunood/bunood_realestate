@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00",
+ "description": "Accounting defaults for real-estate rent invoicing. No account is hardcoded in code (config-over-code).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "accounting_section",
+  "company",
+  "default_cost_center",
+  "column_break_acct",
+  "rent_income_account",
+  "receivable_account",
+  "tenant_deposit_account",
+  "items_section",
+  "default_rent_item",
+  "tax_section",
+  "commercial_tax_template",
+  "residential_tax_template",
+  "invoicing_section",
+  "auto_submit_invoices",
+  "invoice_lead_days"
+ ],
+ "fields": [
+  {
+   "fieldname": "accounting_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Defaults"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "default_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "column_break_acct",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Credited when a rent invoice is posted.",
+   "fieldname": "rent_income_account",
+   "fieldtype": "Link",
+   "label": "Rent Income Account",
+   "options": "Account"
+  },
+  {
+   "description": "Debtors account the tenant is billed against (accrual / credit).",
+   "fieldname": "receivable_account",
+   "fieldtype": "Link",
+   "label": "Receivable Account",
+   "options": "Account"
+  },
+  {
+   "description": "Liability account holding tenant security deposits until settlement.",
+   "fieldname": "tenant_deposit_account",
+   "fieldtype": "Link",
+   "label": "Tenant Security Deposit Account (Liability)",
+   "options": "Account"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Items"
+  },
+  {
+   "description": "Service item used on generated rent Sales Invoices.",
+   "fieldname": "default_rent_item",
+   "fieldtype": "Link",
+   "label": "Default Rent Item",
+   "options": "Item"
+  },
+  {
+   "description": "Saudi ZATCA rule: residential rent is VAT-EXEMPT (0%), commercial rent is 15%. The Lease Contract picks the template from its contract_type.",
+   "fieldname": "tax_section",
+   "fieldtype": "Section Break",
+   "label": "Tax (Saudi VAT)"
+  },
+  {
+   "description": "Applied to COMMERCIAL leases (VAT 15%).",
+   "fieldname": "commercial_tax_template",
+   "fieldtype": "Link",
+   "label": "Commercial VAT Template (15%)",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "description": "Applied to RESIDENTIAL leases (VAT exempt / zero-rated).",
+   "fieldname": "residential_tax_template",
+   "fieldtype": "Link",
+   "label": "Residential Template (Exempt / Zero-rated)",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "fieldname": "invoicing_section",
+   "fieldtype": "Section Break",
+   "label": "Invoicing Policy"
+  },
+  {
+   "default": "1",
+   "description": "Accrual policy: submit the rent invoice on its due date so the tenant shows as a debtor in the Statement of Account until paid. Turn off only for a cash (draft-until-paid) policy.",
+   "fieldname": "auto_submit_invoices",
+   "fieldtype": "Check",
+   "label": "Auto-submit rent invoices on due date (accrual)"
+  },
+  {
+   "default": "0",
+   "description": "Generate the invoice this many days before its due date (0 = on the due date).",
+   "fieldname": "invoice_lead_days",
+   "fieldtype": "Int",
+   "label": "Invoice Lead Days"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-20 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Real Estate Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

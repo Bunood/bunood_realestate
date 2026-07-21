@@ -1,0 +1,18 @@
+[
+ {
+  "doctype": "Accounting Dimension",
+  "name": "Property",
+  "document_type": "Property",
+  "label": "Property",
+  "fieldname": "property",
+  "disabled": 0
+ },
+ {
+  "doctype": "Accounting Dimension",
+  "name": "Real Estate Unit",
+  "document_type": "Real Estate Unit",
+  "label": "Real Estate Unit",
+  "fieldname": "real_estate_unit",
+  "disabled": 0
+ }
+]
