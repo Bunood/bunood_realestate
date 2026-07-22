@@ -6,38 +6,25 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "basics_tab",
   "property_name",
   "code",
   "company",
   "business_type",
   "property_type",
   "ownership_type",
-  "vat_treatment",
   "residential_subtype",
-  "status",
   "column_break_main",
+  "status",
+  "deed_number",
+  "construction_year",
+  "total_area_sqm",
+  "floors_count",
+  "vat_treatment",
+  "operation_tab",
   "management_model",
   "management_behavior",
   "management_fee_percentage",
-  "owner_name",
-  "deed_number",
-  "location_section",
-  "address",
-  "city",
-  "district",
-  "street",
-  "building_no",
-  "column_break_loc",
-  "postal_code",
-  "total_area_sqm",
-  "floors_count",
-  "details_section",
-  "owner_section",
-  "owner_party",
-  "owner_phone",
-  "owner_col",
-  "owner_iban",
-  "construction_year",
   "headlease_section",
   "head_landlord_party",
   "head_lease_annual_rent",
@@ -45,13 +32,38 @@
   "headlease_col",
   "head_lease_start_date",
   "head_lease_end_date",
+  "owner_section",
+  "owner_party",
+  "owner_name",
+  "owner_phone",
+  "owner_id_num",
+  "owner_email",
+  "owner_col",
+  "owner_iban",
+  "owner_nationality",
+  "owner_date_of_birth",
+  "owner_address",
+  "location_tab",
+  "address",
+  "city",
+  "district",
+  "street",
+  "building_no",
+  "column_break_loc",
+  "postal_code",
   "geo_section",
   "latitude",
   "geo_col",
   "longitude",
+  "notes_section",
   "description"
  ],
  "fields": [
+  {
+   "fieldname": "basics_tab",
+   "fieldtype": "Tab Break",
+   "label": "Basics"
+  },
   {
    "fieldname": "property_name",
    "fieldtype": "Data",
@@ -73,11 +85,40 @@
    "reqd": 1
   },
   {
+   "fieldname": "business_type",
+   "fieldtype": "Link",
+   "options": "RE Business Type",
+   "label": "Business Type",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Drives VAT (residential exempt / commercial 15%) via its VAT Treatment."
+  },
+  {
+   "fieldname": "property_type",
+   "fieldtype": "Link",
+   "options": "RE Property Type",
+   "label": "Property Type",
+   "in_standard_filter": 1,
+   "description": "Physical type (apartment building / villa / tower…)."
+  },
+  {
+   "fieldname": "ownership_type",
+   "fieldtype": "Link",
+   "options": "RE Ownership Type",
+   "label": "Ownership Type",
+   "in_standard_filter": 1
+  },
+  {
    "depends_on": "eval:doc.vat_treatment=='Exempt'",
    "fieldname": "residential_subtype",
    "fieldtype": "Select",
    "label": "Residential Subtype",
    "options": "\nFamilies\nSingles\nGroup"
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
   },
   {
    "default": "Active",
@@ -89,65 +130,14 @@
    "options": "Active\nInactive"
   },
   {
-   "fieldname": "column_break_main",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.management_behavior=='managed'",
-   "fieldname": "management_fee_percentage",
-   "fieldtype": "Percent",
-   "label": "Management Fee %"
-  },
-  {
-   "fieldname": "owner_name",
-   "fieldtype": "Data",
-   "label": "Owner"
-  },
-  {
    "fieldname": "deed_number",
    "fieldtype": "Data",
    "label": "Deed Number"
   },
   {
-   "fieldname": "location_section",
-   "fieldtype": "Section Break",
-   "label": "Location"
-  },
-  {
-   "description": "Reuses ERPNext Address (no duplicate master).",
-   "fieldname": "address",
-   "fieldtype": "Link",
-   "label": "Address",
-   "options": "Address"
-  },
-  {
-   "fieldname": "city",
-   "fieldtype": "Data",
-   "label": "City"
-  },
-  {
-   "fieldname": "district",
-   "fieldtype": "Data",
-   "label": "District"
-  },
-  {
-   "fieldname": "street",
-   "fieldtype": "Data",
-   "label": "Street"
-  },
-  {
-   "fieldname": "building_no",
-   "fieldtype": "Data",
-   "label": "Building No"
-  },
-  {
-   "fieldname": "column_break_loc",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "postal_code",
-   "fieldtype": "Data",
-   "label": "Postal Code"
+   "fieldname": "construction_year",
+   "fieldtype": "Int",
+   "label": "Construction Year"
   },
   {
    "fieldname": "total_area_sqm",
@@ -161,40 +151,40 @@
    "label": "Floors Count"
   },
   {
-   "fieldname": "details_section",
-   "fieldtype": "Section Break",
-   "label": "Details"
+   "fieldname": "vat_treatment",
+   "fieldtype": "Data",
+   "label": "VAT Treatment",
+   "fetch_from": "business_type.vat_treatment",
+   "read_only": 1,
+   "hidden": 1
   },
   {
-   "fieldname": "owner_section",
-   "fieldtype": "Section Break",
-   "label": "Owner"
+   "fieldname": "operation_tab",
+   "fieldtype": "Tab Break",
+   "label": "Operation & Owner"
   },
   {
-   "fieldname": "owner_party",
+   "fieldname": "management_model",
    "fieldtype": "Link",
-   "label": "Owner (Supplier)",
-   "options": "Supplier",
-   "description": "Link the owner to a Supplier for management/master-lease payouts."
+   "options": "RE Management Model",
+   "label": "Management Model",
+   "in_standard_filter": 1,
+   "description": "How the property is operated (owned / managed / master-lease…)."
   },
   {
-   "fieldname": "owner_phone",
+   "fieldname": "management_behavior",
    "fieldtype": "Data",
-   "label": "Owner Phone"
+   "label": "Management Behavior",
+   "fetch_from": "management_model.behavior",
+   "read_only": 1,
+   "hidden": 1
   },
   {
-   "fieldname": "owner_col",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "owner_iban",
-   "fieldtype": "Data",
-   "label": "Owner IBAN"
-  },
-  {
-   "fieldname": "construction_year",
-   "fieldtype": "Int",
-   "label": "Construction Year"
+   "depends_on": "eval:doc.management_behavior=='managed'",
+   "fieldname": "management_fee_percentage",
+   "fieldtype": "Percent",
+   "label": "Management Fee %",
+   "description": "Your share of the collected rent (managed / إدارة أملاك model)."
   },
   {
    "fieldname": "headlease_section",
@@ -235,6 +225,107 @@
    "label": "Head-lease End"
   },
   {
+   "fieldname": "owner_section",
+   "fieldtype": "Section Break",
+   "label": "Owner"
+  },
+  {
+   "fieldname": "owner_party",
+   "fieldtype": "Link",
+   "label": "Owner (Supplier)",
+   "options": "Supplier",
+   "description": "Link the owner to a Supplier for management/master-lease payouts."
+  },
+  {
+   "fieldname": "owner_name",
+   "fieldtype": "Data",
+   "label": "Owner Name"
+  },
+  {
+   "fieldname": "owner_phone",
+   "fieldtype": "Data",
+   "label": "Owner Phone"
+  },
+  {
+   "fieldname": "owner_id_num",
+   "fieldtype": "Data",
+   "label": "Owner ID Number"
+  },
+  {
+   "fieldname": "owner_email",
+   "fieldtype": "Data",
+   "label": "Owner Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "owner_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "owner_iban",
+   "fieldtype": "Data",
+   "label": "Owner IBAN",
+   "description": "Used to remit collected rent to the owner."
+  },
+  {
+   "fieldname": "owner_nationality",
+   "fieldtype": "Data",
+   "label": "Owner Nationality",
+   "default": "السعودية"
+  },
+  {
+   "fieldname": "owner_date_of_birth",
+   "fieldtype": "Date",
+   "label": "Owner Date of Birth"
+  },
+  {
+   "fieldname": "owner_address",
+   "fieldtype": "Small Text",
+   "label": "Owner Address"
+  },
+  {
+   "fieldname": "location_tab",
+   "fieldtype": "Tab Break",
+   "label": "Location"
+  },
+  {
+   "description": "Reuses ERPNext Address (no duplicate master).",
+   "fieldname": "address",
+   "fieldtype": "Link",
+   "label": "Address",
+   "options": "Address"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City",
+   "default": "الرياض"
+  },
+  {
+   "fieldname": "district",
+   "fieldtype": "Data",
+   "label": "District"
+  },
+  {
+   "fieldname": "street",
+   "fieldtype": "Data",
+   "label": "Street"
+  },
+  {
+   "fieldname": "building_no",
+   "fieldtype": "Data",
+   "label": "Building No"
+  },
+  {
+   "fieldname": "column_break_loc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "postal_code",
+   "fieldtype": "Data",
+   "label": "Postal Code"
+  },
+  {
    "fieldname": "geo_section",
    "fieldtype": "Section Break",
    "label": "Geo",
@@ -257,58 +348,14 @@
    "precision": "7"
   },
   {
-   "fieldname": "description",
-   "fieldtype": "Small Text",
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
    "label": "Notes"
   },
   {
-   "fieldname": "business_type",
-   "fieldtype": "Link",
-   "options": "RE Business Type",
-   "label": "Business Type",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "description": "Drives VAT (residential exempt / commercial 15%) via its VAT Treatment."
-  },
-  {
-   "fieldname": "property_type",
-   "fieldtype": "Link",
-   "options": "RE Property Type",
-   "label": "Property Type",
-   "in_standard_filter": 1,
-   "description": "Physical type (apartment building / villa / tower…)."
-  },
-  {
-   "fieldname": "ownership_type",
-   "fieldtype": "Link",
-   "options": "RE Ownership Type",
-   "label": "Ownership Type",
-   "in_standard_filter": 1
-  },
-  {
-   "fieldname": "vat_treatment",
-   "fieldtype": "Data",
-   "label": "VAT Treatment",
-   "fetch_from": "business_type.vat_treatment",
-   "read_only": 1,
-   "hidden": 1
-  },
-  {
-   "fieldname": "management_model",
-   "fieldtype": "Link",
-   "options": "RE Management Model",
-   "label": "Management Model",
-   "in_standard_filter": 1,
-   "description": "How the property is operated (owned / managed / master-lease…)."
-  },
-  {
-   "fieldname": "management_behavior",
-   "fieldtype": "Data",
-   "label": "Management Behavior",
-   "fetch_from": "management_model.behavior",
-   "read_only": 1,
-   "hidden": 1
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Notes"
   }
  ],
  "links": [
@@ -323,7 +370,7 @@
    "link_fieldname": "property"
   }
  ],
- "modified": "2026-07-20 00:00:00",
+ "modified": "2026-07-22 00:00:00",
  "modified_by": "Administrator",
  "module": "Real Estate",
  "name": "Property",
