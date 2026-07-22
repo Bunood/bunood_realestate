@@ -18,6 +18,21 @@
   "market_rent",
   "deposit_amount",
   "status",
+  "amenities_section",
+  "living_rooms_count",
+  "view_type",
+  "ac_units_count",
+  "has_kitchen",
+  "amenities_col",
+  "balconies_count",
+  "parking_spots",
+  "kitchen_type",
+  "unit_template",
+  "utilities_section",
+  "electricity_meter",
+  "water_meter",
+  "utilities_col",
+  "furniture_details",
   "current_lease"
  ],
  "fields": [
@@ -94,6 +109,87 @@
    "in_standard_filter": 1,
    "label": "Status",
    "options": "Vacant\nOccupied\nReserved\nMaintenance"
+  },
+  {
+   "fieldname": "amenities_section",
+   "fieldtype": "Section Break",
+   "label": "Amenities",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "living_rooms_count",
+   "fieldtype": "Int",
+   "label": "Living Rooms"
+  },
+  {
+   "fieldname": "view_type",
+   "fieldtype": "Select",
+   "label": "View",
+   "options": "\nStreet\nGarden\nSea\nCity\nInternal"
+  },
+  {
+   "fieldname": "ac_units_count",
+   "fieldtype": "Int",
+   "label": "AC Units"
+  },
+  {
+   "fieldname": "has_kitchen",
+   "fieldtype": "Check",
+   "label": "Has Kitchen",
+   "default": "0"
+  },
+  {
+   "fieldname": "amenities_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "balconies_count",
+   "fieldtype": "Int",
+   "label": "Balconies"
+  },
+  {
+   "fieldname": "parking_spots",
+   "fieldtype": "Int",
+   "label": "Parking Spots"
+  },
+  {
+   "fieldname": "kitchen_type",
+   "fieldtype": "Select",
+   "label": "Kitchen Type",
+   "options": "\nOpen\nClosed\nAmerican\nNone",
+   "depends_on": "eval:doc.has_kitchen"
+  },
+  {
+   "fieldname": "unit_template",
+   "fieldtype": "Data",
+   "label": "Unit Template",
+   "description": "e.g. Studio / 2BR / 3BR"
+  },
+  {
+   "fieldname": "utilities_section",
+   "fieldtype": "Section Break",
+   "label": "Utilities & Notes",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "electricity_meter",
+   "fieldtype": "Data",
+   "label": "Electricity Meter No"
+  },
+  {
+   "fieldname": "water_meter",
+   "fieldtype": "Data",
+   "label": "Water Meter No"
+  },
+  {
+   "fieldname": "utilities_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "furniture_details",
+   "fieldtype": "Small Text",
+   "label": "Furniture Details",
+   "depends_on": "eval:doc.is_furnished"
   },
   {
    "description": "Set automatically when a Lease Contract is submitted.",

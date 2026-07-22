@@ -28,6 +28,23 @@
   "total_area_sqm",
   "floors_count",
   "details_section",
+  "owner_section",
+  "owner_party",
+  "owner_phone",
+  "owner_col",
+  "owner_iban",
+  "construction_year",
+  "headlease_section",
+  "head_landlord_party",
+  "head_lease_annual_rent",
+  "head_lease_billing_cycle",
+  "headlease_col",
+  "head_lease_start_date",
+  "head_lease_end_date",
+  "geo_section",
+  "latitude",
+  "geo_col",
+  "longitude",
   "description"
  ],
  "fields": [
@@ -162,6 +179,97 @@
    "fieldname": "details_section",
    "fieldtype": "Section Break",
    "label": "Details"
+  },
+  {
+   "fieldname": "owner_section",
+   "fieldtype": "Section Break",
+   "label": "Owner"
+  },
+  {
+   "fieldname": "owner_party",
+   "fieldtype": "Link",
+   "label": "Owner (Supplier)",
+   "options": "Supplier",
+   "description": "Link the owner to a Supplier for management/master-lease payouts."
+  },
+  {
+   "fieldname": "owner_phone",
+   "fieldtype": "Data",
+   "label": "Owner Phone"
+  },
+  {
+   "fieldname": "owner_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "owner_iban",
+   "fieldtype": "Data",
+   "label": "Owner IBAN"
+  },
+  {
+   "fieldname": "construction_year",
+   "fieldtype": "Int",
+   "label": "Construction Year"
+  },
+  {
+   "fieldname": "headlease_section",
+   "fieldtype": "Section Break",
+   "label": "Head Lease (Master Lease)",
+   "collapsible": 1,
+   "depends_on": "eval:doc.operation_type=='Master Lease'"
+  },
+  {
+   "fieldname": "head_landlord_party",
+   "fieldtype": "Link",
+   "label": "Head Landlord (Supplier)",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "head_lease_annual_rent",
+   "fieldtype": "Currency",
+   "label": "Head-lease Annual Rent"
+  },
+  {
+   "fieldname": "head_lease_billing_cycle",
+   "fieldtype": "Select",
+   "label": "Head-lease Billing Cycle",
+   "options": "\nMonthly\nQuarterly\nSemi-Annual\nAnnual"
+  },
+  {
+   "fieldname": "headlease_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "head_lease_start_date",
+   "fieldtype": "Date",
+   "label": "Head-lease Start"
+  },
+  {
+   "fieldname": "head_lease_end_date",
+   "fieldtype": "Date",
+   "label": "Head-lease End"
+  },
+  {
+   "fieldname": "geo_section",
+   "fieldtype": "Section Break",
+   "label": "Geo",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "7"
+  },
+  {
+   "fieldname": "geo_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "7"
   },
   {
    "fieldname": "description",

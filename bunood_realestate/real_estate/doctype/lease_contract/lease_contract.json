@@ -39,6 +39,63 @@
   "waste_removal_fee",
   "engineering_supervision_fee",
   "unit_finishing_fee",
+  "guarantor_section",
+  "guarantor_name",
+  "guarantor_id_number",
+  "guarantor_phone",
+  "guarantor_col",
+  "payment_day",
+  "retainer_fee",
+  "security_deposit_extra",
+  "utilities_annual_section",
+  "electricity_annual",
+  "water_annual",
+  "gas_annual",
+  "utilities_annual_col",
+  "parking_annual",
+  "parking_lots_rented",
+  "ejar_section",
+  "sealing_date",
+  "hijri_start_date",
+  "hijri_end_date",
+  "is_conditional",
+  "condition_text",
+  "ejar_lessor_col",
+  "lessor_org_type",
+  "lessor_company_name",
+  "lessor_cr_number",
+  "lessor_unified_number",
+  "lessor_vat_number",
+  "ejar_tenant_col",
+  "tenant_org_type",
+  "tenant_company_name",
+  "tenant_cr_number",
+  "tenant_unified_number",
+  "ejar_more_section",
+  "broker_company_name",
+  "broker_cr_number",
+  "broker_employee_name",
+  "ejar_deed_col",
+  "deed_number",
+  "deed_type",
+  "deed_issuer",
+  "deed_issue_date",
+  "ejar_biz_col",
+  "business_name",
+  "business_cr_number",
+  "isic_activity",
+  "license_number",
+  "obligations_section",
+  "lessor_obligations",
+  "tenant_obligations",
+  "obligations_col",
+  "additional_terms",
+  "payment_methods_text",
+  "import_section",
+  "import_contract_total",
+  "import_installments",
+  "import_col",
+  "import_historical_seed",
   "more_section",
   "parent_lease",
   "notes",
@@ -260,6 +317,298 @@
    "fieldname": "unit_finishing_fee",
    "fieldtype": "Currency",
    "label": "Unit Finishing"
+  },
+  {
+   "fieldname": "guarantor_section",
+   "fieldtype": "Section Break",
+   "label": "Guarantor & Billing",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "guarantor_name",
+   "fieldtype": "Data",
+   "label": "Guarantor Name"
+  },
+  {
+   "fieldname": "guarantor_id_number",
+   "fieldtype": "Data",
+   "label": "Guarantor ID"
+  },
+  {
+   "fieldname": "guarantor_phone",
+   "fieldtype": "Data",
+   "label": "Guarantor Phone"
+  },
+  {
+   "fieldname": "guarantor_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_day",
+   "fieldtype": "Int",
+   "label": "Payment Day",
+   "description": "Day of the period rent is due (informational; schedule uses period start)."
+  },
+  {
+   "fieldname": "retainer_fee",
+   "fieldtype": "Currency",
+   "label": "Retainer (عربون)",
+   "description": "Within contract value; applied to the first installment (not extra revenue)."
+  },
+  {
+   "fieldname": "security_deposit_extra",
+   "fieldtype": "Currency",
+   "label": "Extra Security Deposit"
+  },
+  {
+   "fieldname": "utilities_annual_section",
+   "fieldtype": "Section Break",
+   "label": "Utilities (annual)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "electricity_annual",
+   "fieldtype": "Currency",
+   "label": "Electricity (annual)"
+  },
+  {
+   "fieldname": "water_annual",
+   "fieldtype": "Currency",
+   "label": "Water (annual)"
+  },
+  {
+   "fieldname": "gas_annual",
+   "fieldtype": "Currency",
+   "label": "Gas (annual)"
+  },
+  {
+   "fieldname": "utilities_annual_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "parking_annual",
+   "fieldtype": "Currency",
+   "label": "Parking (annual)"
+  },
+  {
+   "fieldname": "parking_lots_rented",
+   "fieldtype": "Int",
+   "label": "Parking Lots Rented"
+  },
+  {
+   "fieldname": "ejar_section",
+   "fieldtype": "Section Break",
+   "label": "Ejar Details",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "sealing_date",
+   "fieldtype": "Date",
+   "label": "Sealing Date"
+  },
+  {
+   "fieldname": "hijri_start_date",
+   "fieldtype": "Data",
+   "label": "Hijri Start"
+  },
+  {
+   "fieldname": "hijri_end_date",
+   "fieldtype": "Data",
+   "label": "Hijri End"
+  },
+  {
+   "fieldname": "is_conditional",
+   "fieldtype": "Check",
+   "label": "Conditional Contract",
+   "default": "0"
+  },
+  {
+   "fieldname": "condition_text",
+   "fieldtype": "Small Text",
+   "label": "Condition",
+   "depends_on": "eval:doc.is_conditional"
+  },
+  {
+   "fieldname": "ejar_lessor_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lessor_org_type",
+   "fieldtype": "Select",
+   "label": "Lessor Org Type",
+   "options": "\nIndividual\nCommercial\nGovernment\nNon-profit"
+  },
+  {
+   "fieldname": "lessor_company_name",
+   "fieldtype": "Data",
+   "label": "Lessor Company"
+  },
+  {
+   "fieldname": "lessor_cr_number",
+   "fieldtype": "Data",
+   "label": "Lessor CR No"
+  },
+  {
+   "fieldname": "lessor_unified_number",
+   "fieldtype": "Data",
+   "label": "Lessor Unified No (700)"
+  },
+  {
+   "fieldname": "lessor_vat_number",
+   "fieldtype": "Data",
+   "label": "Lessor VAT No"
+  },
+  {
+   "fieldname": "ejar_tenant_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tenant_org_type",
+   "fieldtype": "Select",
+   "label": "Tenant Org Type",
+   "options": "\nIndividual\nCommercial\nGovernment\nNon-profit"
+  },
+  {
+   "fieldname": "tenant_company_name",
+   "fieldtype": "Data",
+   "label": "Tenant Company"
+  },
+  {
+   "fieldname": "tenant_cr_number",
+   "fieldtype": "Data",
+   "label": "Tenant CR No"
+  },
+  {
+   "fieldname": "tenant_unified_number",
+   "fieldtype": "Data",
+   "label": "Tenant Unified No (700)"
+  },
+  {
+   "fieldname": "ejar_more_section",
+   "fieldtype": "Section Break",
+   "label": "Ejar — Broker / Deed / Activity",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "broker_company_name",
+   "fieldtype": "Data",
+   "label": "Broker Company"
+  },
+  {
+   "fieldname": "broker_cr_number",
+   "fieldtype": "Data",
+   "label": "Broker CR No"
+  },
+  {
+   "fieldname": "broker_employee_name",
+   "fieldtype": "Data",
+   "label": "Broker Employee"
+  },
+  {
+   "fieldname": "ejar_deed_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "deed_number",
+   "fieldtype": "Data",
+   "label": "Deed No"
+  },
+  {
+   "fieldname": "deed_type",
+   "fieldtype": "Select",
+   "label": "Deed Type",
+   "options": "\nPaper\nElectronic\nOther"
+  },
+  {
+   "fieldname": "deed_issuer",
+   "fieldtype": "Data",
+   "label": "Deed Issuer"
+  },
+  {
+   "fieldname": "deed_issue_date",
+   "fieldtype": "Date",
+   "label": "Deed Issue Date"
+  },
+  {
+   "fieldname": "ejar_biz_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "business_name",
+   "fieldtype": "Data",
+   "label": "Business Name"
+  },
+  {
+   "fieldname": "business_cr_number",
+   "fieldtype": "Data",
+   "label": "Business CR No"
+  },
+  {
+   "fieldname": "isic_activity",
+   "fieldtype": "Data",
+   "label": "ISIC Activity"
+  },
+  {
+   "fieldname": "license_number",
+   "fieldtype": "Data",
+   "label": "License No"
+  },
+  {
+   "fieldname": "obligations_section",
+   "fieldtype": "Section Break",
+   "label": "Obligations & Terms",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "lessor_obligations",
+   "fieldtype": "Small Text",
+   "label": "Lessor Obligations"
+  },
+  {
+   "fieldname": "tenant_obligations",
+   "fieldtype": "Small Text",
+   "label": "Tenant Obligations"
+  },
+  {
+   "fieldname": "obligations_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "additional_terms",
+   "fieldtype": "Small Text",
+   "label": "Additional Terms"
+  },
+  {
+   "fieldname": "payment_methods_text",
+   "fieldtype": "Data",
+   "label": "Payment Methods"
+  },
+  {
+   "fieldname": "import_section",
+   "fieldtype": "Section Break",
+   "label": "Import Existing Contract",
+   "collapsible": 1,
+   "description": "Migrating a live contract: bill only future periods; past = opening balance."
+  },
+  {
+   "fieldname": "import_contract_total",
+   "fieldtype": "Currency",
+   "label": "Import Total"
+  },
+  {
+   "fieldname": "import_installments",
+   "fieldtype": "Int",
+   "label": "Import Installments"
+  },
+  {
+   "fieldname": "import_col",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "import_historical_seed",
+   "fieldtype": "Check",
+   "label": "Historical Seed (opening balance, no back-dated invoices)",
+   "default": "0"
   },
   {
    "collapsible": 1,
