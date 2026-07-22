@@ -15,6 +15,7 @@
   "items_section",
   "default_rent_item",
   "head_lease_item",
+  "owner_payout_expense_account",
   "tax_section",
   "commercial_tax_template",
   "residential_tax_template",
@@ -85,6 +86,13 @@
    "label": "Head-Lease Item (Master Lease expense)",
    "options": "Item",
    "description": "Service item for head-lease rent paid to the original owner (Master Lease)."
+  },
+  {
+   "fieldname": "owner_payout_expense_account",
+   "fieldtype": "Link",
+   "label": "Owner Payout Expense Account (Management)",
+   "options": "Account",
+   "description": "Expense account debited when paying the owner their share (managed properties)."
   },
   {
    "description": "Saudi ZATCA rule: residential rent is VAT-EXEMPT (0%), commercial rent is 15%. The Lease Contract picks the template from its contract_type.",

@@ -11,6 +11,43 @@ frappe.ui.form.on("Property", {
 			__("Units")
 		);
 
+		if (frm.doc.management_behavior === "managed") {
+			frm.add_custom_button(
+				__("Owner Payout"),
+				() => {
+					const d = new frappe.ui.Dialog({
+						title: __("Owner Payout"),
+						fields: [
+							{ fieldname: "from_date", fieldtype: "Date", label: __("From"), reqd: 1 },
+							{ fieldname: "to_date", fieldtype: "Date", label: __("To"), reqd: 1, default: frappe.datetime.get_today() },
+						],
+						primary_action_label: __("Post Payout"),
+						primary_action(v) {
+							frappe.call({
+								method: "bunood_realestate.real_estate.management.generate_owner_payout",
+								args: { property: frm.doc.name, from_date: v.from_date, to_date: v.to_date },
+								freeze: true,
+								callback: (r) => {
+									if (r.message) {
+										frappe.show_alert({
+											message: __("Owner payout {0} posted ({1})", [
+												format_currency(r.message.owner_payout),
+												r.message.journal_entry,
+											]),
+											indicator: "green",
+										});
+									}
+								},
+							});
+							d.hide();
+						},
+					});
+					d.show();
+				},
+				__("Owner")
+			);
+		}
+
 		if (frm.doc.management_behavior === "master_lease") {
 			frm.add_custom_button(
 				__("Generate Head-Lease Schedule"),
