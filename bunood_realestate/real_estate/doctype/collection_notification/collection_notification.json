@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "autoname": "CN-.YYYY.-.#####",
+ "creation": "2026-07-23 00:00:00",
+ "description": "Audit log of a collection/dunning message sent to a tenant (WhatsApp/SMS/Email).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "lease_contract",
+  "customer",
+  "company",
+  "column_break_cn",
+  "channel",
+  "amount",
+  "sent_on",
+  "message"
+ ],
+ "fields": [
+  {
+   "fieldname": "lease_contract",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lease Contract",
+   "options": "Lease Contract"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tenant (Customer)",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "column_break_cn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "WhatsApp",
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Channel",
+   "options": "WhatsApp\nSMS\nEmail"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Outstanding Amount"
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "label": "Sent On"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-23 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Collection Notification",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

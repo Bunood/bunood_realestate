@@ -21,7 +21,8 @@
   "status",
   "invoice_section",
   "sales_invoice",
-  "invoice_status"
+  "invoice_status",
+  "late_fee_charge"
  ],
  "fields": [
   {
@@ -134,6 +135,15 @@
    "fieldname": "invoice_status",
    "fieldtype": "Data",
    "label": "Invoice Status",
+   "read_only": 1
+  },
+  {
+   "description": "The late-fee Charge raised for this overdue period (idempotency key — a period is charged at most once).",
+   "fieldname": "late_fee_charge",
+   "fieldtype": "Link",
+   "label": "Late Fee Charge",
+   "options": "Charge",
+   "no_copy": 1,
    "read_only": 1
   }
  ],

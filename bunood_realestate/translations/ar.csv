@@ -350,3 +350,27 @@ In Progress,قيد التنفيذ
 On Hold,قيد الانتظار
 Resolved,تم الحل
 Done,منجز
+Rent Collections,مستحقات التحصيل
+Collection Notification,تذكير تحصيل
+Late Fees & Collections,الغرامات والتحصيل
+Enable Automatic Late Fees,تفعيل غرامات التأخير التلقائية
+Late Fee Charge Type,نوع مطالبة الغرامة
+Grace Days,أيام السماح
+Late Fee Type,نوع الغرامة
+Late Fee Value,قيمة الغرامة
+Late Fee Cap,الحد الأقصى للغرامة
+Percentage of Overdue,نسبة من المتأخر
+Fixed Amount,مبلغ ثابت
+Late Fee Charge,مطالبة الغرامة
+Channel,القناة
+Outstanding Amount,المبلغ المستحق
+Sent On,تاريخ الإرسال
+Message,الرسالة
+WhatsApp,واتساب
+SMS,رسالة نصية
+Email,بريد إلكتروني
+Outstanding,المستحق
+Days Overdue,أيام التأخر
+Post Late Fees,ترحيل غرامات التأخير
+WhatsApp Dues,تذكير واتساب بالمستحقات
+Collections,التحصيل

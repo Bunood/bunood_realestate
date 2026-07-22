@@ -7,6 +7,7 @@ import unittest
 
 from bunood_realestate.real_estate.doctype.lease_contract.lease_contract import ZATCA_VAT_RE
 from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import build_periods
+from bunood_realestate.real_estate.collections import compute_late_fee
 from bunood_realestate.real_estate.management import compute_owner_payout
 from bunood_realestate.real_estate.tasks import split_amount
 
@@ -73,6 +74,21 @@ class TestOwnerPayout(unittest.TestCase):
 
 	def test_zero_fee_all_to_owner(self):
 		self.assertEqual(compute_owner_payout(10000, 0)["owner_payout"], 10000)
+
+
+class TestLateFee(unittest.TestCase):
+	def test_percentage(self):
+		self.assertEqual(compute_late_fee(1000, "Percentage of Overdue", 2, 0), 20.0)
+
+	def test_fixed(self):
+		self.assertEqual(compute_late_fee(1000, "Fixed Amount", 50, 0), 50.0)
+
+	def test_cap_applies(self):
+		self.assertEqual(compute_late_fee(1000, "Percentage of Overdue", 5, 30), 30.0)
+
+	def test_zero_when_not_overdue_or_no_value(self):
+		self.assertEqual(compute_late_fee(0, "Percentage of Overdue", 5, 0), 0.0)
+		self.assertEqual(compute_late_fee(1000, "Percentage of Overdue", 0, 0), 0.0)
 
 
 class TestZatcaVatRegex(unittest.TestCase):

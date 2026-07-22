@@ -125,6 +125,28 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Rent Collections",
+   "link_count": 0,
+   "link_to": "Rent Collections",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Collection Notification",
+   "link_count": 0,
+   "link_to": "Collection Notification",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Maintenance",

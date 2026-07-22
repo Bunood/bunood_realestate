@@ -47,6 +47,9 @@ scheduler_events = {
         "bunood_realestate.real_estate.tasks.generate_due_rent_invoices",
         # Master-lease: turn due head-lease rows into Purchase Invoices to the owner.
         "bunood_realestate.real_estate.head_lease.generate_due_head_lease_bills",
+        # Collections: charge a late fee on overdue, still-unpaid rent invoices
+        # (no-op unless enabled in Real Estate Settings).
+        "bunood_realestate.real_estate.collections.apply_late_fees",
     ],
 }
 

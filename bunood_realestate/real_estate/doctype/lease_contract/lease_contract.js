@@ -63,6 +63,42 @@ frappe.ui.form.on("Lease Contract", {
 					__("Lifecycle")
 				);
 			}
+
+			frm.add_custom_button(
+				__("WhatsApp Dues"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.real_estate.collections.dues_whatsapp_link",
+						args: { lease_contract: frm.doc.name },
+						freeze: true,
+						callback: (r) => {
+							if (r.message && r.message.link) {
+								window.open(r.message.link, "_blank");
+							}
+						},
+					});
+				},
+				__("Collections")
+			);
+
+			frm.add_custom_button(
+				__("Post Late Fees"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.real_estate.collections.run_late_fees_now",
+						args: { lease_contract: frm.doc.name },
+						freeze: true,
+						freeze_message: __("Posting late fees..."),
+						callback: (r) => {
+							frappe.show_alert({
+								message: __("Charged {0} late fee(s)", [r.message || 0]),
+								indicator: (r.message || 0) ? "green" : "orange",
+							});
+						},
+					});
+				},
+				__("Collections")
+			);
 		}
 	},
 });

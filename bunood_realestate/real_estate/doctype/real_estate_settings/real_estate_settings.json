@@ -21,7 +21,15 @@
   "residential_tax_template",
   "invoicing_section",
   "auto_submit_invoices",
-  "invoice_lead_days"
+  "invoice_lead_days",
+  "late_fees_section",
+  "enable_late_fees",
+  "late_fee_charge_type",
+  "late_fee_grace_days",
+  "column_break_lf",
+  "late_fee_type",
+  "late_fee_value",
+  "late_fee_cap"
  ],
  "fields": [
   {
@@ -132,6 +140,61 @@
    "fieldname": "invoice_lead_days",
    "fieldtype": "Int",
    "label": "Invoice Lead Days"
+  },
+  {
+   "fieldname": "late_fees_section",
+   "fieldtype": "Section Break",
+   "label": "Late Fees & Collections"
+  },
+  {
+   "default": "0",
+   "description": "When on, a daily job charges a late fee on overdue rent invoices (posted via the Charge engine).",
+   "fieldname": "enable_late_fees",
+   "fieldtype": "Check",
+   "label": "Enable Automatic Late Fees"
+  },
+  {
+   "depends_on": "enable_late_fees",
+   "description": "Charge Type used to post the late fee (its Item + tax settings apply).",
+   "fieldname": "late_fee_charge_type",
+   "fieldtype": "Link",
+   "label": "Late Fee Charge Type",
+   "options": "Charge Type"
+  },
+  {
+   "default": "0",
+   "depends_on": "enable_late_fees",
+   "description": "Days after the due date before a late fee applies.",
+   "fieldname": "late_fee_grace_days",
+   "fieldtype": "Int",
+   "label": "Grace Days"
+  },
+  {
+   "fieldname": "column_break_lf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Percentage of Overdue",
+   "depends_on": "enable_late_fees",
+   "fieldname": "late_fee_type",
+   "fieldtype": "Select",
+   "label": "Late Fee Type",
+   "options": "Percentage of Overdue\nFixed Amount"
+  },
+  {
+   "depends_on": "enable_late_fees",
+   "description": "A percentage (e.g. 2 = 2% of the overdue amount) or a fixed amount, per the type.",
+   "fieldname": "late_fee_value",
+   "fieldtype": "Float",
+   "label": "Late Fee Value"
+  },
+  {
+   "default": "0",
+   "depends_on": "enable_late_fees",
+   "description": "Maximum late fee per period (0 = no cap).",
+   "fieldname": "late_fee_cap",
+   "fieldtype": "Currency",
+   "label": "Late Fee Cap"
   }
  ],
  "index_web_pages_for_search": 1,
