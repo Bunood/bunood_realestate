@@ -109,13 +109,21 @@ class LeaseContract(Document):
 		self._cancel_fee_charges()
 
 	def _raise_fee_charges(self):
-		"""One-time fee fields -> pending Charges (decoupled from accounting)."""
+		"""One-time fee fields -> pending Charges (decoupled from accounting). Uses the
+		internal _apply (the submitter may lack Charge-create rights) and tags each charge
+		with the correct VAT template (residential exempt / commercial 15%)."""
 		from bunood_realestate.core import charge
 
+		settings = frappe.get_single("Real Estate Settings")
+		tax_template = (
+			settings.commercial_tax_template
+			if self.contract_type == "Commercial"
+			else settings.residential_tax_template
+		)
 		for field, ctype in FEE_CHARGES.items():
 			amt = flt(self.get(field))
 			if amt > 0:
-				charge.apply(
+				charge._apply(
 					charge_type=ctype,
 					party=self.customer,
 					party_type="Customer",
@@ -124,6 +132,7 @@ class LeaseContract(Document):
 					reference_doctype="Lease Contract",
 					reference_name=self.name,
 					remarks=f"{ctype} — {self.name}",
+					tax_template=tax_template,
 				)
 
 	def _cancel_fee_charges(self):
@@ -153,6 +162,20 @@ class LeaseContract(Document):
 			""",
 			self.name,
 		)
+		if not live:
+			# Also block if a posted FEE-charge invoice exists (via the Charge engine).
+			live = frappe.db.sql(
+				"""
+				SELECT si.name
+				FROM `tabCharge` c
+				JOIN `tabSales Invoice` si ON si.name = c.sales_invoice
+				WHERE c.reference_doctype = 'Lease Contract'
+				  AND c.reference_name = %s
+				  AND si.docstatus = 1
+				LIMIT 1
+				""",
+				self.name,
+			)
 		if live:
 			frappe.throw(
 				_("Cancel or credit the issued Sales Invoice(s) first, or use Terminate instead.")

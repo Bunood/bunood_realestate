@@ -292,12 +292,14 @@
    "description": "Brokerage / سعي.",
    "fieldname": "brokerage_fee",
    "fieldtype": "Currency",
-   "label": "Brokerage Fee"
+   "label": "Brokerage Fee",
+   "no_copy": 1
   },
   {
    "fieldname": "general_services_amount",
    "fieldtype": "Currency",
-   "label": "General Services"
+   "label": "General Services",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_fees",
@@ -306,17 +308,20 @@
   {
    "fieldname": "waste_removal_fee",
    "fieldtype": "Currency",
-   "label": "Waste Removal"
+   "label": "Waste Removal",
+   "no_copy": 1
   },
   {
    "fieldname": "engineering_supervision_fee",
    "fieldtype": "Currency",
-   "label": "Engineering Supervision"
+   "label": "Engineering Supervision",
+   "no_copy": 1
   },
   {
    "fieldname": "unit_finishing_fee",
    "fieldtype": "Currency",
-   "label": "Unit Finishing"
+   "label": "Unit Finishing",
+   "no_copy": 1
   },
   {
    "fieldname": "guarantor_section",

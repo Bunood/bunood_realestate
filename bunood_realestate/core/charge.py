@@ -4,15 +4,16 @@
 
 Event-driven, decoupled from accounting:
 
-    <something happens>  ->  charge.apply(...)  ->  Charge (Pending)
-                                                      |
-                                   charge.post_reference_charges(...) / post
-                                                      v
-                                          ERPNext Sales Invoice (accounting)
+    <event>  ->  _apply(...)  ->  Charge (Pending)
+                                    |
+                     post_reference_charges(...)
+                                    v
+                        ERPNext Sales Invoice (accounting)
 
 A Charge is a neutral money obligation. Today it becomes a Sales Invoice; tomorrow
-the same Charge could become a receipt, a Journal Entry, or a notification — without
-changing the caller. We NEVER post GL ourselves; ERPNext does.
+the same Charge could become a receipt / Journal Entry / notification. We NEVER post
+GL ourselves; ERPNext does. The Charge carries its own tax_template so the CALLER
+(which knows residential vs commercial) sets VAT correctly — the engine just applies it.
 """
 
 import frappe
@@ -31,9 +32,30 @@ def apply(
 	reference_name=None,
 	posting_date=None,
 	remarks=None,
+	tax_template=None,
 ):
-	"""Raise a Charge (status Pending). Returns the Charge name.
-	`amount` defaults to the Charge Type's default_rate."""
+	"""Public API — enforces Charge-create permission, then raises the Charge."""
+	frappe.has_permission("Charge", "create", throw=True)
+	return _apply(
+		charge_type, party, party_type, amount, company,
+		reference_doctype, reference_name, posting_date, remarks, tax_template,
+	)
+
+
+def _apply(
+	charge_type,
+	party,
+	party_type="Customer",
+	amount=None,
+	company=None,
+	reference_doctype=None,
+	reference_name=None,
+	posting_date=None,
+	remarks=None,
+	tax_template=None,
+):
+	"""Internal — raise a Charge (Pending). Called from trusted server hooks that run as
+	a user who may lack direct Charge-create rights, so it does NOT check permissions."""
 	ct = frappe.get_cached_doc("Charge Type", charge_type)
 	if not ct.is_active:
 		frappe.throw(_("Charge Type {0} is not active.").format(charge_type))
@@ -54,6 +76,7 @@ def apply(
 			"reference_doctype": reference_doctype,
 			"reference_name": reference_name,
 			"remarks": remarks,
+			"tax_template": tax_template,
 			"status": "Pending",
 		}
 	)
@@ -63,8 +86,9 @@ def apply(
 
 @frappe.whitelist()
 def post_reference_charges(reference_doctype, reference_name, posting_date=None):
-	"""Accounting bridge: turn all Pending charges of a source document into submitted
-	Sales Invoice(s) — one per (party_type, party, company). Idempotent per charge."""
+	"""Turn Pending charges of a source document into submitted Sales Invoice(s) —
+	one per (party_type, party, company). Requires Sales-Invoice submit rights."""
+	frappe.has_permission("Sales Invoice", "submit", throw=True)
 	rows = frappe.get_all(
 		"Charge",
 		filters={
@@ -87,16 +111,23 @@ def post_reference_charges(reference_doctype, reference_name, posting_date=None)
 
 
 def _post_charges(party_type, party, company, charge_names, posting_date=None):
-	charges = [frappe.get_doc("Charge", n) for n in charge_names]
-	charges = [c for c in charges if c.status == "Pending"]
-	if not charges:
+	# Row lock + re-validate so concurrent posters serialize (no double-invoicing).
+	locked = frappe.db.get_values(
+		"Charge", {"name": ["in", charge_names], "status": "Pending"}, "name", for_update=True
+	)
+	pending = [r[0] for r in locked]
+	if not pending:
 		return None
 	if party_type != "Customer":
 		frappe.throw(_("Only Customer charges can be posted to a Sales Invoice for now."))
+	charges = [frappe.get_doc("Charge", n) for n in pending]
 
 	si = frappe.new_doc("Sales Invoice")
 	si.customer = party
 	si.company = company
+	# Pin to company currency — Charge.amount is company-denominated.
+	si.currency = frappe.get_cached_value("Company", company, "default_currency")
+	si.conversion_rate = 1
 	si.set_posting_time = 1
 	si.posting_date = posting_date or nowdate()
 
@@ -111,6 +142,16 @@ def _post_charges(party_type, party, company, charge_names, posting_date=None):
 		row.qty = 1
 		row.rate = flt(c.amount)
 		row.description = c.remarks or c.charge_type
+
+	# VAT: apply the tax template the CALLER attached to the charges (residential exempt /
+	# commercial 15%). Without it, a taxable charge would post a non-compliant 0-VAT invoice.
+	template = next((c.tax_template for c in charges if c.tax_template), None)
+	if template:
+		from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+		si.taxes_and_charges = template
+		for tax in get_taxes_and_charges("Sales Taxes and Charges Template", template):
+			si.append("taxes", tax)
 
 	si.flags.ignore_permissions = True
 	si.insert()

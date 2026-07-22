@@ -9,19 +9,30 @@ WhatsApp. That is value Frappe's raw APIs don't give in one call — unlike wrap
 import frappe
 
 
+def _as_list(value):
+	if not value:
+		return []
+	if isinstance(value, str):
+		return [v.strip() for v in value.split(",") if v.strip()]
+	return list(value)
+
+
 @frappe.whitelist()
-def notify(recipients, subject=None, message=None, channels=None,
-           reference_doctype=None, reference_name=None):
-	"""Send `message` to `recipients` over one or more channels.
+def notify(recipients=None, subject=None, message=None, channels=None,
+           mobiles=None, reference_doctype=None, reference_name=None):
+	"""Send `message` over one or more channels.
+	- email  -> `recipients` (email addresses)
+	- sms    -> `mobiles` (phone numbers; falls back to `recipients` only if given as phones)
+	- whatsapp -> `mobiles`
 	channels: list/tuple from {"email","sms","whatsapp"} (default ["email"])."""
-	if isinstance(recipients, str):
-		recipients = [r.strip() for r in recipients.split(",") if r.strip()]
+	recipients = _as_list(recipients)
+	mobiles = _as_list(mobiles)
 	channels = channels or ["email"]
 	if isinstance(channels, str):
 		channels = [channels]
 	sent = []
 
-	if "email" in channels:
+	if "email" in channels and recipients:
 		frappe.sendmail(
 			recipients=recipients,
 			subject=subject or "",
@@ -31,16 +42,16 @@ def notify(recipients, subject=None, message=None, channels=None,
 		)
 		sent.append("email")
 
-	if "sms" in channels:
+	if "sms" in channels and mobiles:
 		try:
 			from frappe.core.doctype.sms_settings.sms_settings import send_sms
 
-			send_sms(recipients, message or "")
+			send_sms(mobiles, message or "")
 			sent.append("sms")
 		except Exception:
 			frappe.log_error(title="Bunood notify: SMS failed", message=frappe.get_traceback())
 
-	if "whatsapp" in channels:
+	if "whatsapp" in channels and mobiles:
 		# Pluggable: wire a WhatsApp provider here (own hook / app). Logged for now.
 		frappe.logger("bunood").info("WhatsApp channel requested but not configured")
 
