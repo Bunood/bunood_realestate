@@ -1,0 +1,44 @@
+[
+ {
+  "doctype": "RE Management Model",
+  "name": "ملك",
+  "title": "ملك",
+  "is_active": 1,
+  "behavior": "owned"
+ },
+ {
+  "doctype": "RE Management Model",
+  "name": "إدارة أملاك",
+  "title": "إدارة أملاك",
+  "is_active": 1,
+  "behavior": "managed"
+ },
+ {
+  "doctype": "RE Management Model",
+  "name": "استثماري",
+  "title": "استثماري",
+  "is_active": 1,
+  "behavior": "master_lease"
+ },
+ {
+  "doctype": "RE Management Model",
+  "name": "تشغيل",
+  "title": "تشغيل",
+  "is_active": 1,
+  "behavior": "operation"
+ },
+ {
+  "doctype": "RE Management Model",
+  "name": "تحصيل إيجارات",
+  "title": "تحصيل إيجارات",
+  "is_active": 1,
+  "behavior": "collection"
+ },
+ {
+  "doctype": "RE Management Model",
+  "name": "صيانة فقط",
+  "title": "صيانة فقط",
+  "is_active": 1,
+  "behavior": "maintenance"
+ }
+]

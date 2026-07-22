@@ -1,0 +1,50 @@
+[
+ {
+  "doctype": "RE Property Type",
+  "name": "عمارة",
+  "title": "عمارة",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "فيلا",
+  "title": "فيلا",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "برج",
+  "title": "برج",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "مجمع",
+  "title": "مجمع",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "مبنى مكاتب",
+  "title": "مبنى مكاتب",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "مول",
+  "title": "مول",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "مستودع",
+  "title": "مستودع",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Property Type",
+  "name": "أرض",
+  "title": "أرض",
+  "is_active": 1
+ }
+]

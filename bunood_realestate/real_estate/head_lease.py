@@ -22,8 +22,9 @@ from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import bu
 def generate_for_property(prop):
 	"""Build the head-lease payment schedule from the property's head-lease terms. Idempotent."""
 	p = frappe.get_doc("Property", prop) if isinstance(prop, str) else prop
-	if p.operation_type != "Master Lease":
-		frappe.throw(_("A head-lease schedule applies only to Master Lease properties."))
+	behavior = frappe.db.get_value("RE Management Model", p.management_model, "behavior") if p.management_model else None
+	if behavior != "master_lease":
+		frappe.throw(_("A head-lease schedule applies only to Master-Lease (استثماري) properties."))
 	if not (
 		p.head_landlord_party
 		and flt(p.head_lease_annual_rent)

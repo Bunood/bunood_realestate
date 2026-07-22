@@ -13,6 +13,8 @@
   "company",
   "contract_type",
   "contract_subtype",
+  "contract_kind",
+  "revenue_model",
   "column_break_cd",
   "start_date",
   "end_date",
@@ -150,6 +152,21 @@
    "fieldtype": "Select",
    "label": "Contract Subtype",
    "options": "New\nRenewal\nTransfer"
+  },
+  {
+   "fieldname": "contract_kind",
+   "fieldtype": "Link",
+   "options": "RE Contract Kind",
+   "label": "Contract Kind",
+   "in_standard_filter": 1,
+   "description": "Lease / Management / Operation / Investment…"
+  },
+  {
+   "fieldname": "revenue_model",
+   "fieldtype": "Link",
+   "options": "RE Revenue Model",
+   "label": "Revenue Model",
+   "in_standard_filter": 1
   },
   {
    "fieldname": "column_break_cd",

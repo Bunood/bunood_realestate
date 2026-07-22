@@ -1,0 +1,44 @@
+[
+ {
+  "doctype": "RE Business Type",
+  "name": "سكني",
+  "title": "سكني",
+  "is_active": 1,
+  "vat_treatment": "Exempt"
+ },
+ {
+  "doctype": "RE Business Type",
+  "name": "تجاري",
+  "title": "تجاري",
+  "is_active": 1,
+  "vat_treatment": "Standard"
+ },
+ {
+  "doctype": "RE Business Type",
+  "name": "مختلط",
+  "title": "مختلط",
+  "is_active": 1,
+  "vat_treatment": "Standard"
+ },
+ {
+  "doctype": "RE Business Type",
+  "name": "ضيافة",
+  "title": "ضيافة",
+  "is_active": 1,
+  "vat_treatment": "Standard"
+ },
+ {
+  "doctype": "RE Business Type",
+  "name": "صناعي",
+  "title": "صناعي",
+  "is_active": 1,
+  "vat_treatment": "Standard"
+ },
+ {
+  "doctype": "RE Business Type",
+  "name": "زراعي",
+  "title": "زراعي",
+  "is_active": 1,
+  "vat_treatment": "Exempt"
+ }
+]

@@ -1,0 +1,58 @@
+[
+ {
+  "doctype": "RE Revenue Model",
+  "name": "إيجار ثابت",
+  "title": "إيجار ثابت",
+  "is_active": 1,
+  "behavior": "fixed"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "إيجار متغير",
+  "title": "إيجار متغير",
+  "is_active": 1,
+  "behavior": "variable"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "نسبة من المبيعات",
+  "title": "نسبة من المبيعات",
+  "is_active": 1,
+  "behavior": "pct_sales"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "رسوم إدارة",
+  "title": "رسوم إدارة",
+  "is_active": 1,
+  "behavior": "fee"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "عمولة",
+  "title": "عمولة",
+  "is_active": 1,
+  "behavior": "commission"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "مشاركة أرباح",
+  "title": "مشاركة أرباح",
+  "is_active": 1,
+  "behavior": "profit_share"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "بيع",
+  "title": "بيع",
+  "is_active": 1,
+  "behavior": "sale"
+ },
+ {
+  "doctype": "RE Revenue Model",
+  "name": "حق انتفاع",
+  "title": "حق انتفاع",
+  "is_active": 1,
+  "behavior": "usufruct"
+ }
+]

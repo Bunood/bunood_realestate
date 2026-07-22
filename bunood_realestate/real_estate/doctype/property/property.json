@@ -9,11 +9,15 @@
   "property_name",
   "code",
   "company",
+  "business_type",
   "property_type",
+  "ownership_type",
+  "vat_treatment",
   "residential_subtype",
   "status",
   "column_break_main",
-  "operation_type",
+  "management_model",
+  "management_behavior",
   "management_fee_percentage",
   "owner_name",
   "deed_number",
@@ -69,18 +73,7 @@
    "reqd": 1
   },
   {
-   "default": "Residential",
-   "description": "Drives VAT: Residential is exempt, Commercial is 15%, Mixed decides per unit type.",
-   "fieldname": "property_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Property Type",
-   "options": "Residential\nCommercial\nMixed",
-   "reqd": 1
-  },
-  {
-   "depends_on": "eval:['Residential','Mixed'].includes(doc.property_type)",
+   "depends_on": "eval:doc.vat_treatment=='Exempt'",
    "fieldname": "residential_subtype",
    "fieldtype": "Select",
    "label": "Residential Subtype",
@@ -100,15 +93,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Investment",
-   "description": "Investment = owned, keep all revenue. Management = manage for owner, take a fee %. Master Lease = head-lease the building then sublease (profit = spread).",
-   "fieldname": "operation_type",
-   "fieldtype": "Select",
-   "label": "Operation Type",
-   "options": "Investment\nManagement\nMaster Lease"
-  },
-  {
-   "depends_on": "eval:doc.operation_type=='Management'",
+   "depends_on": "eval:doc.management_behavior=='managed'",
    "fieldname": "management_fee_percentage",
    "fieldtype": "Percent",
    "label": "Management Fee %"
@@ -216,7 +201,7 @@
    "fieldtype": "Section Break",
    "label": "Head Lease (Master Lease)",
    "collapsible": 1,
-   "depends_on": "eval:doc.operation_type=='Master Lease'"
+   "depends_on": "eval:doc.management_behavior=='master_lease'"
   },
   {
    "fieldname": "head_landlord_party",
@@ -275,6 +260,55 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "business_type",
+   "fieldtype": "Link",
+   "options": "RE Business Type",
+   "label": "Business Type",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Drives VAT (residential exempt / commercial 15%) via its VAT Treatment."
+  },
+  {
+   "fieldname": "property_type",
+   "fieldtype": "Link",
+   "options": "RE Property Type",
+   "label": "Property Type",
+   "in_standard_filter": 1,
+   "description": "Physical type (apartment building / villa / tower…)."
+  },
+  {
+   "fieldname": "ownership_type",
+   "fieldtype": "Link",
+   "options": "RE Ownership Type",
+   "label": "Ownership Type",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "vat_treatment",
+   "fieldtype": "Data",
+   "label": "VAT Treatment",
+   "fetch_from": "business_type.vat_treatment",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "management_model",
+   "fieldtype": "Link",
+   "options": "RE Management Model",
+   "label": "Management Model",
+   "in_standard_filter": 1,
+   "description": "How the property is operated (owned / managed / master-lease…)."
+  },
+  {
+   "fieldname": "management_behavior",
+   "fieldtype": "Data",
+   "label": "Management Behavior",
+   "fetch_from": "management_model.behavior",
+   "read_only": 1,
+   "hidden": 1
   }
  ],
  "links": [

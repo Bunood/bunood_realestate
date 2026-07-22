@@ -11,7 +11,7 @@ frappe.ui.form.on("Property", {
 			__("Units")
 		);
 
-		if (frm.doc.operation_type === "Master Lease") {
+		if (frm.doc.management_behavior === "master_lease") {
 			frm.add_custom_button(
 				__("Generate Head-Lease Schedule"),
 				() => {

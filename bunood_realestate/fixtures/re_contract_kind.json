@@ -1,0 +1,58 @@
+[
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد إيجار",
+  "title": "عقد إيجار",
+  "is_active": 1,
+  "behavior": "lease"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد إدارة أملاك",
+  "title": "عقد إدارة أملاك",
+  "is_active": 1,
+  "behavior": "management"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد تشغيل",
+  "title": "عقد تشغيل",
+  "is_active": 1,
+  "behavior": "operation"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد استثمار",
+  "title": "عقد استثمار",
+  "is_active": 1,
+  "behavior": "investment"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد وساطة",
+  "title": "عقد وساطة",
+  "is_active": 1,
+  "behavior": "brokerage"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد صيانة",
+  "title": "عقد صيانة",
+  "is_active": 1,
+  "behavior": "maintenance"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد تسويق",
+  "title": "عقد تسويق",
+  "is_active": 1,
+  "behavior": "marketing"
+ },
+ {
+  "doctype": "RE Contract Kind",
+  "name": "عقد اتحاد ملاك",
+  "title": "عقد اتحاد ملاك",
+  "is_active": 1,
+  "behavior": "association"
+ }
+]

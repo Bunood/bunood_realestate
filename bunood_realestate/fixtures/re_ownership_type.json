@@ -1,0 +1,62 @@
+[
+ {
+  "doctype": "RE Ownership Type",
+  "name": "ملك خاص",
+  "title": "ملك خاص",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "ملك مشترك",
+  "title": "ملك مشترك",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "شركة",
+  "title": "شركة",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "وقف",
+  "title": "وقف",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "حكومي",
+  "title": "حكومي",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "بلدية",
+  "title": "بلدية",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "جمعية",
+  "title": "جمعية",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "صندوق REIT",
+  "title": "صندوق REIT",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "مؤجّر من الغير",
+  "title": "مؤجّر من الغير",
+  "is_active": 1
+ },
+ {
+  "doctype": "RE Ownership Type",
+  "name": "حق انتفاع",
+  "title": "حق انتفاع",
+  "is_active": 1
+ }
+]

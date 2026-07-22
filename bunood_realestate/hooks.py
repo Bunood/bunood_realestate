@@ -23,6 +23,15 @@ fixtures = [
     {"dt": "Accounting Dimension", "filters": [["document_type", "in", ["Property", "Real Estate Unit"]]]},
     # Bunood Core: seed default Charge Types (Broker/Cleaning/… ) for the Charge engine.
     "Charge Type",
+    # Master data (user-editable taxonomy) — seeded with common Saudi values.
+    # Behavior-driving ones (Management Model / Revenue Model / Contract Kind) carry a
+    # `behavior` engine-key that the code handles; new rows pick a known key.
+    "RE Property Type",
+    "RE Ownership Type",
+    "RE Business Type",
+    "RE Management Model",
+    "RE Revenue Model",
+    "RE Contract Kind",
     # Phase 2+: Custom Fields (e.g. Lease/Property/Unit links on Sales Invoice) export here too.
     # {"dt": "Custom Field", "filters": [["module", "=", "Real Estate"]]},
 ]
