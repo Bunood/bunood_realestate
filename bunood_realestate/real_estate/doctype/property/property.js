@@ -10,6 +10,44 @@ frappe.ui.form.on("Property", {
 			() => open_bulk_units_dialog(frm),
 			__("Units")
 		);
+
+		if (frm.doc.operation_type === "Master Lease") {
+			frm.add_custom_button(
+				__("Generate Head-Lease Schedule"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.real_estate.head_lease.generate_now",
+						args: { property: frm.doc.name },
+						freeze: true,
+						callback: (r) => {
+							frappe.show_alert({
+								message: __("Created {0} period(s)", [r.message || 0]),
+								indicator: "green",
+							});
+						},
+					});
+				},
+				__("Head Lease")
+			);
+			frm.add_custom_button(
+				__("Post Due Head-Lease Bills"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.real_estate.head_lease.post_due_bills",
+						args: { property: frm.doc.name },
+						freeze: true,
+						freeze_message: __("Posting bills..."),
+						callback: (r) => {
+							frappe.show_alert({
+								message: __("Created {0} purchase invoice(s)", [r.message || 0]),
+								indicator: "green",
+							});
+						},
+					});
+				},
+				__("Head Lease")
+			);
+		}
 	},
 });
 

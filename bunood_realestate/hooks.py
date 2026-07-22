@@ -35,6 +35,8 @@ scheduler_events = {
     "daily": [
         # Turn due Planned Rent Schedule rows into submitted accrual Sales Invoices.
         "bunood_realestate.real_estate.tasks.generate_due_rent_invoices",
+        # Master-lease: turn due head-lease rows into Purchase Invoices to the owner.
+        "bunood_realestate.real_estate.head_lease.generate_due_head_lease_bills",
     ],
 }
 

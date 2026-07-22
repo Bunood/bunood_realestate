@@ -14,6 +14,7 @@
   "tenant_deposit_account",
   "items_section",
   "default_rent_item",
+  "head_lease_item",
   "tax_section",
   "commercial_tax_template",
   "residential_tax_template",
@@ -77,6 +78,13 @@
    "fieldtype": "Link",
    "label": "Default Rent Item",
    "options": "Item"
+  },
+  {
+   "fieldname": "head_lease_item",
+   "fieldtype": "Link",
+   "label": "Head-Lease Item (Master Lease expense)",
+   "options": "Item",
+   "description": "Service item for head-lease rent paid to the original owner (Master Lease)."
   },
   {
    "description": "Saudi ZATCA rule: residential rent is VAT-EXEMPT (0%), commercial rent is 15%. The Lease Contract picks the template from its contract_type.",

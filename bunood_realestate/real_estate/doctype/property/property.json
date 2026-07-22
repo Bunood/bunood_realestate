@@ -282,6 +282,11 @@
    "group": "Units",
    "link_doctype": "Real Estate Unit",
    "link_fieldname": "property"
+  },
+  {
+   "group": "Head Lease",
+   "link_doctype": "Head Lease Schedule",
+   "link_fieldname": "property"
   }
  ],
  "modified": "2026-07-20 00:00:00",
