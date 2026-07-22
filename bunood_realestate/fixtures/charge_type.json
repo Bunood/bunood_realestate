@@ -4,7 +4,6 @@
  {"doctype": "Charge Type", "name": "Waste Removal", "charge_type_name": "Waste Removal", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
  {"doctype": "Charge Type", "name": "Engineering Supervision", "charge_type_name": "Engineering Supervision", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
  {"doctype": "Charge Type", "name": "Unit Finishing", "charge_type_name": "Unit Finishing", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
- {"doctype": "Charge Type", "name": "Management Fee", "charge_type_name": "Management Fee", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
  {"doctype": "Charge Type", "name": "Registration Fee", "charge_type_name": "Registration Fee", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
  {"doctype": "Charge Type", "name": "Insurance Fee", "charge_type_name": "Insurance Fee", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
  {"doctype": "Charge Type", "name": "Cleaning Fee", "charge_type_name": "Cleaning Fee", "charge_kind": "Fee", "taxable": 1, "is_active": 1},
