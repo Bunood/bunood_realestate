@@ -1,0 +1,125 @@
+{
+ "actions": [],
+ "autoname": "field:charge_type_name",
+ "creation": "2026-07-21 00:00:00",
+ "description": "A reusable kind of charge (Management/Registration/Insurance/…). Any module applies it via bunood_core.charge.apply(). Carries an ERPNext service Item (income account + tax).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "charge_type_name",
+  "charge_kind",
+  "item",
+  "column_break_1",
+  "default_rate",
+  "taxable",
+  "is_active",
+  "rule_section",
+  "condition",
+  "rate_formula",
+  "description"
+ ],
+ "fields": [
+  {
+   "fieldname": "charge_type_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Charge Type",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "Fee",
+   "fieldname": "charge_kind",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Kind",
+   "options": "Fee\nUtility\nPenalty\nDiscount\nDeposit\nOther"
+  },
+  {
+   "description": "ERPNext service Item carrying the income account + item tax template. Required to post a charge to an invoice.",
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "label": "Service Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_rate",
+   "fieldtype": "Currency",
+   "label": "Default Amount"
+  },
+  {
+   "default": "1",
+   "fieldname": "taxable",
+   "fieldtype": "Check",
+   "label": "Taxable (VAT)"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active"
+  },
+  {
+   "collapsible": 1,
+   "description": "Reserved for a future Formula/Rule engine — NOT evaluated yet. Design-for-later, not built.",
+   "fieldname": "rule_section",
+   "fieldtype": "Section Break",
+   "label": "Rule (future Formula Engine)"
+  },
+  {
+   "description": "e.g. contract_type=='Commercial'. Placeholder for the future Rules engine.",
+   "fieldname": "condition",
+   "fieldtype": "Small Text",
+   "label": "Condition (future)"
+  },
+  {
+   "description": "e.g. area * price. Placeholder for the future Formula engine.",
+   "fieldname": "rate_formula",
+   "fieldtype": "Small Text",
+   "label": "Rate Formula (future)"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-21 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Bunood Core",
+ "name": "Charge Type",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

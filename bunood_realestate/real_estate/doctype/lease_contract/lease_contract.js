@@ -25,6 +25,28 @@ frappe.ui.form.on("Lease Contract", {
 				__("Rent")
 			);
 
+			frm.add_custom_button(
+				__("Post Fee Charges"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.core.charge.post_reference_charges",
+						args: { reference_doctype: "Lease Contract", reference_name: frm.doc.name },
+						freeze: true,
+						freeze_message: __("Posting fee charges..."),
+						callback: (r) => {
+							const inv = r.message || [];
+							frappe.show_alert({
+								message: inv.length
+									? __("Created invoice(s): {0}", [inv.join(", ")])
+									: __("No pending fee charges"),
+								indicator: inv.length ? "green" : "orange",
+							});
+						},
+					});
+				},
+				__("Rent")
+			);
+
 			if (!frm.doc.deposit_received) {
 				frm.add_custom_button(__("Record Deposit"), () => deposit_dialog(frm, "receive"), __("Deposit"));
 			} else if (flt(frm.doc.deposit_refunded) < flt(frm.doc.deposit_received)) {

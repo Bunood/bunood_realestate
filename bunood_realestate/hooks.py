@@ -21,6 +21,8 @@ fixtures = [
     # ledgers with zero parallel bookkeeping. Installed on migrate; the dimension's
     # after_insert builds the custom fields across ERPNext transaction doctypes (one-time).
     {"dt": "Accounting Dimension", "filters": [["document_type", "in", ["Property", "Real Estate Unit"]]]},
+    # Bunood Core: seed default Charge Types (Broker/Cleaning/… ) for the Charge engine.
+    "Charge Type",
     # Phase 2+: Custom Fields (e.g. Lease/Property/Unit links on Sales Invoice) export here too.
     # {"dt": "Custom Field", "filters": [["module", "=", "Real Estate"]]},
 ]

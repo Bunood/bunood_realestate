@@ -11,6 +11,17 @@ from frappe.utils import add_days, add_months, date_diff, flt, getdate
 # ZATCA VAT number: 15 digits, starts and ends with 3 (bunood_core parity).
 ZATCA_VAT_RE = re.compile(r"^3\d{13}3$")
 
+# One-time fee field -> Bunood Core Charge Type. On activation each non-zero fee
+# becomes a pending Charge; the "Post Fee Charges" action turns them into a Sales
+# Invoice (event -> Charge -> ERPNext, never Contract -> Sales Invoice directly).
+FEE_CHARGES = {
+	"brokerage_fee": "Broker Fee",
+	"general_services_amount": "General Services",
+	"waste_removal_fee": "Waste Removal",
+	"engineering_supervision_fee": "Engineering Supervision",
+	"unit_finishing_fee": "Unit Finishing",
+}
+
 
 class LeaseContract(Document):
 	def validate(self):
@@ -85,6 +96,8 @@ class LeaseContract(Document):
 		# A submitted renewal marks its parent contract Renewed.
 		if self.contract_subtype == "Renewal" and self.parent_lease:
 			frappe.db.set_value("Lease Contract", self.parent_lease, "status", "Renewed")
+		# Raise one-time fees as pending Charges (Bunood Core engine).
+		self._raise_fee_charges()
 
 	def on_cancel(self):
 		from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import cancel_for_lease
@@ -93,6 +106,39 @@ class LeaseContract(Document):
 		self.db_set("status", "Cancelled")
 		self._set_units_status("Vacant", current_lease=None)
 		cancel_for_lease(self)
+		self._cancel_fee_charges()
+
+	def _raise_fee_charges(self):
+		"""One-time fee fields -> pending Charges (decoupled from accounting)."""
+		from bunood_realestate.core import charge
+
+		for field, ctype in FEE_CHARGES.items():
+			amt = flt(self.get(field))
+			if amt > 0:
+				charge.apply(
+					charge_type=ctype,
+					party=self.customer,
+					party_type="Customer",
+					amount=amt,
+					company=self.company,
+					reference_doctype="Lease Contract",
+					reference_name=self.name,
+					remarks=f"{ctype} — {self.name}",
+				)
+
+	def _cancel_fee_charges(self):
+		"""Cancel still-pending fee charges when the lease is cancelled."""
+		pending = frappe.get_all(
+			"Charge",
+			filters={
+				"reference_doctype": "Lease Contract",
+				"reference_name": self.name,
+				"status": "Pending",
+			},
+			pluck="name",
+		)
+		for name in pending:
+			frappe.db.set_value("Charge", name, "status", "Cancelled")
 
 	def _block_cancel_if_invoiced(self):
 		"""Don't orphan issued invoices: require they be cancelled/credited first, or use
