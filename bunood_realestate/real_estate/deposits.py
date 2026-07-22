@@ -15,7 +15,6 @@ from frappe.utils import flt, nowdate
 @frappe.whitelist()
 def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 	frappe.only_for(["Accounts Manager", "System Manager"])
-	lease = frappe.get_doc("Lease Contract", lease_contract)
 	settings = frappe.get_single("Real Estate Settings")
 	if not settings.tenant_deposit_account:
 		frappe.throw(_("Set the Tenant Security Deposit Account in Real Estate Settings."))
@@ -23,27 +22,41 @@ def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 	amount = flt(amount)
 	if amount <= 0:
 		frappe.throw(_("Deposit amount must be greater than zero."))
-	if lease.deposit_received:
+
+	# Serialize concurrent deposit actions on this lease, then re-read the committed
+	# state under the lock so a double-click / two operators can't both post a receipt.
+	frappe.db.get_value("Lease Contract", lease_contract, "name", for_update=True)
+	state = frappe.db.get_value(
+		"Lease Contract", lease_contract, ["company", "deposit_received"], as_dict=True
+	)
+	if not state:
+		frappe.throw(_("Lease {0} not found.").format(lease_contract))
+	if state.deposit_received:
 		frappe.throw(_("A deposit has already been recorded for this lease."))
 
 	je = _make_journal(
-		company=lease.company,
+		company=state.company,
 		posting_date=posting_date or nowdate(),
 		debit_account=paid_to_account,
 		credit_account=settings.tenant_deposit_account,
 		amount=amount,
-		remark=_("Security deposit received — Lease {0}").format(lease.name),
+		remark=_("Security deposit received — Lease {0}").format(lease_contract),
 	)
-	lease.db_set("deposit_received", amount)
-	lease.db_set("deposit_received_date", je.posting_date)
-	lease.db_set("deposit_journal_entry", je.name)
+	frappe.db.set_value(
+		"Lease Contract",
+		lease_contract,
+		{
+			"deposit_received": amount,
+			"deposit_received_date": je.posting_date,
+			"deposit_journal_entry": je.name,
+		},
+	)
 	return je.name
 
 
 @frappe.whitelist()
 def refund_deposit(lease_contract, amount, paid_from_account, posting_date=None):
 	frappe.only_for(["Accounts Manager", "System Manager"])
-	lease = frappe.get_doc("Lease Contract", lease_contract)
 	settings = frappe.get_single("Real Estate Settings")
 	if not settings.tenant_deposit_account:
 		frappe.throw(_("Set the Tenant Security Deposit Account in Real Estate Settings."))
@@ -51,19 +64,35 @@ def refund_deposit(lease_contract, amount, paid_from_account, posting_date=None)
 	amount = flt(amount)
 	if amount <= 0:
 		frappe.throw(_("Refund amount must be greater than zero."))
-	if amount > flt(lease.deposit_received) - flt(lease.deposit_refunded):
+
+	# Serialize concurrent refunds on this lease, then re-read the held balance under
+	# the lock so two refunds can't each pass a stale balance check and double-pay cash.
+	frappe.db.get_value("Lease Contract", lease_contract, "name", for_update=True)
+	state = frappe.db.get_value(
+		"Lease Contract", lease_contract, ["company", "deposit_received", "deposit_refunded"], as_dict=True
+	)
+	if not state:
+		frappe.throw(_("Lease {0} not found.").format(lease_contract))
+	held = flt(state.deposit_received) - flt(state.deposit_refunded)
+	if amount > held:
 		frappe.throw(_("Refund exceeds the held deposit balance."))
 
 	je = _make_journal(
-		company=lease.company,
+		company=state.company,
 		posting_date=posting_date or nowdate(),
 		debit_account=settings.tenant_deposit_account,
 		credit_account=paid_from_account,
 		amount=amount,
-		remark=_("Security deposit refund — Lease {0}").format(lease.name),
+		remark=_("Security deposit refund — Lease {0}").format(lease_contract),
 	)
-	lease.db_set("deposit_refunded", flt(lease.deposit_refunded) + amount)
-	lease.db_set("deposit_refund_journal_entry", je.name)
+	frappe.db.set_value(
+		"Lease Contract",
+		lease_contract,
+		{
+			"deposit_refunded": flt(state.deposit_refunded) + amount,
+			"deposit_refund_journal_entry": je.name,
+		},
+	)
 	return je.name
 
 

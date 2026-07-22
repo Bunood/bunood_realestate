@@ -136,11 +136,16 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 	si.property = lease.property
 
 	# VAT by contract type: commercial 15% / residential exempt (Saudi ZATCA rule).
-	template = (
-		settings.commercial_tax_template
-		if lease.contract_type == "Commercial"
-		else settings.residential_tax_template
-	)
+	# A Commercial lease MUST carry a tax template — otherwise we'd silently issue a
+	# 0-VAT (ZATCA-non-compliant) invoice. Residential is legitimately exempt/untaxed.
+	if lease.contract_type == "Commercial":
+		template = settings.commercial_tax_template
+		if not template:
+			frappe.throw(
+				_("Set a Commercial Tax Template in Real Estate Settings before invoicing a commercial lease (ZATCA requires 15% VAT).")
+			)
+	else:
+		template = settings.residential_tax_template
 	if template:
 		from erpnext.controllers.accounts_controller import get_taxes_and_charges
 

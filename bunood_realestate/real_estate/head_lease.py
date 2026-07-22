@@ -122,6 +122,11 @@ def _post_bill(schedule_name, settings=None):
 	item.qty = 1
 	item.rate = flt(row.amount)
 	item.description = _("Head-lease {0} ({1} to {2})").format(row.property, row.period_start, row.period_end)
+	# Tag the head-lease EXPENSE with the Property accounting dimension so per-property
+	# P&L nets it against the sub-lease income (which tasks.py already tags). Without this
+	# the expense lands under "unassigned" and per-property profit is overstated.
+	item.property = row.property
+	pi.property = row.property
 
 	pi.flags.ignore_permissions = True
 	pi.insert()

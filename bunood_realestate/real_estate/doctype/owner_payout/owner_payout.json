@@ -1,0 +1,168 @@
+{
+ "actions": [],
+ "autoname": "OWNPAY-.#####",
+ "creation": "2026-07-22 00:00:00",
+ "description": "One posted owner payout per property per period — the rent collected from tenants that the company owes the owner (managed / إدارة أملاك model), minus the management fee. Its (property, from_date, to_date) window is the idempotency key that stops double-paying the owner.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "property",
+  "owner_party",
+  "company",
+  "column_break_op",
+  "from_date",
+  "to_date",
+  "status",
+  "amounts_section",
+  "rent_base",
+  "fee_percentage",
+  "column_break_amt",
+  "fee_amount",
+  "owner_payout",
+  "reference_section",
+  "journal_entry"
+ ],
+ "fields": [
+  {
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Property",
+   "options": "Property",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "owner_party",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Owner (Supplier)",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_op",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "From Date",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "To Date",
+   "reqd": 1
+  },
+  {
+   "default": "Posted",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Posted\nCancelled",
+   "search_index": 1
+  },
+  {
+   "fieldname": "amounts_section",
+   "fieldtype": "Section Break",
+   "label": "Amounts"
+  },
+  {
+   "description": "Net (ex-VAT) rent collected for the property in this period.",
+   "fieldname": "rent_base",
+   "fieldtype": "Currency",
+   "label": "Rent Base",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fee_percentage",
+   "fieldtype": "Percent",
+   "label": "Management Fee %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_amt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fee_amount",
+   "fieldtype": "Currency",
+   "label": "Management Fee (company keeps)",
+   "read_only": 1
+  },
+  {
+   "description": "Amount owed to the owner (rent base minus fee).",
+   "fieldname": "owner_payout",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Owner Payout",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-22 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Owner Payout",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
