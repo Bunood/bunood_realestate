@@ -1,0 +1,10 @@
+[
+ {"doctype": "RE Maintenance Category", "title": "سباكة", "default_priority": "High"},
+ {"doctype": "RE Maintenance Category", "title": "كهرباء", "default_priority": "High"},
+ {"doctype": "RE Maintenance Category", "title": "تكييف وتبريد", "default_priority": "High"},
+ {"doctype": "RE Maintenance Category", "title": "أعطال عامة", "default_priority": "Medium"},
+ {"doctype": "RE Maintenance Category", "title": "نظافة", "default_priority": "Low"},
+ {"doctype": "RE Maintenance Category", "title": "مصاعد", "default_priority": "Urgent"},
+ {"doctype": "RE Maintenance Category", "title": "دهان وتشطيبات", "default_priority": "Low"},
+ {"doctype": "RE Maintenance Category", "title": "أمن وسلامة", "default_priority": "Urgent"}
+]

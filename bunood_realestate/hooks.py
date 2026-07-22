@@ -32,6 +32,7 @@ fixtures = [
     "RE Management Model",
     "RE Revenue Model",
     "RE Contract Kind",
+    "RE Maintenance Category",
     # Phase 2+: Custom Fields (e.g. Lease/Property/Unit links on Sales Invoice) export here too.
     # {"dt": "Custom Field", "filters": [["module", "=", "Real Estate"]]},
 ]

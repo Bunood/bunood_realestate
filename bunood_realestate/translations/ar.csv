@@ -315,3 +315,38 @@ Tenant,المستأجر
 Type,النوع
 Start,البداية
 End,النهاية
+Maintenance Request,طلب صيانة
+Maintenance Work Order,أمر عمل صيانة
+Maintenance Work Order Item,بند أمر العمل
+RE Maintenance Category,تصنيف الصيانة
+Subject,الموضوع
+Priority,الأولوية
+Category,التصنيف
+Reported On,تاريخ الإبلاغ
+Contact Phone,هاتف التواصل
+Resolution Notes,ملاحظات الحل
+Resolved On,تاريخ الحل
+Assigned To,مُسند إلى
+Assigned To (User),مُسند إلى (مستخدم)
+Contractor (Supplier),المقاول (مورّد)
+Contractor Phone,هاتف المقاول
+Work Items,بنود العمل
+Total Cost,التكلفة الإجمالية
+Scheduled Date,التاريخ المجدول
+Item / Work,البند / العمل
+Qty,الكمية
+Rate,السعر
+Default Priority,الأولوية الافتراضية
+Details,التفاصيل
+Resolution,الحل
+Assignment,الإسناد
+Work,العمل
+Low,منخفضة
+Medium,متوسطة
+High,عالية
+Urgent,عاجلة
+Assigned,مُسنَد
+In Progress,قيد التنفيذ
+On Hold,قيد الانتظار
+Resolved,تم الحل
+Done,منجز
