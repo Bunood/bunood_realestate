@@ -1,10 +1,317 @@
-Investment,ملك
-Management,إدارة أملاك
-Master Lease,استثماري
 Residential,سكني
 Commercial,تجاري
 Mixed,مختلط
-Operation Type,نوع التشغيل
 Head Lease (Master Lease),الإيجار الرئيسي (استثماري)
 Owner (Supplier),المالك (مورّد)
 Head Landlord (Supplier),المالك الأصلي (مورّد)
+Real Estate,العقارات
+Masters,البيانات الأساسية
+Leasing,التأجير
+Reports,التقارير
+Settings,الإعدادات
+Property,عقار
+Real Estate Unit,وحدة عقارية
+Lease Contract,عقد إيجار
+Rent Schedule,جدول الإيجار
+Real Estate Settings,إعدادات العقارات
+Lease Termination,إنهاء عقد الإيجار
+Owner Payout,مستحقات المالك
+Head Lease Schedule,جدول الإيجار الرئيسي
+Lease Unit,وحدة العقد
+Lease Deduction,استقطاع من الضمان
+Charge,مطالبة مالية
+Charge Type,نوع المطالبة
+RE Business Type,نوع النشاط
+RE Property Type,نوع العقار
+RE Ownership Type,نوع الملكية
+RE Management Model,نموذج الإدارة
+RE Revenue Model,نموذج الإيراد
+RE Contract Kind,صنف العقد
+Rent Roll,سجل الإيجارات
+Occupancy Summary,ملخّص الإشغال
+Basics,الأساسيات
+Operation & Owner,التشغيل والمالك
+Location,الموقع
+Owner,المالك
+Geo,الإحداثيات
+Notes,ملاحظات
+Property Name,اسم العقار
+Code,الرمز
+Business Type,نوع النشاط
+Property Type,نوع العقار
+Ownership Type,نوع الملكية
+Residential Subtype,التصنيف السكني
+Deed Number,رقم الصك
+Construction Year,سنة البناء
+Total Area (sqm),المساحة الإجمالية (م²)
+Floors Count,عدد الطوابق
+VAT Treatment,معاملة الضريبة
+Management Model,نموذج الإدارة
+Management Fee %,نسبة رسوم الإدارة %
+Head-lease Annual Rent,الإيجار السنوي للإيجار الرئيسي
+Head-lease Billing Cycle,دورة فوترة الإيجار الرئيسي
+Head-lease Start,بداية الإيجار الرئيسي
+Head-lease End,نهاية الإيجار الرئيسي
+Owner Name,اسم المالك
+Owner Phone,جوال المالك
+Owner ID Number,رقم هوية المالك
+Owner Email,بريد المالك الإلكتروني
+Owner IBAN,آيبان المالك
+Owner Nationality,جنسية المالك
+Owner Date of Birth,تاريخ ميلاد المالك
+Owner Address,عنوان المالك
+Building No,رقم المبنى
+Latitude,خط العرض
+Longitude,خط الطول
+Unit Number,رقم الوحدة
+Unit Type,نوع الوحدة
+Floor,الطابق
+Furnished,مفروشة
+Area (sqm),المساحة (م²)
+Rooms,عدد الغرف
+Bathrooms,دورات المياه
+Market Rent (Annual),إيجار السوق (سنوي)
+Deposit,التأمين
+Living Rooms,غرف المعيشة
+View,الإطلالة
+AC Units,عدد المكيفات
+Has Kitchen,يوجد مطبخ
+Balconies,الشُرَف
+Parking Spots,مواقف السيارات
+Kitchen Type,نوع المطبخ
+Unit Template,نموذج الوحدة
+Electricity Meter No,رقم عداد الكهرباء
+Water Meter No,رقم عداد المياه
+Furniture Details,تفاصيل الأثاث
+Current Lease,العقد الحالي
+Amenities,المرافق
+Utilities & Notes,الخدمات والملاحظات
+Contract,العقد
+Units & Rent,الوحدات والإيجار
+Parties,الأطراف
+Deed & Activity,الصك والنشاط
+Financials,الماليات
+Terms & Details,الشروط والتفاصيل
+Ejar / Tax,إيجار / الضريبة
+One-time Fees (optional),رسوم لمرة واحدة (اختياري)
+Billing & Deposit,الفوترة والتأمين
+Utilities (annual),الخدمات (سنوي)
+Obligations & Terms,الالتزامات والشروط
+Ejar Details,تفاصيل إيجار
+Import Existing Contract,استيراد عقد قائم
+More,المزيد
+Tenant (Customer),المستأجر (عميل)
+Contract Type,نوع العقد
+Contract Subtype,التصنيف الفرعي للعقد
+Contract Kind,صنف العقد
+Revenue Model,نموذج الإيراد
+Start Date,تاريخ البداية
+End Date,تاريخ النهاية
+Billing Cycle,دورة الفوترة
+Tenant VAT Number,الرقم الضريبي للمستأجر
+Ejar Contract No,رقم عقد إيجار
+Auto Renew,تجديد تلقائي
+Units,الوحدات
+Annual Rent Total,إجمالي الإيجار السنوي
+Deposit (Agreed),التأمين (المتفق عليه)
+Deposit Received,التأمين المستلم
+Deposit Received Date,تاريخ استلام التأمين
+Deposit Entry,قيد التأمين
+Deposit Refunded,التأمين المسترد
+Refund Entry,قيد الاسترداد
+Lessor Org Type,نوع كيان المؤجِّر
+Lessor Company,شركة المؤجِّر
+Lessor CR No,رقم السجل التجاري للمؤجِّر
+Lessor Unified No (700),الرقم الموحّد للمؤجِّر (700)
+Lessor VAT No,الرقم الضريبي للمؤجِّر
+Tenant Org Type,نوع كيان المستأجر
+Tenant Company,شركة المستأجر
+Tenant CR No,رقم السجل التجاري للمستأجر
+Tenant Unified No (700),الرقم الموحّد للمستأجر (700)
+Broker Company,شركة الوسيط
+Broker CR No,رقم السجل التجاري للوسيط
+Broker Employee,موظف الوسيط
+Guarantor Name,اسم الضامن
+Guarantor ID,هوية الضامن
+Guarantor Phone,جوال الضامن
+Deed No,رقم الصك
+Deed Type,نوع الصك
+Deed Issuer,جهة إصدار الصك
+Deed Issue Date,تاريخ إصدار الصك
+Business Name,اسم النشاط
+Business CR No,السجل التجاري للنشاط
+ISIC Activity,نشاط أيسيك (ISIC)
+License No,رقم الترخيص
+Brokerage Fee,أتعاب السعي
+General Services,خدمات عامة
+Waste Removal,إزالة النفايات
+Engineering Supervision,إشراف هندسي
+Unit Finishing,تشطيب الوحدة
+Payment Day,يوم السداد
+Retainer (عربون),العربون
+Extra Security Deposit,تأمين إضافي
+Payment Methods,طرق الدفع
+Electricity (annual),الكهرباء (سنوي)
+Water (annual),المياه (سنوي)
+Gas (annual),الغاز (سنوي)
+Parking (annual),المواقف (سنوي)
+Parking Lots Rented,عدد المواقف المؤجرة
+Lessor Obligations,التزامات المؤجِّر
+Tenant Obligations,التزامات المستأجر
+Additional Terms,شروط إضافية
+Sealing Date,تاريخ التوثيق
+Hijri Start,البداية (هجري)
+Hijri End,النهاية (هجري)
+Conditional Contract,عقد مشروط
+Condition,الشرط
+Import Total,إجمالي الاستيراد
+Import Installments,عدد أقساط الاستيراد
+"Historical Seed (opening balance, no back-dated invoices)",رصيد افتتاحي (بدون فواتير بأثر رجعي)
+Renewed From,مُجدَّد من
+Period No,رقم الفترة
+Period Start,بداية الفترة
+Period End,نهاية الفترة
+Due Date,تاريخ الاستحقاق
+Rent (ex-VAT),الإيجار (بدون ضريبة)
+Prorated,محسوب بالتناسب
+Invoice Status,حالة الفاتورة
+Amount,المبلغ
+Rent Base,أساس الإيجار
+Management Fee (company keeps),رسوم الإدارة (تحتفظ بها الشركة)
+From Date,من تاريخ
+To Date,إلى تاريخ
+Termination Date,تاريخ الإنهاء
+Deposit Held,التأمين المحتجز
+Deductions,الاستقطاعات
+Total Deductions,إجمالي الاستقطاعات
+Net Refund,صافي المسترد
+Refund From (Bank/Cash),الاسترداد من (بنك/نقد)
+Settlement Entry,قيد التسوية
+Income Account,حساب الإيراد
+Kind,النوع
+Unit,الوحدة
+Annual Rent,الإيجار السنوي
+Default Cost Center,مركز التكلفة الافتراضي
+Rent Income Account,حساب إيراد الإيجار
+Receivable Account,حساب المدينين
+Tenant Security Deposit Account (Liability),حساب تأمينات المستأجرين (التزام)
+Default Rent Item,صنف الإيجار الافتراضي
+Head-Lease Item (Master Lease expense),صنف الإيجار الرئيسي (مصروف الاستئجار الرئيسي)
+Owner Payout Expense Account (Management),حساب مصروف مستحقات المالك (الإدارة)
+Commercial VAT Template (15%),قالب ضريبة تجاري (15%)
+Residential Template (Exempt / Zero-rated),قالب سكني (معفى / صفري)
+Auto-submit rent invoices on due date (accrual),ترحيل فواتير الإيجار تلقائيًا في تاريخ الاستحقاق (استحقاق)
+Invoice Lead Days,أيام تقديم الفاتورة
+Party Type,نوع الطرف
+Party,الطرف
+Tax Template,قالب الضريبة
+Reference Document Type,نوع المستند المرجعي
+Reference Name,اسم المرجع
+Remarks,ملاحظات
+Service Item,صنف الخدمة
+Default Amount,المبلغ الافتراضي
+Taxable (VAT),خاضع للضريبة
+Rule (future Formula Engine),القاعدة (محرك المعادلات مستقبلاً)
+Condition (future),الشرط (مستقبلي)
+Rate Formula (future),معادلة القيمة (مستقبلي)
+Behavior (engine key),السلوك (مفتاح المحرك)
+Amounts,المبالغ
+Reference,المرجع
+Deposit Settlement,تسوية التأمين
+Refund,الاسترداد
+Source,المصدر
+Invoice,الفاتورة
+Accounting Defaults,الإعدادات المحاسبية الافتراضية
+Items,الأصناف
+Tax (Saudi VAT),الضريبة (ضريبة القيمة المضافة)
+Invoicing Policy,سياسة الفوترة
+Families,عائلات
+Singles,عزّاب
+Group,مجموعة
+Inactive,غير نشط
+Semi-Annual,نصف سنوي
+Apartment,شقة
+Shop,محل
+Office,مكتب
+Villa,فيلا
+Warehouse,مستودع
+Land Plot,قطعة أرض
+Other,أخرى
+Vacant,شاغرة
+Occupied,مؤجّرة
+Reserved,محجوزة
+Maintenance,صيانة
+Street,شارع
+Garden,حديقة
+Sea,بحر
+City,مدينة
+Internal,داخلية
+Open,مفتوح
+Closed,مغلق
+American,أمريكي
+None,بدون
+New,جديد
+Renewal,تجديد
+Transfer,نقل
+Expired,منتهٍ
+Renewed,مُجدَّد
+Individual,فرد
+Government,حكومي
+Non-profit,غير ربحي
+Paper,ورقي
+Electronic,إلكتروني
+Planned,مخطّط
+Invoiced,مُفوتر
+Failed,فشل
+Posted,مُرحَّل
+Settled,مُسوّى
+Pending,معلّق
+Fee,رسم
+Utility,خدمة
+Penalty,غرامة
+Discount,خصم
+Cleaning,تنظيف
+Damage,أضرار
+Unpaid Rent,إيجار غير مسدد
+Unpaid Utilities,خدمات غير مسددة
+Key Replacement,استبدال مفاتيح
+Early Exit,إخلاء مبكر
+Standard,قياسي
+Exempt,معفى
+Zero-rated,صفري
+Generate Due Invoices,توليد الفواتير المستحقة
+Post Fee Charges,ترحيل رسوم الأتعاب
+Record Deposit,تسجيل التأمين
+Refund Deposit,استرداد التأمين
+Renew,تجديد
+Terminate,إنهاء
+Rent,الإيجار
+Lifecycle,دورة الحياة
+Renew Lease,تجديد العقد
+Rent Increase %,نسبة زيادة الإيجار %
+Duration in months (blank = same as current),المدة بالأشهر (فارغ = نفس الحالية)
+Create Renewal,إنشاء تجديد
+Record Security Deposit,تسجيل التأمين
+Refund Security Deposit,استرداد التأمين
+Received Into (Bank/Cash),مُستلم في (بنك/نقد)
+Refunded From (Bank/Cash),مُسترد من (بنك/نقد)
+Record,تسجيل
+Create Units,إنشاء وحدات
+Bulk Create Units,إنشاء وحدات دفعة واحدة
+Number of Units,عدد الوحدات
+Start Number,رقم البداية
+Unit No Prefix,بادئة رقم الوحدة
+Create,إنشاء
+Generate Head-Lease Schedule,توليد جدول الإيجار الرئيسي
+Post Due Head-Lease Bills,ترحيل فواتير الإيجار الرئيسي المستحقة
+Head Lease,الإيجار الرئيسي
+Post Payout,ترحيل المستحقات
+From,من
+To,إلى
+Total Units,إجمالي الوحدات
+Occupancy %,نسبة الإشغال %
+Lease,العقد
+Tenant,المستأجر
+Type,النوع
+Start,البداية
+End,النهاية
