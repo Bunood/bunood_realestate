@@ -544,6 +544,13 @@ Converted Lease,العقد المُحوَّل
 Convert to Lease,تحويل إلى عقد
 Open Lease,فتح العقد
 Creating draft lease...,جارٍ إنشاء مسودة العقد...
+Customer Statement,كشف حساب العميل
+Voucher Type,نوع القيد
+Voucher,القيد
+Debit,مدين
+Credit,دائن
+Balance,الرصيد
+Opening Balance,الرصيد الافتتاحي
 Import Leases,استيراد العقود
 Import Lease Contracts,استيراد عقود الإيجار
 Upload an Excel (.xlsx). Each row creates a Draft lease you can review then activate.,ارفع ملف Excel (.xlsx). كل صف يُنشئ مسودة عقد تراجعها ثم تعتمدها.
