@@ -278,9 +278,14 @@ def _get_or_create_customer(name, phone=None):
 	name = (name or "").strip()
 	if not name:
 		frappe.throw(_("Tenant name is required."))
-	existing = frappe.db.get_value("Customer", {"customer_name": name}, "name")
-	if existing:
-		return existing
+	phone = (phone or "").strip()
+	# Reuse an existing party ONLY on a UNIQUE mobile match — never silently bind by
+	# the non-unique display name (that could attach the lease + its invoices to an
+	# unrelated same-named customer's ledger). Otherwise create a fresh party.
+	if phone:
+		matches = frappe.get_all("Customer", filters={"mobile_no": phone}, pluck="name")
+		if len(matches) == 1:
+			return matches[0]
 	cust = frappe.new_doc("Customer")
 	cust.customer_name = name
 	cust.customer_type = "Individual"
@@ -324,6 +329,13 @@ def create_lease_from_wizard(data):
 		frappe.throw(_("Selected unit not found."))
 	company = frappe.db.get_value("Property", prop, "company")
 
+	# Company boundary: the client-supplied unit ids are NOT covered by Frappe's
+	# Company user-permission (Real Estate Unit is company-linked only via Property),
+	# so re-apply the same scope available_units() uses — never trust the raw ids.
+	allowed = set(frappe.get_list("Company", pluck="name") or [])
+	if company not in allowed:
+		frappe.throw(_("Not permitted for this company."), frappe.PermissionError)
+
 	lease = frappe.new_doc("Lease Contract")
 	lease.customer = _get_or_create_customer(c.get("tenant_name"), c.get("tenant_phone"))
 	lease.property = prop
@@ -335,8 +347,19 @@ def create_lease_from_wizard(data):
 
 	total_deposit = 0.0
 	for u in units:
+		un = u.get("unit")
+		# Validate EVERY unit (not just the first): it must exist, belong to the same
+		# property (hence company), and be vacant — closes the cross-company/foreign
+		# unit hijack where a crafted payload mixes another tenant's unit in.
+		info = frappe.db.get_value("Real Estate Unit", un, ["property", "status"], as_dict=True)
+		if not info:
+			frappe.throw(_("Unit {0} not found.").format(un))
+		if info.property != prop:
+			frappe.throw(_("All units on a contract must belong to the same property."))
+		if info.status and info.status != "Vacant":
+			frappe.throw(_("Unit {0} is not available.").format(un))
 		lease.append("units", {
-			"unit": u.get("unit"),
+			"unit": un,
 			"annual_rent": flt(u.get("annual_rent")),
 			"deposit_amount": flt(u.get("deposit")),
 		})
