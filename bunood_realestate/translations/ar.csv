@@ -594,3 +594,8 @@ Import failed.,فشل الاستيراد.
 Importing leases...,جارٍ استيراد العقود...
 The file is empty or has only a header row.,الملف فارغ أو يحوي صف العناوين فقط.
 Missing required columns: tenant_name and unit.,أعمدة مطلوبة ناقصة: tenant_name و unit.
+Owner Statement,كشف حساب المالك
+Management Fee,رسوم الإدارة
+Net Paid to Owner,صافي المدفوع للمالك
+Net Payout,صافي المستحق
+Fee %,نسبة الرسوم %
