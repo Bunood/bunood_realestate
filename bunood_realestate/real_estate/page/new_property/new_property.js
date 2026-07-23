@@ -55,16 +55,26 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 			let seq = 1;
 			(fl.blocks || []).forEach((b) => {
 				for (let c = 0; c < (parseInt(b.count) || 0); c++) {
+					// Per-unit override values when the block is customised, else block defaults.
+					const o = (b.overrides && b.overrides[c]) || b;
 					out.push({
 						floor, unit_number: "F" + floor + "-" + String(seq).padStart(2, "0"),
-						unit_type: b.type, rooms_count: b.rooms, living_rooms_count: b.living,
-						bathrooms: b.bath, area_sqm: b.area, monthly_rent: b.rent, deposit_amount: b.deposit,
+						unit_type: b.type, rooms_count: o.rooms, living_rooms_count: o.living,
+						bathrooms: o.bath, area_sqm: o.area, monthly_rent: o.rent, deposit_amount: o.deposit,
 					});
 					seq++;
 				}
 			});
 		});
 		return out;
+	}
+
+	function ensureOverrides(b) {
+		const n = parseInt(b.count) || 0;
+		if (!b.overrides) b.overrides = [];
+		while (b.overrides.length < n)
+			b.overrides.push({ rooms: b.rooms, living: b.living, bath: b.bath, area: b.area, rent: b.rent, deposit: b.deposit });
+		b.overrides.length = n;
 	}
 	function totals() {
 		const units = collectUnits();
@@ -240,14 +250,34 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 	function blockHtml(b, fi, bi) {
 		const num = (label, key, val) => '<div class="np-bf"><label>' + esc(label) + '</label><input type="number" data-fi="' + fi + '" data-bi="' + bi + '" data-bk="' + key + '" value="' + esc(val) + '"></div>';
 		const types = [["Apartment", __("Apartment")], ["Shop", __("Shop")], ["Office", __("Office")], ["Villa", __("Villa")], ["Warehouse", __("Warehouse")], ["Other", __("Other")]];
+		const count = parseInt(b.count) || 0;
 		return (
-			'<div class="np-block"><div class="np-bf"><label>' + esc(__("Type")) + '</label><select data-fi="' + fi + '" data-bi="' + bi + '" data-bk="type">' +
+			'<div class="np-blockwrap"><div class="np-block"><div class="np-bf"><label>' + esc(__("Type")) + '</label><select data-fi="' + fi + '" data-bi="' + bi + '" data-bk="type">' +
 			types.map((o) => '<option value="' + o[0] + '"' + (o[0] === b.type ? " selected" : "") + ">" + esc(o[1]) + "</option>").join("") + "</select></div>" +
 			num(__("Count"), "count", b.count) + num(__("Rooms"), "rooms", b.rooms) + num(__("Living"), "living", b.living) +
 			num(__("Baths"), "bath", b.bath) + num(__("Area"), "area", b.area) + num(__("Rent/mo"), "rent", b.rent) + num(__("Deposit"), "deposit", b.deposit) +
 			((S.floors[fi] && S.floors[fi].blocks.length > 1) ? ' <span class="np-rmblock" data-fi="' + fi + '" data-bi="' + bi + '">✕</span>' : "") +
+			"</div>" +
+			(count
+				? '<div class="np-ov"><span class="np-ov-toggle" data-fi="' + fi + '" data-bi="' + bi + '">' + (b.expand ? "▾ " : "▸ ") + esc(__("Customize each unit")) + " (" + count + ")</span>" +
+				  (b.expand && b.overrides ? ' <span class="np-ov-reset" data-fi="' + fi + '" data-bi="' + bi + '">' + esc(__("Reset from default")) + "</span>" : "") +
+				  (b.expand ? overrideTable(b, fi, bi) : "") + "</div>"
+				: "") +
 			"</div>"
 		);
+	}
+	function overrideTable(b, fi, bi) {
+		ensureOverrides(b);
+		const head = ["#", __("Rooms"), __("Living"), __("Baths"), __("Area"), __("Rent/mo"), __("Deposit")]
+			.map((h) => "<th>" + esc(h) + "</th>").join("");
+		const rows = b.overrides
+			.map((o, oi) => {
+				const cell = (k) => '<td><input type="number" data-fi="' + fi + '" data-bi="' + bi + '" data-oi="' + oi + '" data-ok="' + k + '" value="' + esc(o[k]) + '"></td>';
+				return "<tr><td>F" + (fi + 1) + "-" + String(oi + 1).padStart(2, "0") + "</td>" +
+					cell("rooms") + cell("living") + cell("bath") + cell("area") + cell("rent") + cell("deposit") + "</tr>";
+			})
+			.join("");
+		return '<div class="np-ovtable"><table><thead><tr>' + head + "</tr></thead><tbody>" + rows + "</tbody></table></div>";
 	}
 	function previewHtml() {
 		const flrs = effectiveFloors();
@@ -283,17 +313,31 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 				else S[g][k] = $(this).val();
 			}
 			const fi = $(this).data("fi"), bi = $(this).data("bi"), bk = $(this).data("bk");
-			if (fi != null && bi != null && bk) {
-				S.floors[fi].blocks[bi][bk] = bk === "type" ? $(this).val() : $(this).val();
+			const oi = $(this).data("oi"), ok = $(this).data("ok");
+			if (fi != null && bi != null && oi != null && ok) {
+				const b = S.floors[fi].blocks[bi];
+				ensureOverrides(b);
+				b.overrides[oi][ok] = $(this).val();
 				refreshStep3();
-			}
-			if ($(this).data("k") === "property_type" || $(this).attr("id") === "np-same") {
-				// handled elsewhere
+			} else if (fi != null && bi != null && bk) {
+				S.floors[fi].blocks[bi][bk] = $(this).val();
+				if (bk === "count" && S.floors[fi].blocks[bi].expand) render();
+				else refreshStep3();
 			}
 		});
 		$root.find("[data-type]").on("click", function () { S.basics.property_type = $(this).data("type"); render(); });
 		$root.find("[data-op]").on("click", function () { S.operation = $(this).data("op"); render(); });
 		$root.find("[data-preset]").on("click", function () { applyPreset($(this).data("preset")); render(); });
+		$root.find(".np-ov-toggle").on("click", function () {
+			const b = S.floors[$(this).data("fi")].blocks[$(this).data("bi")];
+			b.expand = !b.expand;
+			if (b.expand) ensureOverrides(b);
+			render();
+		});
+		$root.find(".np-ov-reset").on("click", function () {
+			S.floors[$(this).data("fi")].blocks[$(this).data("bi")].overrides = null;
+			render();
+		});
 		$root.find("#np-same").on("change", function () { S.sameAll = this.checked; render(); });
 		$root.find(".np-addfloor").on("click", function () { S.floors.push({ blocks: [block("Apartment", 4, 2, 1, 2, 120, 1800, 1800)] }); render(); });
 		$root.find(".np-rmfloor").on("click", function () { S.floors.splice($(this).data("fi"), 1); render(); });
@@ -387,6 +431,14 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 .np-bf input,.np-bf select{width:72px;border:1px solid var(--bnd-border,#DCE6E2);border-radius:7px;padding:6px 8px;}
 .np-bf select{width:100px;}
 .np-addblock{font-size:12px;}
+.np-ov{margin:4px 0 8px;}
+.np-ov-toggle{cursor:pointer;color:var(--bnd-primary,#1F5145);font-weight:600;font-size:12px;}
+.np-ov-reset{cursor:pointer;color:var(--bnd-muted,#5C6B66);font-size:11px;margin-inline-start:10px;text-decoration:underline;}
+.np-ovtable{overflow-x:auto;margin-top:6px;}
+.np-ovtable table{width:100%;border-collapse:collapse;font-size:12px;}
+.np-ovtable th,.np-ovtable td{border:1px solid var(--bnd-border,#DCE6E2);padding:3px 5px;text-align:center;}
+.np-ovtable th{background:var(--bnd-surface-2,#EEF3F1);color:var(--bnd-muted,#5C6B66);}
+.np-ovtable input{width:64px;border:1px solid var(--bnd-border,#DCE6E2);border-radius:6px;padding:4px 6px;}
 .np-mirror{font-size:12px;color:var(--bnd-muted,#5C6B66);}
 .np-totals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:var(--bnd-ink,#12251F);color:#fff;border-radius:14px;padding:16px;margin-top:16px;text-align:center;}
 .np-totals span{display:block;font-size:22px;font-weight:800;color:var(--bnd-gold,#E0B15E);}
