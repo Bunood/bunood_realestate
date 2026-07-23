@@ -2,6 +2,14 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Lease Contract", {
+	onload(frm) {
+		// Single creation path: a brand-new lease goes through the guided wizard.
+		// Skip amendments (they carry amended_from and must keep the doctype form).
+		if (frm.is_new() && !frm.doc.amended_from) {
+			frappe.set_route("new-lease");
+		}
+	},
+
 	refresh(frm) {
 		recompute_annual_rent(frm);
 

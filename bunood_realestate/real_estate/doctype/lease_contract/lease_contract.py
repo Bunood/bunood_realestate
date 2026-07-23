@@ -228,3 +228,123 @@ def renew_lease(lease_contract, rent_bump_pct=0, months=None):
 
 	new.insert(ignore_permissions=True)
 	return new.name
+
+
+# ---------------------------------------------------------------------------
+# New-lease wizard (guided 7-step creation) — mirrors the bunood_core Ejar wizard.
+# ---------------------------------------------------------------------------
+
+# Scalar Lease Contract fields the wizard may set (parties, ejar, financial…).
+_WIZARD_FIELDS = (
+	"contract_subtype", "ejar_contract_no", "tenant_vat_number", "billing_cycle",
+	"start_date", "end_date", "hijri_start_date", "hijri_end_date", "sealing_date",
+	"payment_day", "retainer_fee", "security_deposit_extra", "payment_methods_text",
+	"brokerage_fee", "general_services_amount", "waste_removal_fee",
+	"engineering_supervision_fee", "unit_finishing_fee",
+	"electricity_annual", "water_annual", "gas_annual", "parking_annual", "parking_lots_rented",
+	"lessor_org_type", "lessor_company_name", "lessor_cr_number", "lessor_unified_number", "lessor_vat_number",
+	"tenant_org_type", "tenant_company_name", "tenant_cr_number", "tenant_unified_number",
+	"broker_company_name", "broker_cr_number", "broker_employee_name",
+	"deed_number", "deed_type", "deed_issuer", "deed_issue_date",
+	"business_name", "business_cr_number", "isic_activity", "license_number",
+	"lessor_obligations", "tenant_obligations", "additional_terms",
+	"guarantor_name", "guarantor_id_number", "guarantor_phone",
+)
+
+
+@frappe.whitelist()
+def available_units():
+	"""Vacant units (with their property) in the companies the caller may see —
+	feeds the wizard's multi-unit picker."""
+	companies = frappe.get_list("Company", pluck="name") or []
+	if not companies:
+		return []
+	comp = tuple(companies) if len(companies) > 1 else (companies[0], companies[0])
+	return frappe.db.sql(
+		"""
+		SELECT reu.name AS unit, reu.unit_number, reu.property, p.property_name,
+		       COALESCE(reu.market_rent, 0) AS market_rent, COALESCE(reu.deposit_amount, 0) AS deposit_amount
+		FROM `tabReal Estate Unit` reu
+		JOIN `tabProperty` p ON p.name = reu.property
+		WHERE p.company IN %(comp)s AND (reu.status IS NULL OR reu.status = 'Vacant')
+		ORDER BY p.property_name, reu.unit_number
+		""",
+		{"comp": comp},
+		as_dict=True,
+	)
+
+
+def _get_or_create_customer(name, phone=None):
+	name = (name or "").strip()
+	if not name:
+		frappe.throw(_("Tenant name is required."))
+	existing = frappe.db.get_value("Customer", {"customer_name": name}, "name")
+	if existing:
+		return existing
+	cust = frappe.new_doc("Customer")
+	cust.customer_name = name
+	cust.customer_type = "Individual"
+	if phone:
+		cust.mobile_no = phone
+	# Fill required defaults so creation works on any site.
+	cust.customer_group = (
+		frappe.db.get_single_value("Selling Settings", "customer_group")
+		or frappe.db.get_value("Customer Group", {"is_group": 0}, "name")
+	)
+	cust.territory = (
+		frappe.db.get_single_value("Selling Settings", "territory")
+		or frappe.db.get_value("Territory", {"is_group": 0}, "name")
+	)
+	cust.flags.ignore_permissions = True
+	cust.insert()
+	return cust.name
+
+
+@frappe.whitelist()
+def create_lease_from_wizard(data):
+	"""Create (and optionally activate) a Lease Contract + its units from the wizard.
+	One request = one transaction. Native validation (commercial VAT, unit overlap)
+	still runs on insert/submit."""
+	frappe.only_for(["Accounts Manager", "System Manager"])
+	import json
+
+	from frappe.utils import cint
+
+	payload = json.loads(data) if isinstance(data, str) else (data or {})
+	c = payload.get("contract") or {}
+	units = payload.get("units") or []
+	publish = cint(payload.get("publish"))
+
+	if not units:
+		frappe.throw(_("Add at least one unit to the contract."))
+
+	unit0 = units[0].get("unit")
+	prop = frappe.db.get_value("Real Estate Unit", unit0, "property")
+	if not prop:
+		frappe.throw(_("Selected unit not found."))
+	company = frappe.db.get_value("Property", prop, "company")
+
+	lease = frappe.new_doc("Lease Contract")
+	lease.customer = _get_or_create_customer(c.get("tenant_name"), c.get("tenant_phone"))
+	lease.property = prop
+	lease.company = company
+	lease.contract_type = c.get("contract_type") if c.get("contract_type") in ("Residential", "Commercial") else "Residential"
+	for f in _WIZARD_FIELDS:
+		if c.get(f) not in (None, ""):
+			lease.set(f, c.get(f))
+
+	total_deposit = 0.0
+	for u in units:
+		lease.append("units", {
+			"unit": u.get("unit"),
+			"annual_rent": flt(u.get("annual_rent")),
+			"deposit_amount": flt(u.get("deposit")),
+		})
+		total_deposit += flt(u.get("deposit"))
+	if not flt(lease.deposit_amount):
+		lease.deposit_amount = total_deposit
+
+	lease.insert()
+	if publish:
+		lease.submit()
+	return {"lease": lease.name, "submitted": bool(publish)}

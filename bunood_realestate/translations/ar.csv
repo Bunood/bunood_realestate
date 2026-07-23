@@ -456,3 +456,57 @@ Property name is required.,اسم العقار مطلوب.
 Owner name is required.,اسم المالك مطلوب.
 Creating property and units...,جارٍ إنشاء العقار والوحدات...
 Created {0} with {1} unit(s),تم إنشاء {0} مع {1} وحدة
+New Lease,عقد جديد
+Create New Lease,إنشاء عقد إيجار جديد
+Saudi Ejar-style • Residential (exempt) or Commercial (15% VAT + ZATCA),مطابق لمنصة إيجار السعودية • سكني (بدون ضريبة) أو تجاري (مع ضريبة 15% + فاتورة ZATCA)
+Lessor,المؤجر
+Broker,الوسيط
+Review & Publish,المراجعة والنشر
+Step 1: Contract Type & Basics,الخطوة 1: نوع العقد والمعلومات الأساسية
+Choose the contract type (drives VAT) and the unit(s) and dates.,اختر نوع العقد (يحدّد تطبيق الضريبة) وحدّد الوحدة والتواريخ.
+"Individuals — apartments, villas • no VAT",للأفراد — شقق، فلل، استوديوهات • بدون ضريبة
+"Companies — offices, shops • 15% VAT + ZATCA",للشركات — مكاتب، محلات، مستودعات • ضريبة 15% + فاتورة ZATCA
+Select property,اختر العقار
+Select unit,اختر الوحدة
+Annual rent,الإيجار السنوي
+Add,إضافة
+yr,سنة
+Tenant Name,اسم المستأجر
+Tenant Phone,جوال المستأجر
+Step 2: Lessor (Owner),الخطوة 2: المؤجر (المالك)
+The lessor may be an individual or a company.,المؤجر قد يكون فرداً أو شركة.
+Company Details,بيانات الشركة
+Company,شركة
+Step 3: Tenant,الخطوة 3: المستأجر
+Individual or company. Commercial contracts require a VAT number.,فرد أو شركة. العقود التجارية يلزمها رقم ضريبي.
+Guarantor (optional),الضامن (اختياري)
+Step 4: Broker (optional),الخطوة 4: الوسيط العقاري (اختياري)
+"If a broker mediated the contract, add their details.",لو كان هناك وسيط عقاري، أدخل بياناته.
+Step 5: Deed & Business Activity,الخطوة 5: الصكوك والنشاط التجاري
+"Title deed info; for commercial contracts, activity details.",معلومات صك الملكية وللعقود التجارية تفاصيل النشاط.
+Title Deed (الصك),صك الملكية
+Business Activity (النشاط),النشاط التجاري
+Step 6: Financial Terms,الخطوة 6: الشروط المالية
+"Billing cycle, fees and utilities. VAT is derived from the contract type.",دورة الفوترة والرسوم والمرافق. الضريبة تُحسب من نوع العقد.
+Rent Summary,ملخص الإيجار
+15% — Commercial,15% — تجاري
+Exempt — Residential (0%),معفى — سكني (0%)
+Installments,عدد الأقساط
+Per Installment,قيمة القسط
+VAT,الضريبة
+Total incl. VAT,الإجمالي شامل الضريبة
+One-time Fees (outside contract value),رسوم لمرة واحدة (خارج قيمة العقد)
+Annual Utilities,المرافق السنوية
+Obligations (optional),الالتزامات (اختياري)
+Step 7: Review & Publish,الخطوة 7: المراجعة والنشر
+Review before saving; you can go back to any step.,راجع قبل الحفظ، يمكنك العودة لأي خطوة.
+Activate contract now (generates the rent schedule),تفعيل العقد الآن (يولّد جدول الإيجار)
+Create Contract,إنشاء العقد
+Contract {0} created,تم إنشاء العقد {0}
+Creating contract...,جارٍ إنشاء العقد...
+Select a unit.,اختر وحدة.
+Add at least one unit.,أضف وحدة واحدة على الأقل.
+Tenant name is required.,اسم المستأجر مطلوب.
+Start and end dates are required.,تاريخ البداية والنهاية مطلوبان.
+"A commercial contract requires the tenant VAT number (15 digits, starts & ends with 3).",العقد التجاري يلزمه الرقم الضريبي للمستأجر (15 رقماً يبدأ وينتهي بـ3).
+Loading…,جارٍ التحميل…
