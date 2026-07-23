@@ -551,6 +551,20 @@ Debit,مدين
 Credit,دائن
 Balance,الرصيد
 Opening Balance,الرصيد الافتتاحي
+Finance,المالية
+Property Expense,مصروف عقار
+Unit (optional),الوحدة (اختياري)
+Expense Date,تاريخ المصروف
+Amount & Accounts,المبلغ والحسابات
+Expense Account,حساب المصروف
+Paid From (Bank/Cash),مدفوع من (بنك/نقد)
+Beneficiary (Supplier),المستفيد (مورّد)
+Utilities,مرافق
+Security,أمن
+Insurance,تأمين
+Government Fees,رسوم حكومية
+Management,إدارة
+Journal Entry,قيد يومية
 Import Leases,استيراد العقود
 Import Lease Contracts,استيراد عقود الإيجار
 Upload an Excel (.xlsx). Each row creates a Draft lease you can review then activate.,ارفع ملف Excel (.xlsx). كل صف يُنشئ مسودة عقد تراجعها ثم تعتمدها.
