@@ -39,6 +39,10 @@ class TestLandFinance(FrappeTestCase):
 		self.assertEqual(round(flt(je.total_credit), 2), 1000)
 		income_line = [a for a in je.accounts if flt(a.credit_in_account_currency) > 0][0]
 		self.assertEqual(income_line.get("land"), self.land)
+		# Cost center on every line must belong to this company (P&L lines mandate one).
+		for a in je.accounts:
+			self.assertTrue(a.cost_center, "each JE line needs a cost center")
+			self.assertEqual(frappe.db.get_value("Cost Center", a.cost_center, "company"), self.company)
 		rev.reload(); rev.cancel()
 		self.assertEqual(frappe.db.get_value("Journal Entry", rev.journal_entry, "docstatus"), 2)
 
@@ -54,6 +58,8 @@ class TestLandFinance(FrappeTestCase):
 		self.assertEqual(round(flt(je.total_debit), 2), 300)
 		exp_line = [a for a in je.accounts if flt(a.debit_in_account_currency) > 0][0]
 		self.assertEqual(exp_line.get("land"), self.land)
+		for a in je.accounts:
+			self.assertEqual(frappe.db.get_value("Cost Center", a.cost_center, "company"), self.company)
 
 	def _cleanup(self, dt, name):
 		try:

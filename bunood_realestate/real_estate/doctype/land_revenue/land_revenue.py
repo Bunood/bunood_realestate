@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate
 
+from bunood_realestate.real_estate.gl_utils import require_cost_center
+
 
 class LandRevenue(Document):
 	def validate(self):
@@ -19,8 +21,7 @@ class LandRevenue(Document):
 				frappe.throw(_("The land contract belongs to a different land."))
 
 	def on_submit(self):
-		settings = frappe.get_single("Real Estate Settings")
-		cost_center = settings.default_cost_center or frappe.get_cached_value("Company", self.company, "cost_center")
+		cost_center = require_cost_center(self.company)
 
 		je = frappe.new_doc("Journal Entry")
 		je.voucher_type = "Journal Entry"
@@ -30,14 +31,15 @@ class LandRevenue(Document):
 		je.user_remark = _("Land revenue — {0} · {1}").format(self.land, self.category)
 
 		# DR bank/cash (received). CR income (P&L) tagged with the Land dimension → per-land P&L.
-		debit = {"account": self.received_in, "debit_in_account_currency": flt(self.amount)}
-		if cost_center:
-			debit["cost_center"] = cost_center
+		debit = {"account": self.received_in, "debit_in_account_currency": flt(self.amount), "cost_center": cost_center}
 		je.append("accounts", debit)
 
-		credit = {"account": self.income_account, "credit_in_account_currency": flt(self.amount), "land": self.land}
-		if cost_center:
-			credit["cost_center"] = cost_center
+		credit = {
+			"account": self.income_account,
+			"credit_in_account_currency": flt(self.amount),
+			"land": self.land,
+			"cost_center": cost_center,
+		}
 		je.append("accounts", credit)
 
 		je.flags.ignore_permissions = True

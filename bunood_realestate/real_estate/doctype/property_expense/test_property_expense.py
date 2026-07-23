@@ -52,6 +52,13 @@ class TestPropertyExpense(FrappeTestCase):
 		# The debit (expense) line carries the Property accounting dimension.
 		dr = [a for a in je.accounts if flt(a.debit_in_account_currency) > 0][0]
 		self.assertEqual(dr.get("property"), self.prop)
+		# Every line carries a cost center that belongs to THIS company (P&L lines
+		# mandate one, and a cross-company cost center would be rejected).
+		for a in je.accounts:
+			self.assertTrue(a.cost_center, "each JE line needs a cost center")
+			self.assertEqual(
+				frappe.db.get_value("Cost Center", a.cost_center, "company"), self.company
+			)
 		self.assertEqual(frappe.db.get_value("Property Expense", exp.name, "status"), "Posted")
 
 		# Cancel reverses the GL (JE cancelled) — no orphaned/parallel figure.
@@ -59,6 +66,13 @@ class TestPropertyExpense(FrappeTestCase):
 		exp.cancel()
 		self.assertEqual(frappe.db.get_value("Journal Entry", exp.journal_entry, "docstatus"), 2)
 		self.assertEqual(frappe.db.get_value("Property Expense", exp.name, "status"), "Cancelled")
+
+	def test_require_cost_center_throws_for_unknown_company(self):
+		# A company with no resolvable cost center must fail early with a clear error,
+		# not a raw ERPNext validation mid-submit.
+		from bunood_realestate.real_estate.gl_utils import require_cost_center
+
+		self.assertRaises(frappe.ValidationError, require_cost_center, "No Such Company ZZZ")
 
 	def test_amount_must_be_positive(self):
 		exp = frappe.get_doc({

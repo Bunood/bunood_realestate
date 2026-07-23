@@ -12,6 +12,8 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, flt, nowdate
 
+from bunood_realestate.real_estate.gl_utils import resolve_cost_center
+
 
 def split_amount(base, weights):
 	"""Split `base` across `weights` (per-unit annual rents); last line absorbs rounding.
@@ -174,8 +176,11 @@ def _append_rent_line(si, settings, rate, unit, property, period_start, period_e
 	item.qty = 1
 	item.rate = flt(rate)
 	item.income_account = settings.rent_income_account
-	if settings.default_cost_center:
-		item.cost_center = settings.default_cost_center
+	# Use a cost center that belongs to THIS invoice's company (a settings default set
+	# for another company would be rejected). If none, ERPNext fills the company default.
+	cost_center = resolve_cost_center(si.company)
+	if cost_center:
+		item.cost_center = cost_center
 	label = unit or _("Rent")
 	item.description = _("Rent {0} ({1} to {2})").format(label, period_start, period_end)
 	# Accounting dimensions (custom fields created by the app's fixtures).

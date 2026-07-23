@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
+from bunood_realestate.real_estate.gl_utils import require_cost_center
+
 
 class LeaseTermination(Document):
 	def validate(self):
@@ -98,13 +100,18 @@ class LeaseTermination(Document):
 				"account": self.refund_account,
 				"credit_in_account_currency": flt(self.net_refund),
 			})
+		deduction_cc = None
 		for d in self.deductions:
 			if flt(d.amount) > 0:
-				# Deduction accounts are income (P&L) → a cost center is required for GL.
-				line = {"account": d.income_account, "credit_in_account_currency": flt(d.amount)}
-				if settings.default_cost_center:
-					line["cost_center"] = settings.default_cost_center
-				je.append("accounts", line)
+				# Deduction accounts are income (P&L) → a company-matching cost center is
+				# required for GL; resolve it once, lazily (only if there are deductions).
+				if deduction_cc is None:
+					deduction_cc = require_cost_center(self.company)
+				je.append("accounts", {
+					"account": d.income_account,
+					"credit_in_account_currency": flt(d.amount),
+					"cost_center": deduction_cc,
+				})
 		je.flags.ignore_permissions = True
 		je.insert()
 		je.submit()

@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate
 
+from bunood_realestate.real_estate.gl_utils import require_cost_center
+
 
 class PropertyExpense(Document):
 	def validate(self):
@@ -32,8 +34,7 @@ class PropertyExpense(Document):
 		self.db_set("status", "Cancelled")
 
 	def _post_journal(self):
-		settings = frappe.get_single("Real Estate Settings")
-		cost_center = settings.default_cost_center or frappe.get_cached_value("Company", self.company, "cost_center")
+		cost_center = require_cost_center(self.company)
 
 		je = frappe.new_doc("Journal Entry")
 		je.voucher_type = "Journal Entry"
@@ -54,13 +55,14 @@ class PropertyExpense(Document):
 		}
 		if self.unit:
 			debit["real_estate_unit"] = self.unit
-		if cost_center:
-			debit["cost_center"] = cost_center
+		debit["cost_center"] = cost_center
 		je.append("accounts", debit)
 
-		credit = {"account": self.paid_from, "credit_in_account_currency": flt(self.amount)}
-		if cost_center:
-			credit["cost_center"] = cost_center
+		credit = {
+			"account": self.paid_from,
+			"credit_in_account_currency": flt(self.amount),
+			"cost_center": cost_center,
+		}
 		je.append("accounts", credit)
 
 		je.flags.ignore_permissions = True
