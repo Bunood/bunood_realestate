@@ -2,6 +2,16 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Property", {
+	onload(frm) {
+		// Single creation path: every "New Property" goes through the guided wizard,
+		// never the raw doctype form. The plain form remains only for viewing/editing
+		// an existing property. (The wizard creates via a server method and routes to
+		// the saved doc, so this never loops.)
+		if (frm.is_new()) {
+			frappe.set_route("new-property");
+		}
+	},
+
 	refresh(frm) {
 		if (frm.is_new()) return;
 
