@@ -401,3 +401,58 @@ Reporting an issue requires an active lease.,الإبلاغ عن مشكلة يت
 Your account is not linked to a tenant yet. Please contact the property office.,حسابك غير مرتبط بمستأجر بعد. يرجى التواصل مع مكتب العقار.
 Please describe the issue.,يرجى وصف المشكلة.
 No active lease found for your account.,لا يوجد عقد نشط مرتبط بحسابك.
+New Property,عقار جديد
+Create New Property,إنشاء عقار جديد
+3 easy steps • Basics → Owner & Operation → Units,3 خطوات سهلة • أساسيات ← المالك والتشغيل ← الوحدات
+Owner & Operation & Location,المالك + التشغيل + الموقع
+Generate Units,توليد الوحدات
+Step 1: Basics,الخطوة 1: الأساسيات
+"Property identity: name, code, deed, type.",معلومات تعريف العقار: الاسم، الكود، الصك، النوع.
+e.g. Al-Suwaidi Building,مثال: عمارة السويدي
+Code (internal reference),كود العقار (مرجع داخلي)
+"Buildings, apartments, villas",عمارات سكنية، شقق، فلل
+"Offices, shops, warehouses",مكاتب، محلات، مستودعات
+Shops below + apartments above,محلات أسفل + شقق فوق
+Step 2: Owner + Operation + Location,الخطوة 2: المالك + التشغيل + الموقع
+"Choose the owner, operation type and location.",حدّد المالك ونوع التشغيل وموقع العقار.
+Operation Type,نوع تشغيل العقار
+Investment (Owned),استثمار (ملك)
+Owned outright — all income is yours,العقار ملكي، كل الإيراد لي
+Property Management,إدارة أملاك
+Owned by another — you take a %,العقار لشخص آخر أنا أتقاضى نسبة من الإيراد
+Master Lease,استثماري
+Rent the whole building then sublet,أستأجر المبنى كاملاً من مالكه وأعيد تأجير وحداته
+Your share of income %,نسبتك من الإيراد %
+Owner Details,بيانات المالك
+Nationality,الجنسية
+District,الحي
+Postal Code,الرمز البريدي
+Property Notes,ملاحظات العقار
+Step 3: Building Composition,الخطوة 3: تكوين المبنى
+Pick a preset or configure floors — the live preview updates as you go.,اختر قالباً جاهزاً أو اضبط الأدوار — تتحدّث المعاينة أمامك مباشرة.
+Quick Preset,قالب جاهز (سريع)
+1 unit • 5 rooms,وحدة واحدة • 5 غرف
+Residential Building,عمارة سكنية
+4 floors × 4 apartments,4 أدوار × 4 شقق
+Shops + offices + apartments,محلات + مكاتب + شقق
+Office Tower,برج مكاتب
+5 floors × 6 offices,5 أدوار × 6 مكاتب
+Building Preview,معاينة المبنى
+All floors identical,كل الأدوار متشابهة
+Add Floor,إضافة دور
+Another type on this floor,نوع آخر بنفس الدور
+Count,العدد
+Living,صالة
+Baths,حمامات
+Area,المساحة
+Rent/mo,إيجار/شهر
+units,وحدة
+Floors,الأدوار
+Expected Monthly Rent,إيجار شهري متوقع
+Previous,السابق
+Next,التالي
+Create Property + Units,إنشاء العقار + الوحدات
+Property name is required.,اسم العقار مطلوب.
+Owner name is required.,اسم المالك مطلوب.
+Creating property and units...,جارٍ إنشاء العقار والوحدات...
+Created {0} with {1} unit(s),تم إنشاء {0} مع {1} وحدة
