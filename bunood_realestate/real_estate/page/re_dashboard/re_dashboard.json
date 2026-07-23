@@ -1,0 +1,21 @@
+{
+ "content": null,
+ "creation": "2026-07-23 00:00:00",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-07-23 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "real-estate-dashboard",
+ "owner": "Administrator",
+ "page_name": "real-estate-dashboard",
+ "roles": [
+  {"role": "Accounts Manager"},
+  {"role": "Accounts User"},
+  {"role": "System Manager"}
+ ],
+ "standard": "Yes",
+ "system_page": 0,
+ "title": "Real Estate Dashboard"
+}
