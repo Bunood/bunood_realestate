@@ -20,7 +20,7 @@ fixtures = [
     # GL Entry is tagged by property & unit, giving native per-property/unit P&L and
     # ledgers with zero parallel bookkeeping. Installed on migrate; the dimension's
     # after_insert builds the custom fields across ERPNext transaction doctypes (one-time).
-    {"dt": "Accounting Dimension", "filters": [["document_type", "in", ["Property", "Real Estate Unit"]]]},
+    {"dt": "Accounting Dimension", "filters": [["document_type", "in", ["Property", "Real Estate Unit", "Land"]]]},
     # Bunood Core: seed default Charge Types (Broker/Cleaning/… ) for the Charge engine.
     "Charge Type",
     # Master data (user-editable taxonomy) — seeded with common Saudi values.

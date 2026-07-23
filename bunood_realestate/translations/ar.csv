@@ -565,6 +565,19 @@ Insurance,تأمين
 Government Fees,رسوم حكومية
 Management,إدارة
 Journal Entry,قيد يومية
+Land Revenue,إيراد أرض
+Land Expense,مصروف أرض
+Revenue Date,تاريخ الإيراد
+Received In (Bank/Cash),مُستلم في (بنك/نقد)
+Payer (Customer),الدافع (عميل)
+Investment Yield,عائد استثمار
+Telecom Tower,برج اتصالات
+Billboard,لوحة إعلانية
+Agriculture,زراعة
+Municipal Fees,رسوم بلدية
+Zakat,زكاة
+Fencing,تسوير
+Guarding,حراسة
 Import Leases,استيراد العقود
 Import Lease Contracts,استيراد عقود الإيجار
 Upload an Excel (.xlsx). Each row creates a Draft lease you can review then activate.,ارفع ملف Excel (.xlsx). كل صف يُنشئ مسودة عقد تراجعها ثم تعتمدها.

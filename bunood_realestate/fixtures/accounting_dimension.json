@@ -14,5 +14,13 @@
   "label": "Real Estate Unit",
   "fieldname": "real_estate_unit",
   "disabled": 0
+ },
+ {
+  "doctype": "Accounting Dimension",
+  "name": "Land",
+  "document_type": "Land",
+  "label": "Land",
+  "fieldname": "land",
+  "disabled": 0
  }
 ]
