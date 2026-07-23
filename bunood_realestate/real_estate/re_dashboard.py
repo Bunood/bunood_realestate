@@ -57,11 +57,41 @@ def dashboard_data():
 		)[0][0]
 	)
 
+	reserved = flt(
+		frappe.db.sql(
+			"SELECT COUNT(*) FROM `tabReal Estate Unit` reu JOIN `tabProperty` p ON p.name = reu.property "
+			"WHERE p.company IN %(comp)s AND reu.status = 'Reserved'",
+			{"comp": comp},
+		)[0][0]
+	)
+	vacant = max(0.0, units_total - occupied - reserved)
+
+	# Collections this month: paid (grand_total − outstanding) vs expected (scheduled).
+	expected_month = flt(
+		frappe.db.sql(
+			"SELECT COALESCE(SUM(base_amount), 0) FROM `tabRent Schedule` "
+			"WHERE company IN %(comp)s AND MONTH(due_date) = MONTH(CURDATE()) AND YEAR(due_date) = YEAR(CURDATE())",
+			{"comp": comp},
+		)[0][0]
+	)
+	collected_month = flt(
+		frappe.db.sql(
+			"""
+			SELECT COALESCE(SUM(si.grand_total - si.outstanding_amount), 0)
+			FROM `tabRent Schedule` rs JOIN `tabSales Invoice` si ON si.name = rs.sales_invoice
+			WHERE rs.company IN %(comp)s AND si.docstatus = 1
+			  AND MONTH(rs.due_date) = MONTH(CURDATE()) AND YEAR(rs.due_date) = YEAR(CURDATE())
+			""",
+			{"comp": comp},
+		)[0][0]
+	)
+	collection_rate = round(collected_month * 100.0 / expected_month, 1) if expected_month else 0.0
+
 	kpis = [
 		{"key": "properties", "label": _("Properties"), "value": properties, "tone": "green", "icon": "building"},
 		{"key": "occupancy", "label": _("Occupancy %"), "value": f"{occupancy_pct}%", "tone": "gold", "icon": "pie-chart"},
 		{"key": "active_leases", "label": _("Active Leases"), "value": active_leases, "tone": "blue", "icon": "file-text"},
-		{"key": "vacant", "label": _("Vacant Units"), "value": units_total - occupied, "tone": "sky", "icon": "home"},
+		{"key": "vacant", "label": _("Vacant Units"), "value": int(vacant), "tone": "sky", "icon": "home"},
 		{"key": "overdue", "label": _("Overdue"), "value": frappe.utils.fmt_money(overdue_amount), "tone": "amber", "icon": "alert-triangle"},
 	]
 
@@ -69,6 +99,17 @@ def dashboard_data():
 		"kpis": kpis,
 		"chart": _monthly_rent_chart(comp),
 		"overdue": _top_overdue(comp),
+		"cockpit": {
+			"occupancy_pct": occupancy_pct,
+			"collection_rate": collection_rate,
+			"properties": properties,
+			"units_total": int(units_total),
+			"active_leases": active_leases,
+			"collected_month": collected_month,
+			"expected_month": expected_month,
+			"outstanding": overdue_amount,
+			"ring": {"occupied": int(occupied), "reserved": int(reserved), "vacant": int(vacant)},
+		},
 	}
 
 
