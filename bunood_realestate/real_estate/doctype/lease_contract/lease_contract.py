@@ -104,9 +104,34 @@ class LeaseContract(Document):
 
 		self._block_cancel_if_invoiced()
 		self.db_set("status", "Cancelled")
-		self._set_units_status("Vacant", current_lease=None)
+		self._free_units()
 		cancel_for_lease(self)
 		self._cancel_fee_charges()
+
+	def _free_units(self):
+		"""Free each unit ONLY if no OTHER Active submitted lease still holds it, and only
+		clear current_lease if it points at THIS lease — so cancelling one of two
+		back-to-back leases can't free a unit the other still occupies (mirror of
+		Land Contract.on_cancel; keeps unit.status in step with the real leases)."""
+		for row in self.units:
+			if not row.unit:
+				continue
+			other = frappe.db.sql(
+				"""
+				SELECT lc.name FROM `tabLease Contract` lc
+				JOIN `tabLease Unit` lu ON lu.parent = lc.name
+				WHERE lc.docstatus = 1 AND lc.status = 'Active' AND lu.unit = %s AND lc.name != %s
+				LIMIT 1
+				""",
+				(row.unit, self.name),
+			)
+			if other:
+				frappe.db.set_value("Real Estate Unit", row.unit, "current_lease", other[0][0])
+			else:
+				vals = {"status": "Vacant"}
+				if frappe.db.get_value("Real Estate Unit", row.unit, "current_lease") == self.name:
+					vals["current_lease"] = None
+				frappe.db.set_value("Real Estate Unit", row.unit, vals)
 
 	def _raise_fee_charges(self):
 		"""One-time fee fields -> pending Charges (decoupled from accounting). Uses the
@@ -283,8 +308,13 @@ def _get_or_create_customer(name, phone=None):
 	# the non-unique display name (that could attach the lease + its invoices to an
 	# unrelated same-named customer's ledger). Otherwise create a fresh party.
 	if phone:
-		matches = frappe.get_all("Customer", filters={"mobile_no": phone}, pluck="name")
-		if len(matches) == 1:
+		# Reuse the existing party on ANY mobile match (oldest first) — not only a unique
+		# one. Matching just the first hit still dedups, and it avoids the trap where two
+		# customers already share a phone so the function would mint a NEW party forever.
+		matches = frappe.get_all(
+			"Customer", filters={"mobile_no": phone}, pluck="name", order_by="creation asc"
+		)
+		if matches:
 			return matches[0]
 	cust = frappe.new_doc("Customer")
 	cust.customer_name = name
@@ -334,6 +364,7 @@ def _build_lease(c, units, publish=0):
 		if c.get(f) not in (None, ""):
 			lease.set(f, c.get(f))
 
+	start, end = c.get("start_date"), c.get("end_date")
 	total_deposit = 0.0
 	for u in units:
 		un = u.get("unit")
@@ -347,6 +378,23 @@ def _build_lease(c, units, publish=0):
 			frappe.throw(_("All units on a contract must belong to the same property."))
 		if info.status and info.status != "Vacant":
 			frappe.throw(_("Unit {0} is not available.").format(un))
+		# Duplicate guard at CREATION time: reject if any non-cancelled lease (drafts
+		# included) already covers this unit for an overlapping period. Stops a re-run of
+		# the Excel import or a double-submitted wizard from minting a duplicate draft
+		# (the submit-time overlap guard only sees Active leases, not drafts).
+		if start and end:
+			dupe = frappe.db.sql(
+				"""
+				SELECT lc.name FROM `tabLease Contract` lc
+				JOIN `tabLease Unit` lu ON lu.parent = lc.name
+				WHERE lc.docstatus < 2 AND lu.unit = %s
+				  AND lc.start_date <= %s AND lc.end_date >= %s
+				LIMIT 1
+				""",
+				(un, end, start),
+			)
+			if dupe:
+				frappe.throw(_("Unit {0} already has a contract ({1}) covering this period.").format(un, dupe[0][0]))
 		lease.append("units", {
 			"unit": un,
 			"annual_rent": flt(u.get("annual_rent")),

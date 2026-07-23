@@ -36,6 +36,14 @@ class LeaseTermination(Document):
 		lease = frappe.get_doc("Lease Contract", self.lease_contract)
 		lease.db_set("deposit_refunded", flt(lease.deposit_refunded) - flt(self.deposit_held))
 		lease.db_set("status", "Active")
+		# Re-occupy the units (symmetric to _close_lease) — otherwise the lease is Active
+		# again while its units read Vacant, giving a wrong occupancy KPI and re-offering
+		# a still-leased unit in the wizard.
+		for row in lease.units:
+			if row.unit:
+				frappe.db.set_value(
+					"Real Estate Unit", row.unit, {"status": "Occupied", "current_lease": lease.name}
+				)
 		self._restore_future_rent()
 		self.db_set("status", "Cancelled")
 

@@ -17,10 +17,20 @@ class UnitBooking(Document):
 			frappe.throw(_("Hold-until date cannot be before the booking date."))
 
 	def on_submit(self):
+		# Lock the unit row, then refuse a second live reservation on it or a non-vacant
+		# unit — no two Reserved bookings (and no two draft leases) for one physical unit.
+		frappe.db.get_value("Real Estate Unit", self.unit, "name", for_update=True)
+		other = frappe.db.exists(
+			"Unit Booking",
+			{"unit": self.unit, "status": "Reserved", "docstatus": 1, "name": ["!=", self.name]},
+		)
+		if other:
+			frappe.throw(_("Unit {0} already has an active reservation ({1}).").format(self.unit, other))
+		unit_status = frappe.db.get_value("Real Estate Unit", self.unit, "status")
+		if unit_status and unit_status != "Vacant":
+			frappe.throw(_("Unit {0} is not available (status: {1}).").format(self.unit, unit_status))
 		self.db_set("status", "Reserved")
-		# Reserve the unit only if it is currently free.
-		if frappe.db.get_value("Real Estate Unit", self.unit, "status") == "Vacant":
-			frappe.db.set_value("Real Estate Unit", self.unit, "status", "Reserved")
+		frappe.db.set_value("Real Estate Unit", self.unit, "status", "Reserved")
 
 	def on_cancel(self):
 		if self.status == "Converted":
@@ -28,6 +38,21 @@ class UnitBooking(Document):
 		self.db_set("status", "Cancelled")
 		if frappe.db.get_value("Real Estate Unit", self.unit, "status") == "Reserved":
 			frappe.db.set_value("Real Estate Unit", self.unit, "status", "Vacant")
+
+
+def expire_bookings():
+	"""Daily: a Reserved booking past its hold-until date becomes Expired, and its unit is
+	freed if still Reserved by it — so an abandoned hold never leaves a unit stuck Reserved."""
+	rows = frappe.get_all(
+		"Unit Booking",
+		filters={"status": "Reserved", "docstatus": 1, "expiry_date": ["<", nowdate()]},
+		fields=["name", "unit"],
+	)
+	for b in rows:
+		frappe.db.set_value("Unit Booking", b.name, "status", "Expired")
+		if b.unit and frappe.db.get_value("Real Estate Unit", b.unit, "status") == "Reserved":
+			frappe.db.set_value("Real Estate Unit", b.unit, "status", "Vacant")
+	return len(rows)
 
 
 @frappe.whitelist()

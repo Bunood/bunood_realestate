@@ -10,7 +10,19 @@ from frappe.utils import cint, flt
 
 
 class Property(Document):
-	pass
+	def validate(self):
+		# One legal deed = one Property. Reject a duplicate deed (per company) so a
+		# double-click / wizard re-run can't split one building into two GL anchors.
+		if self.deed_number:
+			dupe = frappe.db.get_value(
+				"Property",
+				{"deed_number": self.deed_number, "company": self.company, "name": ["!=", self.name or ""]},
+				"name",
+			)
+			if dupe:
+				frappe.throw(
+					_("Property {0} already uses deed number {1}.").format(dupe, self.deed_number)
+				)
 
 
 # Card value -> master record resolvers (the wizard shows friendly cards; we map

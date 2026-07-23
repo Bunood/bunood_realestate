@@ -50,6 +50,8 @@ scheduler_events = {
         # Collections: charge a late fee on overdue, still-unpaid rent invoices
         # (no-op unless enabled in Real Estate Settings).
         "bunood_realestate.real_estate.collections.apply_late_fees",
+        # Expire abandoned unit holds so a unit never stays stuck "Reserved".
+        "bunood_realestate.real_estate.doctype.unit_booking.unit_booking.expire_bookings",
     ],
 }
 
@@ -67,5 +69,12 @@ doc_events = {
     "Payment Entry": {
         "on_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
         "on_cancel": "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
+    },
+    # Keep the lease's cached deposit balance in step with the GL: if a deposit /
+    # refund Journal Entry is cancelled or deleted, reset the mirror so the app never
+    # refunds/settles against a liability that no longer exists (no parallel ledger).
+    "Journal Entry": {
+        "on_cancel": "bunood_realestate.real_estate.events.reconcile_deposit_on_je",
+        "on_trash": "bunood_realestate.real_estate.events.reconcile_deposit_on_je",
     },
 }

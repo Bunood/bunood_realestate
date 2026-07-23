@@ -24,20 +24,24 @@ def dashboard_data():
 		"Lease Contract", {"company": ["in", companies], "status": "Active", "docstatus": 1}
 	)
 
-	# Units by status (scoped via the parent property's company).
-	unit_rows = frappe.db.sql(
-		"""
-		SELECT reu.status AS status, COUNT(*) AS n
-		FROM `tabReal Estate Unit` reu
-		JOIN `tabProperty` p ON p.name = reu.property
-		WHERE p.company IN %(comp)s
-		GROUP BY reu.status
-		""",
-		{"comp": comp},
-		as_dict=True,
+	# Occupancy from the AUTHORITATIVE source — units actually held by a submitted Active
+	# lease — not the mutable Real Estate Unit.status flag (which an operator can edit and
+	# which can lag behind cancels/terminations). This can never diverge from real leases.
+	units_total = flt(
+		frappe.db.sql(
+			"SELECT COUNT(*) FROM `tabReal Estate Unit` reu JOIN `tabProperty` p ON p.name = reu.property "
+			"WHERE p.company IN %(comp)s",
+			{"comp": comp},
+		)[0][0]
 	)
-	units_total = sum(r.n for r in unit_rows)
-	occupied = sum(r.n for r in unit_rows if r.status == "Occupied")
+	occupied = flt(
+		frappe.db.sql(
+			"SELECT COUNT(DISTINCT lu.unit) FROM `tabLease Contract` lc "
+			"JOIN `tabLease Unit` lu ON lu.parent = lc.name "
+			"WHERE lc.docstatus = 1 AND lc.status = 'Active' AND lc.company IN %(comp)s",
+			{"comp": comp},
+		)[0][0]
+	)
 	occupancy_pct = round(occupied * 100.0 / units_total, 1) if units_total else 0.0
 
 	overdue_amount = flt(
