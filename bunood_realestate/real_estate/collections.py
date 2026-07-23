@@ -70,10 +70,18 @@ def apply_late_fees(lease_contract=None):
 def _charge_late_fee(schedule_name, settings):
 	from bunood_realestate.core.charge import _apply, post_reference_charges
 
-	# Row lock + re-read → the idempotency guard below can't be raced.
-	frappe.db.get_value("Rent Schedule", schedule_name, "name", for_update=True)
-	row = frappe.get_doc("Rent Schedule", schedule_name)
-	if row.late_fee_charge or row.status != "Invoiced" or not row.sales_invoice:
+	# Read the idempotency + posting fields UNDER the row lock. A locking read always
+	# returns the latest COMMITTED values, so a concurrent run that waited on this lock
+	# sees our committed late_fee_charge and stops. (A plain re-read after the lock could
+	# still return a stale REPEATABLE-READ snapshot and double-charge the row.)
+	row = frappe.db.get_value(
+		"Rent Schedule",
+		schedule_name,
+		["late_fee_charge", "status", "sales_invoice", "customer", "company", "period_no", "due_date"],
+		for_update=True,
+		as_dict=True,
+	)
+	if not row or row.late_fee_charge or row.status != "Invoiced" or not row.sales_invoice:
 		return False
 
 	# Only fee a genuinely-unpaid invoice (never a settled one).
@@ -92,14 +100,14 @@ def _charge_late_fee(schedule_name, settings):
 		amount=fee,
 		company=row.company,
 		reference_doctype="Rent Schedule",
-		reference_name=row.name,
+		reference_name=schedule_name,
 		remarks=_("Late fee — period {0}, due {1}").format(row.period_no, row.due_date),
 	)
 	# Stamp the idempotency key BEFORE posting: if the post fails, the row is still
 	# marked so we never double-charge; the Pending charge is posted later by the
 	# normal "Post Fee Charges" flow.
-	frappe.db.set_value("Rent Schedule", row.name, "late_fee_charge", charge_name)
-	post_reference_charges("Rent Schedule", row.name)
+	frappe.db.set_value("Rent Schedule", schedule_name, "late_fee_charge", charge_name)
+	post_reference_charges("Rent Schedule", schedule_name)
 	return True
 
 
@@ -146,8 +154,10 @@ def _tenant_outstanding(customer, company):
 @frappe.whitelist()
 def dues_whatsapp_link(lease_contract):
 	"""Build a click-to-send WhatsApp dunning link for a lease's tenant + log it."""
-	frappe.has_permission("Lease Contract", "read", throw=True)
 	lease = frappe.get_doc("Lease Contract", lease_contract)
+	# Record-level check (not just the doctype role) so a user restricted by a
+	# Company/Property User Permission can't read another tenant's dues/mobile.
+	lease.check_permission("read")
 	mobile = frappe.db.get_value("Customer", lease.customer, "mobile_no") or ""
 	outstanding = _tenant_outstanding(lease.customer, lease.company)
 	tenant_name = frappe.db.get_value("Customer", lease.customer, "customer_name") or lease.customer

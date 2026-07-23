@@ -98,11 +98,15 @@ def generate_due_head_lease_bills(property=None, lead_days=None):
 
 def _post_bill(schedule_name, settings=None):
 	settings = settings or frappe.get_single("Real Estate Settings")
-	# Row lock + re-validate (no double-billing under concurrency).
-	frappe.db.get_value("Head Lease Schedule", schedule_name, "name", for_update=True)
-	row = frappe.get_doc("Head Lease Schedule", schedule_name)
-	if row.status != "Planned" or row.purchase_invoice:
+	# Read the idempotency fields UNDER the row lock (a locking read returns the latest
+	# committed values, so a concurrent run that waited sees our committed purchase_invoice
+	# and stops; a plain re-read could return a stale snapshot → double-bill).
+	guard = frappe.db.get_value(
+		"Head Lease Schedule", schedule_name, ["status", "purchase_invoice"], for_update=True, as_dict=True
+	)
+	if not guard or guard.status != "Planned" or guard.purchase_invoice:
 		return False
+	row = frappe.get_doc("Head Lease Schedule", schedule_name)
 	if not settings.head_lease_item:
 		frappe.throw(_("Set a Head-Lease Item in Real Estate Settings."))
 	if not row.head_landlord:

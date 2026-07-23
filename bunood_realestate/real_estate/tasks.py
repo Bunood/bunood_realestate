@@ -74,14 +74,16 @@ def generate_due_rent_invoices(lease_contract=None, lead_days=None):
 
 def _create_invoice_for_schedule(schedule_name, settings=None):
 	settings = settings or frappe.get_single("Real Estate Settings")
-	# Row lock: concurrent generators (scheduler + manual click) serialize here, so the
-	# loser re-reads the committed state and the idempotency guard below stops it.
-	frappe.db.get_value("Rent Schedule", schedule_name, "name", for_update=True)
-	row = frappe.get_doc("Rent Schedule", schedule_name)
-
-	# Idempotency guard — never double-invoice a period.
-	if row.status != "Planned" or row.sales_invoice:
+	# Read the idempotency fields UNDER the row lock. A locking read always returns the
+	# latest COMMITTED values, so the loser of a concurrent race (scheduler + manual
+	# click) sees the committed sales_invoice and stops. Reading them via a plain
+	# re-read after the lock could return a stale REPEATABLE-READ snapshot → double-invoice.
+	guard = frappe.db.get_value(
+		"Rent Schedule", schedule_name, ["status", "sales_invoice"], for_update=True, as_dict=True
+	)
+	if not guard or guard.status != "Planned" or guard.sales_invoice:
 		return False
+	row = frappe.get_doc("Rent Schedule", schedule_name)
 	if not settings.default_rent_item or not settings.rent_income_account:
 		frappe.throw(_("Set Default Rent Item and Rent Income Account in Real Estate Settings."))
 	# Single settings holds company-specific accounts → guard against wrong-company use

@@ -23,11 +23,10 @@ def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 	if amount <= 0:
 		frappe.throw(_("Deposit amount must be greater than zero."))
 
-	# Serialize concurrent deposit actions on this lease, then re-read the committed
-	# state under the lock so a double-click / two operators can't both post a receipt.
-	frappe.db.get_value("Lease Contract", lease_contract, "name", for_update=True)
+	# Read the guard state UNDER the row lock (a locking read returns the latest committed
+	# values) so a double-click / two operators can't both pass the guard and post a receipt.
 	state = frappe.db.get_value(
-		"Lease Contract", lease_contract, ["company", "deposit_received"], as_dict=True
+		"Lease Contract", lease_contract, ["company", "deposit_received"], for_update=True, as_dict=True
 	)
 	if not state:
 		frappe.throw(_("Lease {0} not found.").format(lease_contract))
@@ -65,11 +64,10 @@ def refund_deposit(lease_contract, amount, paid_from_account, posting_date=None)
 	if amount <= 0:
 		frappe.throw(_("Refund amount must be greater than zero."))
 
-	# Serialize concurrent refunds on this lease, then re-read the held balance under
-	# the lock so two refunds can't each pass a stale balance check and double-pay cash.
-	frappe.db.get_value("Lease Contract", lease_contract, "name", for_update=True)
+	# Read the held balance UNDER the row lock (a locking read returns the latest committed
+	# values) so two concurrent refunds can't each pass a stale balance check and double-pay.
 	state = frappe.db.get_value(
-		"Lease Contract", lease_contract, ["company", "deposit_received", "deposit_refunded"], as_dict=True
+		"Lease Contract", lease_contract, ["company", "deposit_received", "deposit_refunded"], for_update=True, as_dict=True
 	)
 	if not state:
 		frappe.throw(_("Lease {0} not found.").format(lease_contract))
