@@ -305,28 +305,17 @@ def _get_or_create_customer(name, phone=None):
 	return cust.name
 
 
-@frappe.whitelist()
-def create_lease_from_wizard(data):
-	"""Create (and optionally activate) a Lease Contract + its units from the wizard.
-	One request = one transaction. Native validation (commercial VAT, unit overlap)
-	still runs on insert/submit."""
-	frappe.only_for(["Accounts Manager", "System Manager"])
-	import json
-
-	from frappe.utils import cint
-
-	payload = json.loads(data) if isinstance(data, str) else (data or {})
-	c = payload.get("contract") or {}
-	units = payload.get("units") or []
-	publish = cint(payload.get("publish"))
-
+def _build_lease(c, units, publish=0):
+	"""Shared builder used by BOTH the wizard and the Excel importer (no duplication).
+	Validates units (same property/company, vacant), get-or-creates the tenant, inserts,
+	and optionally submits. The caller wraps each call in its own transaction."""
 	if not units:
 		frappe.throw(_("Add at least one unit to the contract."))
 
 	unit0 = units[0].get("unit")
 	prop = frappe.db.get_value("Real Estate Unit", unit0, "property")
 	if not prop:
-		frappe.throw(_("Selected unit not found."))
+		frappe.throw(_("Unit {0} not found.").format(unit0))
 	company = frappe.db.get_value("Property", prop, "company")
 
 	# Company boundary: the client-supplied unit ids are NOT covered by Frappe's
@@ -371,3 +360,72 @@ def create_lease_from_wizard(data):
 	if publish:
 		lease.submit()
 	return {"lease": lease.name, "submitted": bool(publish)}
+
+
+@frappe.whitelist()
+def create_lease_from_wizard(data):
+	"""Create (and optionally activate) a Lease Contract + its units from the wizard."""
+	frappe.only_for(["Accounts Manager", "System Manager"])
+	import json
+
+	from frappe.utils import cint
+
+	payload = json.loads(data) if isinstance(data, str) else (data or {})
+	return _build_lease(payload.get("contract") or {}, payload.get("units") or [], cint(payload.get("publish")))
+
+
+LEASE_IMPORT_COLUMNS = [
+	"tenant_name", "tenant_phone", "unit", "contract_type",
+	"start_date", "end_date", "billing_cycle", "annual_rent", "deposit",
+]
+
+
+def _norm_contract_type(v):
+	return "Commercial" if str(v or "").strip().lower() in ("commercial", "تجاري", "c") else "Residential"
+
+
+@frappe.whitelist()
+def import_leases(file_url):
+	"""Bulk-create DRAFT leases from an uploaded .xlsx (header row = LEASE_IMPORT_COLUMNS).
+	Each row is its own transaction — one bad row doesn't abort the batch. Reuses
+	_build_lease so importer + wizard share identical validation (no bunood_core-style
+	duplicate import path)."""
+	frappe.only_for(["Accounts Manager", "System Manager"])
+	from frappe.utils.xlsxutils import read_xlsx_file_from_attached_file
+
+	rows = read_xlsx_file_from_attached_file(file_url=file_url) or []
+	rows = [r for r in rows if any((str(x).strip() if x is not None else "") for x in r)]
+	if len(rows) < 2:
+		frappe.throw(_("The file is empty or has only a header row."))
+
+	header = [str(h).strip().lower() for h in rows[0]]
+	col = {name: header.index(name) for name in header}
+	if "unit" not in col or "tenant_name" not in col:
+		frappe.throw(_("Missing required columns: tenant_name and unit."))
+
+	def cell(row, name):
+		i = col.get(name)
+		if i is None or i >= len(row):
+			return None
+		v = row[i]
+		return v.strip() if isinstance(v, str) else v
+
+	created, errors = [], []
+	for n, row in enumerate(rows[1:], start=2):
+		try:
+			c = {
+				"tenant_name": cell(row, "tenant_name"),
+				"tenant_phone": cell(row, "tenant_phone"),
+				"contract_type": _norm_contract_type(cell(row, "contract_type")),
+				"start_date": cell(row, "start_date"),
+				"end_date": cell(row, "end_date"),
+				"billing_cycle": cell(row, "billing_cycle") or "Monthly",
+			}
+			units = [{"unit": cell(row, "unit"), "annual_rent": cell(row, "annual_rent"), "deposit": cell(row, "deposit")}]
+			res = _build_lease(c, units, publish=0)
+			created.append(res["lease"])
+			frappe.db.commit()
+		except Exception as e:
+			frappe.db.rollback()
+			errors.append({"row": n, "error": str(e)[:200]})
+	return {"created": created, "errors": errors}

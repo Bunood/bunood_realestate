@@ -544,3 +544,19 @@ Converted Lease,العقد المُحوَّل
 Convert to Lease,تحويل إلى عقد
 Open Lease,فتح العقد
 Creating draft lease...,جارٍ إنشاء مسودة العقد...
+Import Leases,استيراد العقود
+Import Lease Contracts,استيراد عقود الإيجار
+Upload an Excel (.xlsx). Each row creates a Draft lease you can review then activate.,ارفع ملف Excel (.xlsx). كل صف يُنشئ مسودة عقد تراجعها ثم تعتمدها.
+Required columns (first row = header):,الأعمدة المطلوبة (الصف الأول = العناوين):
+unit = the unit's ID; contract_type = Residential/Commercial (سكني/تجاري); dates = YYYY-MM-DD; billing_cycle = Monthly/Quarterly/Semi-Annual/Annual. tenant_name + unit are required.,unit = معرّف الوحدة؛ contract_type = سكني/تجاري؛ التواريخ = سنة-شهر-يوم؛ billing_cycle = شهري/ربعي/نصف سنوي/سنوي. الاسم والوحدة مطلوبان.
+Download Template,تحميل القالب
+Upload & Import,رفع واستيراد
+Importing…,جارٍ الاستيراد…
+Created {0} draft lease(s).,تم إنشاء {0} مسودة عقد.
+{0} row(s) failed:,فشل {0} صف:
+Row,الصف
+Error,الخطأ
+Import failed.,فشل الاستيراد.
+Importing leases...,جارٍ استيراد العقود...
+The file is empty or has only a header row.,الملف فارغ أو يحوي صف العناوين فقط.
+Missing required columns: tenant_name and unit.,أعمدة مطلوبة ناقصة: tenant_name و unit.
