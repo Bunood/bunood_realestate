@@ -510,3 +510,26 @@ Tenant name is required.,اسم المستأجر مطلوب.
 Start and end dates are required.,تاريخ البداية والنهاية مطلوبان.
 "A commercial contract requires the tenant VAT number (15 digits, starts & ends with 3).",العقد التجاري يلزمه الرقم الضريبي للمستأجر (15 رقماً يبدأ وينتهي بـ3).
 Loading…,جارٍ التحميل…
+Land,أرض
+Land Contract,عقد أرض
+Land Name,اسم الأرض
+Land Type,نوع الأرض
+Available,متاحة
+Leased,مؤجّرة
+Under Development,تحت التطوير
+Sold,مباعة
+Plot Number,رقم القطعة
+Plan Number,رقم المخطط
+Valuation,التقييم
+Purchase Date,تاريخ الشراء
+Purchase Value,قيمة الشراء
+Current Market Value,القيمة السوقية الحالية
+Agricultural,زراعية
+Industrial,صناعية
+Raw,خام
+Party (Customer),الطرف (عميل)
+Annual Amount,المبلغ السنوي
+Usufruct,انتفاع
+Investment,استثمار
+Terms,الشروط
+Contracts,العقود
