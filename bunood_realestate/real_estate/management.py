@@ -22,6 +22,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate, nowdate
 
+from bunood_realestate.real_estate.gl_utils import require_cost_center
+
 
 def compute_owner_payout(rent_base, fee_pct):
 	"""Pure & testable: split the collected rent into (company fee, owner payout)."""
@@ -116,6 +118,10 @@ def generate_owner_payout(property, from_date, to_date):
 	if payout <= 0:
 		frappe.throw(_("Computed owner payout is zero."))
 
+	# P&L expense line needs a company-matching cost center; tag it with the Property
+	# dimension so the payout offsets that property's rent income (net P&L = the fee).
+	cost_center = require_cost_center(p.company)
+
 	je = frappe.new_doc("Journal Entry")
 	je.voucher_type = "Journal Entry"
 	je.company = p.company
@@ -127,12 +133,16 @@ def generate_owner_payout(property, from_date, to_date):
 	je.append("accounts", {
 		"account": settings.owner_payout_expense_account,
 		"debit_in_account_currency": payout,
+		"property": property,
+		"cost_center": cost_center,
 	})
 	je.append("accounts", {
 		"account": payable,
 		"party_type": "Supplier",
 		"party": p.owner_party,
 		"credit_in_account_currency": payout,
+		"property": property,
+		"cost_center": cost_center,
 	})
 	je.flags.ignore_permissions = True
 	je.insert()
