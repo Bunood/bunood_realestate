@@ -78,6 +78,9 @@ def _owned_request(request, customers):
 	"""Fetch a Maintenance Request ONLY if it belongs to one of the tenant's customers,
 	else raise PermissionError. Prevents a tenant from reading/posting to another
 	tenant's request (IDOR). Ownership = the request's tenant/lease customer."""
+	# Coerce to a plain string so a crafted filter-dict can never turn get_value into
+	# an arbitrary lookup — it must be a document name.
+	request = frappe.utils.cstr(request or "")
 	row = frappe.db.get_value(
 		"Maintenance Request", request, ["name", "tenant", "lease_contract"], as_dict=True
 	)
@@ -138,6 +141,10 @@ def post_maintenance_update(request, message=None, photo=None):
 	name = _owned_request(request, customers)
 
 	if photo:
+		# Must be a server file path (never a javascript:/data:/http: scheme that would
+		# execute if rendered into an href) AND a File the caller owns (just uploaded).
+		if not photo.startswith("/"):
+			frappe.throw(_("Invalid photo reference."), frappe.PermissionError)
 		owns_file = frappe.db.exists("File", {"file_url": photo, "owner": frappe.session.user})
 		if not owns_file:
 			frappe.throw(_("The attached photo could not be verified."), frappe.PermissionError)

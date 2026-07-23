@@ -122,7 +122,8 @@ function bndRenderThread(box, data) {
         + '<div style="max-width:80%; background:' + bg + '; color:' + fg + '; padding:8px 12px; border-radius:12px;">'
         + '<div style="font-size:11px; opacity:.75;">' + bndEsc(u.author_name) + " · " + bndEsc(u.posted_on) + "</div>";
       if (u.message) html += '<div style="white-space:pre-wrap;">' + bndEsc(u.message) + "</div>";
-      if (u.photo) html += '<a href="' + bndEsc(u.photo) + '" target="_blank" rel="noopener"><img src="' + bndEsc(u.photo) + '" style="max-width:200px; border-radius:8px; margin-top:6px;"></a>';
+      // Only render a photo that is a relative server path (never a javascript:/data: scheme).
+      if (u.photo && String(u.photo).charAt(0) === "/") html += '<a href="' + bndEsc(u.photo) + '" target="_blank" rel="noopener"><img src="' + bndEsc(u.photo) + '" style="max-width:200px; border-radius:8px; margin-top:6px;"></a>';
       html += "</div></div>";
     });
   }
