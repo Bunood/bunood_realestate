@@ -1,0 +1,116 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Tenant Portal") }}{% endblock %}
+
+{% block page_content %}
+<div class="bnd-portal" dir="rtl" style="max-width: 960px; margin: 0 auto; padding: 24px 12px;">
+  <h1 style="font-weight:800;">{{ _("Tenant Portal") }}</h1>
+
+  {% if not linked %}
+    <div class="alert alert-warning">{{ _("Your account is not linked to a tenant yet. Please contact the property office.") }}</div>
+  {% else %}
+
+    <div style="background: var(--bnd-primary, #1F5145); color:#fff; border-radius:16px; padding:20px 24px; margin:16px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div>
+        <div style="opacity:.85; font-size:14px;">{{ _("Total Outstanding") }}</div>
+        <div style="font-size:28px; font-weight:800;">{{ frappe.utils.fmt_money(outstanding) }}</div>
+      </div>
+      <a href="#maintenance" class="btn btn-light">{{ _("Report an Issue") }}</a>
+    </div>
+
+    <h3 style="margin-top:24px;">{{ _("My Leases") }}</h3>
+    {% if leases %}
+    <div class="table-responsive"><table class="table">
+      <thead><tr>
+        <th>{{ _("Lease") }}</th><th>{{ _("Property") }}</th><th>{{ _("Start") }}</th>
+        <th>{{ _("End") }}</th><th>{{ _("Annual Rent") }}</th><th>{{ _("Status") }}</th>
+      </tr></thead>
+      <tbody>
+      {% for l in leases %}
+        <tr>
+          <td>{{ l.name }}</td><td>{{ l.property or "" }}</td><td>{{ l.start_date }}</td>
+          <td>{{ l.end_date }}</td><td>{{ frappe.utils.fmt_money(l.annual_rent_total) }}</td>
+          <td>{{ _(l.status) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<p class="text-muted">{{ _("No leases found.") }}</p>{% endif %}
+
+    <h3 style="margin-top:24px;">{{ _("My Invoices") }}</h3>
+    {% if invoices %}
+    <div class="table-responsive"><table class="table">
+      <thead><tr>
+        <th>{{ _("Invoice") }}</th><th>{{ _("Date") }}</th><th>{{ _("Due Date") }}</th>
+        <th>{{ _("Amount") }}</th><th>{{ _("Outstanding") }}</th><th>{{ _("Status") }}</th>
+      </tr></thead>
+      <tbody>
+      {% for i in invoices %}
+        <tr>
+          <td>{{ i.name }}</td><td>{{ i.posting_date }}</td><td>{{ i.due_date }}</td>
+          <td>{{ frappe.utils.fmt_money(i.grand_total) }}</td>
+          <td>{{ frappe.utils.fmt_money(i.outstanding_amount) }}</td>
+          <td>{{ _(i.status) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<p class="text-muted">{{ _("No invoices found.") }}</p>{% endif %}
+
+    <h3 id="maintenance" style="margin-top:28px;">{{ _("Report an Issue") }}</h3>
+    {% if has_active_lease %}
+    <form id="bnd-maint-form" style="max-width:560px;">
+      <div class="form-group">
+        <label>{{ _("Subject") }}</label>
+        <input class="form-control" name="subject" maxlength="140" required>
+      </div>
+      <div class="form-group">
+        <label>{{ _("Priority") }}</label>
+        <select class="form-control" name="priority">
+          <option value="Low">{{ _("Low") }}</option>
+          <option value="Medium" selected>{{ _("Medium") }}</option>
+          <option value="High">{{ _("High") }}</option>
+          <option value="Urgent">{{ _("Urgent") }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>{{ _("Description") }}</label>
+        <textarea class="form-control" name="description" rows="3" maxlength="2000"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">{{ _("Submit Request") }}</button>
+      <div id="bnd-maint-msg" class="mt-2"></div>
+    </form>
+    {% else %}<p class="text-muted">{{ _("Reporting an issue requires an active lease.") }}</p>{% endif %}
+
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var form = document.getElementById("bnd-maint-form");
+  if (!form) return;
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = form.querySelector("button[type=submit]");
+    var msg = document.getElementById("bnd-maint-msg");
+    btn.disabled = true;
+    frappe.call({
+      method: "bunood_realestate.portal.submit_maintenance",
+      args: {
+        subject: form.subject.value,
+        description: form.description.value,
+        priority: form.priority.value,
+      },
+      callback: function (r) {
+        btn.disabled = false;
+        if (r.message && r.message.name) {
+          msg.innerHTML = '<span class="text-success">' + {{ _("Request submitted:") | tojson }} + " " + frappe.utils.escape_html(r.message.name) + "</span>";
+          form.reset();
+        }
+      },
+      error: function () { btn.disabled = false; },
+    });
+  });
+});
+</script>
+{% endblock %}
