@@ -1,0 +1,31 @@
+{
+ "actions": [],
+ "creation": "2026-07-23 00:00:00",
+ "description": "One entry in a Maintenance Request conversation thread — a message and/or a photo, from an operator (desk) or the tenant (portal).",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "posted_on", "author", "author_name", "from_portal",
+  "message", "photo"
+ ],
+ "fields": [
+  {"fieldname": "posted_on", "fieldtype": "Datetime", "in_list_view": 1, "label": "Posted On", "read_only": 1},
+  {"fieldname": "author", "fieldtype": "Link", "label": "Author", "options": "User", "read_only": 1},
+  {"fieldname": "author_name", "fieldtype": "Data", "in_list_view": 1, "label": "Author", "read_only": 1},
+  {"default": "0", "fieldname": "from_portal", "fieldtype": "Check", "in_list_view": 1, "label": "From Tenant (Portal)", "read_only": 1},
+  {"fieldname": "message", "fieldtype": "Small Text", "in_list_view": 1, "label": "Message"},
+  {"fieldname": "photo", "fieldtype": "Attach Image", "label": "Photo"}
+ ],
+ "links": [],
+ "modified": "2026-07-23 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Maintenance Update",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

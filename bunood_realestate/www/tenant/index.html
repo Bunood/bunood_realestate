@@ -57,6 +57,27 @@
     </table></div>
     {% else %}<p class="text-muted">{{ _("No invoices found.") }}</p>{% endif %}
 
+    <h3 style="margin-top:28px;">{{ _("My Requests") }}</h3>
+    {% if maintenance %}
+    <div id="bnd-req-list">
+      {% for m in maintenance %}
+      <div class="bnd-req" data-name="{{ m.name }}" style="border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <strong>{{ m.subject }}</strong>
+            <span class="text-muted" style="font-size:12px;"> · {{ m.name }}</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge" style="background:#eef2f1; color:#1F5145;">{{ _(m.status) }}</span>
+            <button class="btn btn-sm btn-outline-secondary bnd-thread-toggle" type="button">{{ _("Conversation") }}</button>
+          </div>
+        </div>
+        <div class="bnd-thread" style="display:none; margin-top:10px;"></div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="text-muted">{{ _("No requests yet.") }}</p>{% endif %}
+
     <h3 id="maintenance" style="margin-top:28px;">{{ _("Report an Issue") }}</h3>
     {% if has_active_lease %}
     <form id="bnd-maint-form" style="max-width:560px;">
@@ -86,7 +107,96 @@
 </div>
 
 <script>
+function bndEsc(s) { return frappe.utils.escape_html(s == null ? "" : String(s)); }
+
+function bndRenderThread(box, data) {
+  var html = "";
+  if (!data.updates || !data.updates.length) {
+    html += '<p class="text-muted" style="font-size:13px;">' + {{ _("No messages yet.") | tojson }} + "</p>";
+  } else {
+    data.updates.forEach(function (u) {
+      var side = u.from_portal ? "flex-end" : "flex-start";
+      var bg = u.from_portal ? "#1F5145" : "#f1f5f4";
+      var fg = u.from_portal ? "#fff" : "#111";
+      html += '<div style="display:flex; justify-content:' + side + '; margin:6px 0;">'
+        + '<div style="max-width:80%; background:' + bg + '; color:' + fg + '; padding:8px 12px; border-radius:12px;">'
+        + '<div style="font-size:11px; opacity:.75;">' + bndEsc(u.author_name) + " · " + bndEsc(u.posted_on) + "</div>";
+      if (u.message) html += '<div style="white-space:pre-wrap;">' + bndEsc(u.message) + "</div>";
+      if (u.photo) html += '<a href="' + bndEsc(u.photo) + '" target="_blank" rel="noopener"><img src="' + bndEsc(u.photo) + '" style="max-width:200px; border-radius:8px; margin-top:6px;"></a>';
+      html += "</div></div>";
+    });
+  }
+  var name = bndEsc(data.name);
+  html += '<form class="bnd-reply" data-name="' + name + '" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">'
+    + '<input class="form-control bnd-reply-msg" style="flex:1; min-width:180px;" maxlength="2000" placeholder="' + {{ _("Write a reply...") | tojson }} + '">'
+    + '<input type="file" class="bnd-reply-photo" accept="image/*">'
+    + '<button type="submit" class="btn btn-sm btn-primary">' + {{ _("Send") | tojson }} + "</button>"
+    + '<span class="bnd-reply-msgbox" style="font-size:12px;"></span></form>';
+  box.innerHTML = html;
+}
+
+function bndLoadThread(box, name) {
+  frappe.call({
+    method: "bunood_realestate.portal.maintenance_thread",
+    args: { request: name },
+    callback: function (r) { if (r.message) bndRenderThread(box, r.message); },
+  });
+}
+
+async function bndUploadPhoto(file) {
+  var fd = new FormData();
+  fd.append("file", file, file.name);
+  fd.append("is_private", 1);
+  var res = await fetch("/api/method/upload_file", {
+    method: "POST",
+    headers: { "X-Frappe-CSRF-Token": frappe.csrf_token },
+    body: fd,
+  });
+  if (!res.ok) throw new Error("upload failed");
+  var data = await res.json();
+  return data.message.file_url;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+  // Conversation threads: toggle open, lazy-load, and reply (message + optional photo).
+  document.querySelectorAll(".bnd-req").forEach(function (card) {
+    var box = card.querySelector(".bnd-thread");
+    var toggle = card.querySelector(".bnd-thread-toggle");
+    var name = card.getAttribute("data-name");
+    toggle.addEventListener("click", function () {
+      if (box.style.display === "none") {
+        box.style.display = "block";
+        bndLoadThread(box, name);
+      } else {
+        box.style.display = "none";
+      }
+    });
+    box.addEventListener("submit", async function (e) {
+      if (!e.target.classList.contains("bnd-reply")) return;
+      e.preventDefault();
+      var f = e.target;
+      var msgEl = f.querySelector(".bnd-reply-msg");
+      var photoEl = f.querySelector(".bnd-reply-photo");
+      var status = f.querySelector(".bnd-reply-msgbox");
+      var btn = f.querySelector("button[type=submit]");
+      if (!msgEl.value.trim() && !photoEl.files.length) return;
+      btn.disabled = true;
+      try {
+        var photoUrl = null;
+        if (photoEl.files.length) photoUrl = await bndUploadPhoto(photoEl.files[0]);
+        frappe.call({
+          method: "bunood_realestate.portal.post_maintenance_update",
+          args: { request: name, message: msgEl.value, photo: photoUrl },
+          callback: function () { bndLoadThread(box, name); },
+          always: function () { btn.disabled = false; },
+        });
+      } catch (err) {
+        btn.disabled = false;
+        status.innerHTML = '<span class="text-danger">' + {{ _("Could not send.") | tojson }} + "</span>";
+      }
+    });
+  });
+
   var form = document.getElementById("bnd-maint-form");
   if (!form) return;
   form.addEventListener("submit", function (e) {

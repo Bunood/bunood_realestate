@@ -72,3 +72,76 @@ def submit_maintenance(subject, description=None, priority="Medium"):
 	doc.flags.ignore_permissions = True  # portal user has no desk Maintenance perms
 	doc.insert()
 	return {"name": doc.name}
+
+
+def _owned_request(request, customers):
+	"""Fetch a Maintenance Request ONLY if it belongs to one of the tenant's customers,
+	else raise PermissionError. Prevents a tenant from reading/posting to another
+	tenant's request (IDOR). Ownership = the request's tenant/lease customer."""
+	row = frappe.db.get_value(
+		"Maintenance Request", request, ["name", "tenant", "lease_contract"], as_dict=True
+	)
+	if not row:
+		frappe.throw(_("Request not found."), frappe.DoesNotExistError)
+	owner_customer = row.tenant
+	if not owner_customer and row.lease_contract:
+		owner_customer = frappe.db.get_value("Lease Contract", row.lease_contract, "customer")
+	if owner_customer not in customers:
+		frappe.throw(_("You do not have access to this request."), frappe.PermissionError)
+	return row.name
+
+
+@frappe.whitelist()
+def my_maintenance_requests():
+	"""The logged-in tenant's own maintenance requests (latest first)."""
+	customers = _require_tenant()
+	return frappe.get_all(
+		"Maintenance Request",
+		filters={"tenant": ["in", customers]},
+		fields=["name", "subject", "status", "priority", "reported_on", "property", "unit"],
+		order_by="reported_on desc",
+		limit=50,
+	)
+
+
+@frappe.whitelist()
+def maintenance_thread(request):
+	"""The conversation thread for one of the tenant's OWN requests."""
+	customers = _require_tenant()
+	name = _owned_request(request, customers)
+	doc = frappe.get_doc("Maintenance Request", name)
+	return {
+		"name": doc.name,
+		"subject": doc.subject,
+		"status": doc.status,
+		"updates": [
+			{
+				"posted_on": u.posted_on,
+				"author_name": u.author_name,
+				"from_portal": u.from_portal,
+				"message": u.message,
+				"photo": u.photo,
+			}
+			for u in doc.updates
+		],
+	}
+
+
+@frappe.whitelist()
+def post_maintenance_update(request, message=None, photo=None):
+	"""Tenant posts a message/photo to their OWN request. Server-side scoped: the
+	caller cannot target another tenant's request, and a photo URL must be a File the
+	caller owns (they just uploaded it) — never an arbitrary private file reference."""
+	from bunood_realestate.real_estate.doctype.maintenance_request.maintenance_request import append_update
+
+	customers = _require_tenant()
+	name = _owned_request(request, customers)
+
+	if photo:
+		owns_file = frappe.db.exists("File", {"file_url": photo, "owner": frappe.session.user})
+		if not owns_file:
+			frappe.throw(_("The attached photo could not be verified."), frappe.PermissionError)
+
+	doc = frappe.get_doc("Maintenance Request", name)
+	append_update(doc, message, photo, from_portal=1)
+	return {"name": doc.name}

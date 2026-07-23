@@ -23,7 +23,9 @@
   "resolution_section",
   "assigned_to",
   "resolved_on",
-  "resolution"
+  "resolution",
+  "conversation_section",
+  "updates"
  ],
  "fields": [
   {
@@ -142,6 +144,19 @@
    "fieldname": "resolution",
    "fieldtype": "Text",
    "label": "Resolution Notes"
+  },
+  {
+   "fieldname": "conversation_section",
+   "fieldtype": "Section Break",
+   "label": "Conversation"
+  },
+  {
+   "description": "Messages and photos exchanged with the tenant. Add via the 'Post Update' action so each entry is stamped and permission-checked.",
+   "fieldname": "updates",
+   "fieldtype": "Table",
+   "label": "Updates",
+   "options": "Maintenance Update",
+   "read_only": 1
   }
  ],
  "links": [

@@ -38,4 +38,12 @@ def get_context(context):
 	)
 	context.outstanding = sum(flt(i.outstanding_amount) for i in context.invoices)
 	context.has_active_lease = any(l.status == "Active" for l in context.leases)
+
+	context.maintenance = frappe.get_all(
+		"Maintenance Request",
+		filters={"tenant": ["in", customers]},
+		fields=["name", "subject", "status", "priority", "reported_on"],
+		order_by="reported_on desc",
+		limit=20,
+	)
 	return context
