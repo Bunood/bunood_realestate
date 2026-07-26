@@ -8,6 +8,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_days, add_months, date_diff, flt, getdate
 
+from bunood_realestate.real_estate.gl_utils import assert_company_access
+
 # ZATCA VAT number: 15 digits, starts and ends with 3 (bunood_core parity).
 ZATCA_VAT_RE = re.compile(r"^3\d{13}3$")
 
@@ -107,6 +109,11 @@ class LeaseContract(Document):
 		self._free_units()
 		cancel_for_lease(self)
 		self._cancel_fee_charges()
+		# Reverse the on_submit side effect on the parent: a cancelled renewal must not
+		# leave the original lease stuck in "Renewed" (which would block re-renewal).
+		if self.contract_subtype == "Renewal" and self.parent_lease:
+			if frappe.db.get_value("Lease Contract", self.parent_lease, "status") == "Renewed":
+				frappe.db.set_value("Lease Contract", self.parent_lease, "status", "Active")
 
 	def _free_units(self):
 		"""Free each unit ONLY if no OTHER Active submitted lease still holds it, and only
@@ -223,6 +230,7 @@ def renew_lease(lease_contract, rent_bump_pct=0, months=None):
 	rent bumped by rent_bump_pct (the only place rent increases — no mid-contract escalation)."""
 	frappe.only_for(["Accounts Manager", "System Manager"])
 	src = frappe.get_doc("Lease Contract", lease_contract)
+	assert_company_access(src.company)  # record/company scope beyond the role gate
 
 	new = frappe.copy_doc(src)
 	new.parent_lease = src.name
@@ -251,7 +259,9 @@ def renew_lease(lease_contract, rent_bump_pct=0, months=None):
 	):
 		new.set(f, None)
 
-	new.insert(ignore_permissions=True)
+	# Enforce create-perm on the copied lease (the gated roles hold it) instead of
+	# bypassing it, matching the wizard/importer creation paths.
+	new.insert()
 	return new.name
 
 

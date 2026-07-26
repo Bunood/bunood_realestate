@@ -46,13 +46,24 @@ def _require_tenant():
 	return customers
 
 
-def _require_owner():
+def _require_supplier_link(role_label):
+	"""Shared gate for every Supplier-scoped portal (owner, contractor): the user must be
+	logged in AND linked to at least one Supplier. Returns that Supplier list (never []).
+	One implementation — no per-role duplication."""
 	if frappe.session.user == "Guest":
-		frappe.throw(_("Please log in to access the owner portal."), frappe.PermissionError)
+		frappe.throw(_("Please log in to access the portal."), frappe.PermissionError)
 	suppliers = suppliers_for_user()
 	if not suppliers:
-		frappe.throw(_("Your account is not linked to an owner."), frappe.PermissionError)
+		frappe.throw(_("Your account is not linked to a {0}.").format(role_label), frappe.PermissionError)
 	return suppliers
+
+
+def _require_owner():
+	return _require_supplier_link(_("owner"))
+
+
+def _require_vendor():
+	return _require_supplier_link(_("contractor"))
 
 
 @frappe.whitelist()
@@ -198,3 +209,50 @@ def post_maintenance_update(request, message=None, photo=None):
 	doc = frappe.get_doc("Maintenance Request", name)
 	append_update(doc, message, photo, from_portal=1)
 	return {"name": doc.name}
+
+
+# ---------------------------------------------------------------------------
+# Contractor (vendor) portal — assigned maintenance work orders
+# ---------------------------------------------------------------------------
+
+_VENDOR_STATUSES = ("Open", "In Progress", "Done")  # a vendor can progress, never Cancel
+
+
+@frappe.whitelist()
+def vendor_work_orders():
+	"""Maintenance work orders assigned to the logged-in contractor (their linked
+	Supplier[s]). A contractor sees ONLY their own jobs."""
+	suppliers = _require_vendor()
+	return frappe.get_all(
+		"Maintenance Work Order",
+		filters={"contractor": ["in", suppliers]},
+		fields=["name", "maintenance_request", "property", "unit", "status", "scheduled_date", "notes", "total_cost"],
+		order_by="scheduled_date desc",
+		limit=100,
+	)
+
+
+@frappe.whitelist()
+def update_work_order(work_order, status=None, notes=None):
+	"""A contractor updates the status/notes of their OWN work order. Server-side scoped
+	to the caller's Supplier(s); only status + notes may change, and only to a non-Cancel
+	status — the caller cannot touch cost, assignment, or another vendor's job."""
+	suppliers = _require_vendor()
+	wo = frappe.db.get_value(
+		"Maintenance Work Order", frappe.utils.cstr(work_order or ""), ["name", "contractor"], as_dict=True
+	)
+	if not wo:
+		frappe.throw(_("Work order not found."), frappe.DoesNotExistError)
+	if wo.contractor not in suppliers:
+		frappe.throw(_("You do not have access to this work order."), frappe.PermissionError)
+
+	doc = frappe.get_doc("Maintenance Work Order", wo.name)
+	if status:
+		if status not in _VENDOR_STATUSES:
+			frappe.throw(_("Invalid status."))
+		doc.status = status
+	if notes is not None:
+		doc.notes = (notes or "").strip()[:2000]
+	doc.flags.ignore_permissions = True  # portal user has no desk perms; scoped above
+	doc.save(ignore_permissions=True)
+	return {"name": doc.name, "status": doc.status}

@@ -15,6 +15,23 @@ import frappe
 from frappe import _
 
 
+def assert_company_access(company):
+	"""Raise unless the caller may act in ``company``.
+
+	Money-mutator endpoints post GL with ``ignore_permissions=True`` after only a
+	doctype-level right check — which does NOT apply Company User Permissions. Call
+	this on the target document's company first: ``frappe.get_list("Company")`` returns
+	only the companies the caller is permitted to see, so a user restricted to company
+	A cannot post into company B.
+	"""
+	if not company:
+		frappe.throw(_("Company is required."), frappe.PermissionError)
+	if company not in (frappe.get_list("Company", pluck="name") or []):
+		frappe.throw(
+			_("You are not permitted to post in company {0}.").format(company), frappe.PermissionError
+		)
+
+
 def resolve_cost_center(company):
 	"""Return a Cost Center that belongs to ``company``, or ``None``.
 

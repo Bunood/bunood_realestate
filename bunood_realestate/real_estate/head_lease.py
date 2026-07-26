@@ -17,6 +17,7 @@ from frappe import _
 from frappe.utils import add_days, flt, nowdate
 
 from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import build_periods
+from bunood_realestate.real_estate.gl_utils import assert_company_access
 
 
 def generate_for_property(prop):
@@ -64,8 +65,12 @@ def generate_now(property):
 	return generate_for_property(property)
 
 
-def generate_due_head_lease_bills(property=None, lead_days=None):
-	"""Scheduler/manual: due Planned rows -> submitted Purchase Invoice to the owner."""
+def generate_due_head_lease_bills(property=None, lead_days=None, companies=None):
+	"""Scheduler/manual: due Planned rows -> submitted Purchase Invoice to the owner.
+
+	``companies`` (when not None) restricts the sweep to those companies — the
+	whitelisted entry point passes the caller's permitted companies so a user cannot
+	post bills across companies they may not see; the scheduler passes None (all)."""
 	settings = frappe.get_single("Real Estate Settings")
 	if lead_days is None:
 		lead_days = int(settings.invoice_lead_days or 0)
@@ -74,6 +79,8 @@ def generate_due_head_lease_bills(property=None, lead_days=None):
 	filters = {"status": "Planned", "purchase_invoice": ["in", [None, ""]], "due_date": ["<=", cutoff]}
 	if property:
 		filters["property"] = property
+	if companies is not None:
+		filters["company"] = ["in", companies or ["__none__"]]
 	names = frappe.get_all("Head Lease Schedule", filters=filters, order_by="due_date asc", pluck="name")
 
 	created = 0
@@ -146,4 +153,10 @@ def _post_bill(schedule_name, settings=None):
 @frappe.whitelist()
 def post_due_bills(property=None):
 	frappe.has_permission("Purchase Invoice", "submit", throw=True)
-	return generate_due_head_lease_bills(property=property)
+	if property:
+		# ignore_permissions post → verify the caller may act in this property's company.
+		assert_company_access(frappe.db.get_value("Property", property, "company"))
+		return generate_due_head_lease_bills(property=property)
+	# Bulk: restrict to the caller's permitted companies (never post across companies
+	# they cannot see); the scheduler calls generate_due_head_lease_bills directly (all).
+	return generate_due_head_lease_bills(companies=frappe.get_list("Company", pluck="name"))

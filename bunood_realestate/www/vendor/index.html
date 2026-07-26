@@ -1,0 +1,69 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Contractor Portal") }}{% endblock %}
+
+{% block page_content %}
+<div class="bnd-portal" dir="rtl" style="max-width: 900px; margin: 0 auto; padding: 24px 12px;">
+  <h1 style="font-weight:800;">{{ _("Contractor Portal") }}</h1>
+
+  {% if not linked %}
+    <div class="alert alert-warning">{{ _("Your account is not linked to a contractor yet. Please contact the property office.") }}</div>
+  {% else %}
+
+    <p class="text-muted">{{ _("Your assigned maintenance work orders. Update the status as you progress.") }}</p>
+
+    {% if work_orders %}
+    <div id="bnd-wo-list">
+      {% for w in work_orders %}
+      <div class="bnd-wo" data-name="{{ w.name }}" style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div>
+            <strong>{{ w.name }}</strong>
+            <span class="text-muted" style="font-size:12px;"> · {{ w.property or "" }}{% if w.unit %} · {{ w.unit }}{% endif %}</span>
+            {% if w.scheduled_date %}<div class="text-muted" style="font-size:12px;">{{ _("Scheduled") }}: {{ w.scheduled_date }}</div>{% endif %}
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select class="form-control bnd-wo-status" style="width:auto;">
+              {% for s in ["Open", "In Progress", "Done"] %}
+              <option value="{{ s }}" {% if w.status == s %}selected{% endif %}>{{ _(s) }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-primary bnd-wo-save">{{ _("Save") }}</button>
+          </div>
+        </div>
+        <textarea class="form-control bnd-wo-notes" rows="2" maxlength="2000" placeholder="{{ _('Notes') }}" style="margin-top:8px;">{{ w.notes or "" }}</textarea>
+        <div class="bnd-wo-msg" style="font-size:12px; margin-top:4px;"></div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="text-muted">{{ _("No work orders assigned.") }}</p>{% endif %}
+
+  {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".bnd-wo").forEach(function (card) {
+    var save = card.querySelector(".bnd-wo-save");
+    if (!save) return;
+    save.addEventListener("click", function () {
+      var name = card.getAttribute("data-name");
+      var status = card.querySelector(".bnd-wo-status").value;
+      var notes = card.querySelector(".bnd-wo-notes").value;
+      var msg = card.querySelector(".bnd-wo-msg");
+      save.disabled = true;
+      frappe.call({
+        method: "bunood_realestate.portal.update_work_order",
+        args: { work_order: name, status: status, notes: notes },
+        callback: function (r) {
+          if (r.message) {
+            msg.innerHTML = '<span class="text-success">' + {{ _("Saved") | tojson }} + "</span>";
+          }
+        },
+        always: function () { save.disabled = false; },
+      });
+    });
+  });
+});
+</script>
+{% endblock %}

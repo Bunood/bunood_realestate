@@ -11,6 +11,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, nowdate
 
+from bunood_realestate.real_estate.gl_utils import assert_company_access
+
 
 @frappe.whitelist()
 def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
@@ -30,6 +32,7 @@ def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 	)
 	if not state:
 		frappe.throw(_("Lease {0} not found.").format(lease_contract))
+	assert_company_access(state.company)  # ignore_permissions post → verify company scope first
 	if state.deposit_received:
 		frappe.throw(_("A deposit has already been recorded for this lease."))
 
@@ -71,6 +74,7 @@ def refund_deposit(lease_contract, amount, paid_from_account, posting_date=None)
 	)
 	if not state:
 		frappe.throw(_("Lease {0} not found.").format(lease_contract))
+	assert_company_access(state.company)  # ignore_permissions post → verify company scope first
 	held = flt(state.deposit_received) - flt(state.deposit_refunded)
 	if amount > held:
 		frappe.throw(_("Refund exceeds the held deposit balance."))

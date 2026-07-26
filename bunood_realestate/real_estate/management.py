@@ -22,7 +22,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate, nowdate
 
-from bunood_realestate.real_estate.gl_utils import require_cost_center
+from bunood_realestate.real_estate.gl_utils import assert_company_access, require_cost_center
 
 
 def compute_owner_payout(rent_base, fee_pct):
@@ -80,6 +80,10 @@ def generate_owner_payout(property, from_date, to_date):
 		frappe.throw(_("From Date must be on or before To Date."))
 
 	p = frappe.get_doc("Property", property)
+	# Record/company scope: the doctype-level JE-submit right above does NOT apply
+	# Company User Permissions, and we post with ignore_permissions — so verify the
+	# caller may act in this property's company before touching the GL.
+	assert_company_access(p.company)
 
 	behavior = frappe.db.get_value("RE Management Model", p.management_model, "behavior") if p.management_model else None
 	if behavior != "managed":

@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_months, flt, getdate, nowdate
 
+from bunood_realestate.real_estate.gl_utils import assert_company_access
+
 
 class UnitBooking(Document):
 	def validate(self):
@@ -48,11 +50,23 @@ def expire_bookings():
 		filters={"status": "Reserved", "docstatus": 1, "expiry_date": ["<", nowdate()]},
 		fields=["name", "unit"],
 	)
+	expired = 0
 	for b in rows:
-		frappe.db.set_value("Unit Booking", b.name, "status", "Expired")
-		if b.unit and frappe.db.get_value("Real Estate Unit", b.unit, "status") == "Reserved":
-			frappe.db.set_value("Real Estate Unit", b.unit, "status", "Vacant")
-	return len(rows)
+		# Per-row isolation + commit + log (match the rent/head-lease jobs): one bad
+		# booking must not abort the whole daily sweep.
+		try:
+			frappe.db.set_value("Unit Booking", b.name, "status", "Expired")
+			if b.unit and frappe.db.get_value("Real Estate Unit", b.unit, "status") == "Reserved":
+				frappe.db.set_value("Real Estate Unit", b.unit, "status", "Vacant")
+			frappe.db.commit()
+			expired += 1
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Bunood: booking expiry failed",
+				message=f"Unit Booking {b.name}\n\n{frappe.get_traceback()}",
+			)
+	return expired
 
 
 @frappe.whitelist()
@@ -61,6 +75,7 @@ def convert_to_lease(booking):
 	completes/activates it). The unit stays Reserved until the lease is submitted."""
 	frappe.only_for(["Accounts Manager", "System Manager"])
 	b = frappe.get_doc("Unit Booking", booking)
+	assert_company_access(b.company)  # record/company scope beyond the role gate
 	if b.docstatus != 1 or b.status != "Reserved":
 		frappe.throw(_("Only an active reservation can be converted."))
 

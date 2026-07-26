@@ -128,7 +128,8 @@
    "fieldtype": "Link",
    "label": "Sales Invoice",
    "options": "Sales Invoice",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "description": "Reflects the Sales Invoice (Unpaid / Overdue / Paid). Source of truth is ERPNext, not stored here.",

@@ -17,10 +17,16 @@ def _as_list(value):
 	return list(value)
 
 
-@frappe.whitelist()
 def notify(recipients=None, subject=None, message=None, channels=None,
            mobiles=None, reference_doctype=None, reference_name=None):
 	"""Send `message` over one or more channels.
+
+	INTERNAL ONLY — deliberately NOT @frappe.whitelist(): it fans caller-supplied
+	recipients/body into email + SMS, so exposing it over /api/method would let any
+	authenticated user (incl. portal tenants) send arbitrary mail/SMS (toll fraud +
+	phishing). Call it from trusted server code that has already permission-gated the
+	action; if a client ever needs it, add a NEW whitelisted wrapper that role-gates,
+	restricts recipients to related parties, and rate-limits.
 	- email  -> `recipients` (email addresses)
 	- sms    -> `mobiles` (phone numbers; falls back to `recipients` only if given as phones)
 	- whatsapp -> `mobiles`
