@@ -15,6 +15,16 @@ frappe.ui.form.on("Property", {
 	refresh(frm) {
 		if (frm.is_new()) return;
 
+		// Prominent top buttons — preview live data before printing, and jump to finance.
+		const pbtn = frm.add_custom_button(__("Preview"), () => property_preview_dialog(frm));
+		if (pbtn) pbtn.removeClass("btn-default").addClass("btn-primary");
+		frm.add_custom_button(__("Finance"), () => {
+			frappe.set_route("property-finance").then(() => {
+				const pf = frappe.pages["property-finance"];
+				if (pf && pf.bnd_set_property) pf.bnd_set_property(frm.doc.name);
+			});
+		});
+
 		frm.add_custom_button(
 			__("Create Units"),
 			() => open_bulk_units_dialog(frm),
@@ -97,6 +107,45 @@ frappe.ui.form.on("Property", {
 		}
 	},
 });
+
+function property_preview_dialog(frm) {
+	frappe.call({
+		method: "bunood_realestate.real_estate.previews.property_preview",
+		args: { property: frm.doc.name },
+		freeze: true,
+		freeze_message: __("Loading..."),
+		callback: (r) => {
+			if (!r.message) return;
+			const d = r.message;
+			const esc = frappe.utils.escape_html;
+			const chip = (label, value, color) =>
+				`<div style="flex:1;min-width:120px;background:#f7f9f8;border:1px solid #e8eae7;border-radius:12px;padding:12px 14px;">
+					<div style="font-size:11.5px;color:#6b7280;">${esc(label)}</div>
+					<div style="font-size:20px;font-weight:800;color:${color || "#1F5145"};">${value}</div></div>`;
+			const html = `
+				<div dir="auto">
+					<h4 style="margin:0 0 10px;">${esc(d.property_name)}</h4>
+					<div style="display:flex;gap:10px;flex-wrap:wrap;">
+						${chip(__("Occupancy"), `${d.occupancy_pct}%`, "#1F5145")}
+						${chip(__("Units"), d.units_total, "#475569")}
+						${chip(__("Occupied"), d.occupied, "#2D6F5E")}
+						${chip(__("Vacant"), d.vacant, "#C8923C")}
+						${chip(__("Active Leases"), d.active_leases, "#475569")}
+					</div>
+				</div>`;
+			const dlg = new frappe.ui.Dialog({
+				title: __("Property Preview — {0}", [d.name]),
+				fields: [{ fieldtype: "HTML", fieldname: "body", options: html }],
+				primary_action_label: __("Print"),
+				primary_action() {
+					dlg.hide();
+					frm.print_doc();
+				},
+			});
+			dlg.show();
+		},
+	});
+}
 
 function open_bulk_units_dialog(frm) {
 	const d = new frappe.ui.Dialog({

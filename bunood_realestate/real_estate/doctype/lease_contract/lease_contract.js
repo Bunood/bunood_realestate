@@ -13,6 +13,12 @@ frappe.ui.form.on("Lease Contract", {
 	refresh(frm) {
 		recompute_annual_rent(frm);
 
+		// Prominent top button: preview the live data before printing / acting.
+		if (!frm.is_new()) {
+			const btn = frm.add_custom_button(__("Preview"), () => lease_preview_dialog(frm));
+			if (btn) btn.removeClass("btn-default").addClass("btn-primary");
+		}
+
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(
 				__("Generate Due Invoices"),
@@ -110,6 +116,68 @@ frappe.ui.form.on("Lease Contract", {
 		}
 	},
 });
+
+function lease_preview_dialog(frm) {
+	frappe.call({
+		method: "bunood_realestate.real_estate.previews.lease_preview",
+		args: { lease_contract: frm.doc.name },
+		freeze: true,
+		freeze_message: __("Loading..."),
+		callback: (r) => {
+			if (!r.message) return;
+			const d = r.message;
+			const esc = frappe.utils.escape_html;
+			const money = (v) => frappe.format(flt(v), { fieldtype: "Currency" }, { currency: d.currency });
+			const chip = (label, value, color) =>
+				`<div style="flex:1;min-width:120px;background:#f7f9f8;border:1px solid #e8eae7;border-radius:12px;padding:10px 12px;">
+					<div style="font-size:11.5px;color:#6b7280;">${esc(label)}</div>
+					<div style="font-size:17px;font-weight:700;color:${color || "#1F5145"};">${value}</div></div>`;
+			let unitRows = (d.units || [])
+				.map((u) => `<tr><td style="padding:4px 8px;">${esc(u.unit || "-")}</td>
+					<td style="padding:4px 8px;text-align:end;">${money(u.annual_rent)}</td></tr>`)
+				.join("");
+			if (!unitRows) unitRows = `<tr><td colspan="2" style="padding:4px 8px;color:#9ca3af;">${__("No units")}</td></tr>`;
+			const sched = Object.entries(d.schedule || {})
+				.map(([k, v]) => `<span style="display:inline-block;background:#eef2f1;color:#1F5145;border-radius:20px;padding:2px 10px;margin:2px;font-size:12px;">${esc(__(k))}: ${v}</span>`)
+				.join("") || `<span style="color:#9ca3af;">${__("No schedule yet")}</span>`;
+			const html = `
+				<div dir="auto" style="font-size:13.5px;">
+					<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+						${chip(__("Tenant"), esc(d.tenant_name))}
+						${chip(__("Property"), esc(d.property || "-"))}
+						${chip(__("Status"), esc(__(d.status || "")))}
+					</div>
+					<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+						${chip(__("Annual Rent"), money(d.annual_rent_total))}
+						${chip(__("Deposit Held"), money(d.deposit_held), "#C8923C")}
+						${chip(__("Outstanding"), money(d.outstanding), flt(d.outstanding) > 0 ? "#DC2626" : "#1F5145")}
+					</div>
+					<div style="margin:8px 0;color:#374151;">
+						<b>${__("Term")}:</b> ${esc(d.start_date || "")} → ${esc(d.end_date || "")}
+						${d.hijri_start_date ? `<span style="color:#6b7280;"> · ${__("Hijri")}: ${esc(d.hijri_start_date)} → ${esc(d.hijri_end_date || "")}</span>` : ""}
+					</div>
+					<table style="width:100%;border-collapse:collapse;margin:8px 0;">
+						<thead><tr style="border-bottom:1px solid #e5e7eb;">
+							<th style="padding:4px 8px;text-align:start;">${__("Unit")}</th>
+							<th style="padding:4px 8px;text-align:end;">${__("Annual Rent")}</th></tr></thead>
+						<tbody>${unitRows}</tbody>
+					</table>
+					<div style="margin-top:8px;"><b>${__("Rent Schedule")}:</b><br>${sched}</div>
+				</div>`;
+			const dlg = new frappe.ui.Dialog({
+				title: __("Lease Preview — {0}", [d.name]),
+				size: "large",
+				fields: [{ fieldtype: "HTML", fieldname: "body", options: html }],
+				primary_action_label: __("Print"),
+				primary_action() {
+					dlg.hide();
+					frm.print_doc();
+				},
+			});
+			dlg.show();
+		},
+	});
+}
 
 function renew_dialog(frm) {
 	const d = new frappe.ui.Dialog({

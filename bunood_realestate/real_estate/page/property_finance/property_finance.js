@@ -113,4 +113,11 @@ frappe.pages["property-finance"].on_page_load = function (wrapper) {
 	fromField.$input.on("change", load);
 	toField.$input.on("change", load);
 	load();
+
+	// Let other screens (e.g. the Property form's "Finance" button) open this page
+	// already focused on a property.
+	frappe.pages["property-finance"].bnd_set_property = function (name) {
+		propField.set_value(name);
+		load();
+	};
 };
