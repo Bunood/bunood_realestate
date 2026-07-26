@@ -171,6 +171,17 @@
   {
    "dependencies": "",
    "hidden": 0,
+   "is_query_report": 1,
+   "label": "Expiring Leases",
+   "link_count": 0,
+   "link_to": "Expiring Leases",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
    "is_query_report": 0,
    "label": "Collection Notification",
    "link_count": 0,
