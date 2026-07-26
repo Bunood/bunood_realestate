@@ -9,8 +9,10 @@
   "lease_contract",
   "customer",
   "company",
+  "notification_type",
   "column_break_cn",
   "channel",
+  "detail",
   "amount",
   "sent_on",
   "message"
@@ -39,6 +41,15 @@
    "options": "Company"
   },
   {
+   "default": "Collection",
+   "fieldname": "notification_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Type",
+   "options": "Collection\nRenewal\nReceipt"
+  },
+  {
    "fieldname": "column_break_cn",
    "fieldtype": "Column Break"
   },
@@ -49,7 +60,14 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Channel",
-   "options": "WhatsApp\nSMS\nEmail"
+   "options": "WhatsApp\nSMS\nEmail\nSystem"
+  },
+  {
+   "description": "Idempotency key — e.g. the expiry milestone (T-60/T-30/T-7) or the reminder date, so a given alert is logged once.",
+   "fieldname": "detail",
+   "fieldtype": "Data",
+   "label": "Detail",
+   "in_standard_filter": 1
   },
   {
    "fieldname": "amount",

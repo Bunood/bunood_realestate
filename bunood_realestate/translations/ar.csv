@@ -621,3 +621,15 @@ Nothing recorded for this period.,لا يوجد تسجيل لهذه الفترة
 Select a property to see its finances.,اختر عقاراً لعرض ماليّته.
 Income,دخل
 Expense,مصروف
+Auto-renew is ON.,التجديد التلقائي مُفعّل.
+Auto-renew is OFF — contact the tenant to renew.,التجديد التلقائي مُعطّل — تواصل مع المستأجر للتجديد.
+Lease {0} for {1} (property {2}) expires on {3} — in {4} days. {5},عقد الإيجار {0} للمستأجر {1} (عقار {2}) ينتهي في {3} — خلال {4} يوماً. {5}
+Lease expiring soon,عقد يقارب الانتهاء
+Reminder: {0} has an outstanding balance of {1} on lease {2}.,تذكير: على {0} مبلغ مستحق {1} في عقد الإيجار {2}.
+Overdue rent,إيجار متأخر
+Automated Notifications,إشعارات تلقائية
+Enable Renewal & Collection Notifications,تفعيل إشعارات التجديد والتحصيل
+Detail,تفصيل
+Collection,تحصيل
+Receipt,إيصال
+System,النظام

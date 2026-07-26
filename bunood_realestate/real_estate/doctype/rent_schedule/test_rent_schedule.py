@@ -9,6 +9,7 @@ from bunood_realestate.real_estate.doctype.lease_contract.lease_contract import 
 from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import build_periods
 from bunood_realestate.real_estate.collections import compute_late_fee
 from bunood_realestate.real_estate.management import compute_owner_payout
+from bunood_realestate.real_estate.notifications import expiry_milestone
 from bunood_realestate.real_estate.tasks import split_amount
 
 
@@ -89,6 +90,19 @@ class TestLateFee(unittest.TestCase):
 	def test_zero_when_not_overdue_or_no_value(self):
 		self.assertEqual(compute_late_fee(0, "Percentage of Overdue", 5, 0), 0.0)
 		self.assertEqual(compute_late_fee(1000, "Percentage of Overdue", 0, 0), 0.0)
+
+
+class TestExpiryMilestone(unittest.TestCase):
+	def test_hits_each_milestone(self):
+		# today=2026-01-01, end at +60/+30/+7 → that milestone; else None.
+		self.assertEqual(expiry_milestone("2025-01-01", "2026-03-02", "2026-01-01"), 60)
+		self.assertEqual(expiry_milestone("2025-01-01", "2026-01-31", "2026-01-01"), 30)
+		self.assertEqual(expiry_milestone("2025-01-01", "2026-01-08", "2026-01-01"), 7)
+
+	def test_none_off_milestone(self):
+		self.assertIsNone(expiry_milestone("2025-01-01", "2026-01-15", "2026-01-01"))  # 14 days
+		self.assertIsNone(expiry_milestone("2025-01-01", "2025-12-31", "2026-01-01"))  # already past
+		self.assertIsNone(expiry_milestone("2025-01-01", "2026-01-01", "2026-01-01"))  # today
 
 
 class TestZatcaVatRegex(unittest.TestCase):

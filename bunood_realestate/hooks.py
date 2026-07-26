@@ -52,6 +52,10 @@ scheduler_events = {
         "bunood_realestate.real_estate.collections.apply_late_fees",
         # Expire abandoned unit holds so a unit never stays stuck "Reserved".
         "bunood_realestate.real_estate.doctype.unit_booking.unit_booking.expire_bookings",
+        # Notifications (no-op unless enabled in Real Estate Settings): alert on leases
+        # expiring soon (T-60/30/7) and on tenants with overdue rent. Idempotent (logged once).
+        "bunood_realestate.real_estate.notifications.notify_expiring_leases",
+        "bunood_realestate.real_estate.notifications.send_overdue_reminders",
     ],
 }
 

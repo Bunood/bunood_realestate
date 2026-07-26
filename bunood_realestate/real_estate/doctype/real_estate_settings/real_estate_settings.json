@@ -29,7 +29,9 @@
   "column_break_lf",
   "late_fee_type",
   "late_fee_value",
-  "late_fee_cap"
+  "late_fee_cap",
+  "notifications_section",
+  "enable_auto_notifications"
  ],
  "fields": [
   {
@@ -195,6 +197,18 @@
    "fieldname": "late_fee_cap",
    "fieldtype": "Currency",
    "label": "Late Fee Cap"
+  },
+  {
+   "fieldname": "notifications_section",
+   "fieldtype": "Section Break",
+   "label": "Automated Notifications"
+  },
+  {
+   "default": "0",
+   "description": "When on, daily jobs alert on leases expiring soon (T-60/30/7) and on tenants with overdue rent. Each alert is logged once (Collection Notification) so it never repeats.",
+   "fieldname": "enable_auto_notifications",
+   "fieldtype": "Check",
+   "label": "Enable Renewal & Collection Notifications"
   }
  ],
  "index_web_pages_for_search": 1,
