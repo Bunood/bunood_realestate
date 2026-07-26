@@ -643,3 +643,14 @@ No units,لا وحدات
 No schedule yet,لا يوجد جدول بعد
 Occupancy,الإشغال
 Print,طباعة
+Property Building,مبنى العقار
+Building View,عرض المبنى
+Ground,الأرضي
+Floor {0},الطابق {0}
+m²,م²
+rooms,غرف
+baths,حمامات
+No tenant,لا مستأجر
+This property has no units yet.,لا توجد وحدات لهذا العقار بعد.
+Select a property to see its building.,اختر عقاراً لعرض مبناه.
+Unit {0},الوحدة {0}

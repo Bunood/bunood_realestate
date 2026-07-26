@@ -51,6 +51,94 @@ def lease_preview(lease_contract):
 
 
 @frappe.whitelist()
+def property_building(property):
+	"""Units of a property grouped by floor, each with its live status/tenant/rent — the
+	data behind the visual 'building' view + units board. Occupancy is derived from
+	submitted Active leases (authoritative), not the mutable unit.status flag."""
+	p = frappe.get_doc("Property", property)
+	p.check_permission("read")
+
+	units = frappe.get_all(
+		"Real Estate Unit",
+		filters={"property": property},
+		fields=[
+			"name", "unit_number", "unit_type", "floor", "area_sqm",
+			"rooms_count", "bathrooms", "market_rent", "status", "view_type",
+		],
+		order_by="floor asc, unit_number asc",
+	)
+
+	# unit -> live tenancy from the active lease (authoritative).
+	leased = {}
+	for r in frappe.db.sql(
+		"""
+		SELECT lu.unit AS unit, lc.name AS lease, lc.customer AS customer,
+		       cust.customer_name AS tenant_name, lu.annual_rent AS rent
+		FROM `tabLease Unit` lu
+		JOIN `tabLease Contract` lc ON lc.name = lu.parent
+		JOIN `tabReal Estate Unit` reu ON reu.name = lu.unit
+		LEFT JOIN `tabCustomer` cust ON cust.name = lc.customer
+		WHERE lc.docstatus = 1 AND lc.status = 'Active' AND reu.property = %s
+		""",
+		property,
+		as_dict=True,
+	):
+		leased.setdefault(r.unit, r)
+
+	floors = {}
+	counts = {"Occupied": 0, "Reserved": 0, "Vacant": 0, "Maintenance": 0}
+	for u in units:
+		live = leased.get(u.name)
+		if live:
+			state = "Occupied"
+			tenant, tenant_name, rent, lease = live.customer, live.tenant_name, flt(live.rent), live.lease
+		else:
+			# No active lease → fall back to the unit's own flag, but never claim "Occupied".
+			state = u.status if u.status in ("Reserved", "Maintenance") else "Vacant"
+			tenant = tenant_name = lease = None
+			rent = flt(u.market_rent)
+		counts[state] = counts.get(state, 0) + 1
+
+		key = u.floor if u.floor is not None else 0
+		floors.setdefault(key, []).append({
+			"name": u.name,
+			"unit_number": u.unit_number or u.name,
+			"unit_type": u.unit_type,
+			"floor": u.floor,
+			"area_sqm": flt(u.area_sqm),
+			"rooms_count": u.rooms_count,
+			"bathrooms": u.bathrooms,
+			"view_type": u.view_type,
+			"state": state,
+			"tenant": tenant,
+			"tenant_name": tenant_name,
+			"rent": rent,
+			"lease": lease,
+		})
+
+	total = len(units)
+	floor_list = [
+		{"floor": k, "units": floors[k]}
+		for k in sorted(floors.keys(), reverse=True)  # top floor first (building view)
+	]
+	return {
+		"property": p.name,
+		"property_name": p.get("property_name") or p.name,
+		"company": p.company,
+		"currency": frappe.get_cached_value("Company", p.company, "default_currency") or "SAR",
+		"floors": floor_list,
+		"totals": {
+			"total": total,
+			"occupied": counts["Occupied"],
+			"reserved": counts["Reserved"],
+			"vacant": counts["Vacant"],
+			"maintenance": counts["Maintenance"],
+			"occupancy_pct": round(counts["Occupied"] * 100.0 / total, 1) if total else 0.0,
+		},
+	}
+
+
+@frappe.whitelist()
 def property_preview(property):
 	"""Live summary for one property: units, occupancy, active leases — before printing."""
 	p = frappe.get_doc("Property", property)

@@ -18,6 +18,12 @@ frappe.ui.form.on("Property", {
 		// Prominent top buttons — preview live data before printing, and jump to finance.
 		const pbtn = frm.add_custom_button(__("Preview"), () => property_preview_dialog(frm));
 		if (pbtn) pbtn.removeClass("btn-default").addClass("btn-primary");
+		frm.add_custom_button(__("Building View"), () => {
+			frappe.set_route("property-building").then(() => {
+				const pb = frappe.pages["property-building"];
+				if (pb && pb.bnd_set_property) pb.bnd_set_property(frm.doc.name);
+			});
+		});
 		frm.add_custom_button(__("Finance"), () => {
 			frappe.set_route("property-finance").then(() => {
 				const pf = frappe.pages["property-finance"];
