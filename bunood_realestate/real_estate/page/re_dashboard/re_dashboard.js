@@ -4,6 +4,7 @@
 // (re_dashboard.dashboard_data). Styling: bunood_theme/public/css/bunood_cockpit.css.
 
 frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
+	bnd_inject_cockpit_css();
 	frappe.ui.make_app_page({ parent: wrapper, title: __("Real Estate Command Center"), single_column: true });
 
 	const $c = $(wrapper).find(".layout-main-section").addClass("bnd-dash-wrap");
@@ -170,3 +171,84 @@ frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 
 	$c.on("click", "[data-go]", function () { frappe.set_route($(this).data("go")); });
 };
+
+// The "Sadu Modern" cockpit stylesheet ships WITH the app (self-contained, palette
+// hardcoded, font fallbacks) and is injected once — so the command center renders as
+// designed regardless of which desk theme is installed.
+function bnd_inject_cockpit_css() {
+	if (document.getElementById("bnd-ck-css")) return;
+	const css = `
+.bnd-ck{--g:#1F5145;--g-deep:#0F2A24;--g-ink:#0A201B;--g-soft:#2D6F5E;--g-line:#1B463C;--brass:#C8923C;--brass-bright:#F6D08A;--ochre-deep:#8E641E;--mint:#9BE0CB;--mint-bright:#C4F0E0;--mint-soft:#E3F1EB;--mint-deep:#2F7D66;--paper:#F4F5F0;--card:#FFFFFF;--rule:#E8E9E2;--rule-d:#D9DCD3;--ink:#0B1F1A;--stone:#5B6760;--rust:#B5563C;--rust-soft:#F2D8CE;--slate:#3D5260;--on-g-1:#fff;--on-g-2:rgba(255,255,255,.85);--on-g-3:rgba(255,255,255,.72);--spring:cubic-bezier(.34,1.56,.64,1);--ease-out:cubic-bezier(.22,1,.36,1);--num:'Space Grotesk','Readex Pro',system-ui,sans-serif;--head:'El Messiri','Readex Pro',system-ui,sans-serif;max-width:1280px;margin-inline:auto;padding:6px 2px 48px}
+html[data-theme="dark"] .bnd-ck{--paper:#0C1512;--card:#111F1A;--rule:#223229;--rule-d:#223229;--ink:#EAF2EE;--stone:#8FA39B}
+.bnd-ck .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}
+.bnd-ck .ck-hero{position:relative;overflow:hidden;border-radius:18px;padding:26px 30px;color:#fff;background:linear-gradient(120deg,var(--g),var(--g-deep));box-shadow:0 18px 36px rgba(15,42,36,.16)}
+.bnd-ck .ck-hero::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 1.5px,transparent 1.5px 14px),repeating-linear-gradient(-45deg,rgba(255,255,255,.035) 0 1.5px,transparent 1.5px 14px)}
+.bnd-ck .ck-hero__sadu{position:absolute;inset-block:0;inset-inline-start:0;width:7px;background:repeating-linear-gradient(180deg,var(--brass) 0 8px,var(--g-deep) 8px 12px,var(--mint) 12px 20px,var(--g-deep) 20px 24px)}
+.bnd-ck .ck-hero__in{position:relative;display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap}
+.bnd-ck .ck-hero__mark{width:52px;height:52px;border-radius:12px;background:var(--g-deep);display:grid;place-items:center;color:var(--brass-bright);flex:0 0 auto}
+.bnd-ck .ck-hero__mark svg{width:26px;height:26px}
+.bnd-ck .ck-hero__eyebrow{color:var(--brass-bright);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.bnd-ck .ck-hero__title{font-family:var(--head);font-size:26px;font-weight:700;margin-top:3px}
+.bnd-ck .ck-hero__sub{color:var(--on-g-2);font-size:13px;margin-top:4px}
+.bnd-ck .ck-hero__pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.bnd-ck .hpill{border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600}
+.bnd-ck .hpill--brass{background:rgba(246,208,138,.16);color:var(--brass-bright);border:1px solid rgba(246,208,138,.3)}
+.bnd-ck .hpill--white{background:rgba(255,255,255,.12);color:#fff}
+.bnd-ck .hpill--ink{background:var(--g-ink);color:var(--on-g-2)}
+.bnd-ck .ck-hero__cta{margin-inline-start:auto;display:flex;gap:10px;align-items:center}
+.bnd-ck .ck-btn{border-radius:10px;padding:10px 18px;font-weight:700;font-size:13px;border:1px solid transparent;cursor:pointer;transition:transform .12s var(--spring)}
+.bnd-ck .ck-btn:hover{transform:translateY(-2px)}
+.bnd-ck .ck-btn--brass{background:var(--brass);color:#1a1205}
+.bnd-ck .ck-btn--out{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.bnd-ck .ck-hk{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+@media(max-width:900px){.bnd-ck .ck-hk{grid-template-columns:1fr 1fr}}
+.bnd-ck .ck-hk__c{position:relative;overflow:hidden;display:block;border-radius:14px;padding:16px 18px;background:var(--g-deep);color:#fff;text-decoration:none;transition:transform .16s var(--spring),box-shadow .16s var(--ease-out)}
+.bnd-ck .ck-hk__c::before{content:"";position:absolute;inset-block-start:0;inset-inline:0;height:3px;background:var(--brass);transform:scaleX(0);transform-origin:inline-start;transition:transform .3s var(--ease-out)}
+.bnd-ck .ck-hk__c:hover{transform:translateY(-5px) scale(1.018);box-shadow:0 18px 36px rgba(15,42,36,.3);color:#fff}
+.bnd-ck .ck-hk__c:hover::before{transform:scaleX(1)}
+.bnd-ck .ck-hk__lbl{display:flex;align-items:center;gap:7px;color:var(--on-g-2);font-size:12px;font-weight:600}
+.bnd-ck .ck-hk__lbl svg{width:16px;height:16px;color:var(--brass-bright);transition:transform .16s var(--spring)}
+.bnd-ck .ck-hk__c:hover .ck-hk__lbl svg{transform:scale(1.16) rotate(-7deg)}
+.bnd-ck .ck-hk__val{font-family:var(--num);font-size:25px;font-weight:800;margin-top:8px}
+.bnd-ck .ck-hk__val.is-brass{color:var(--brass-bright)}
+.bnd-ck .ck-h{display:flex;align-items:center;gap:10px;margin:24px 0 12px}
+.bnd-ck .ck-h__ic{width:28px;height:28px;border-radius:8px;background:var(--mint-soft);color:var(--g);display:grid;place-items:center}
+.bnd-ck .ck-h__ic svg{width:16px;height:16px}
+.bnd-ck .ck-h__t{font-family:var(--head);font-size:16px;font-weight:700;color:var(--ink)}
+.bnd-ck .ck-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.bnd-ck .col-4{grid-column:span 4}.bnd-ck .col-5{grid-column:span 5}.bnd-ck .col-7{grid-column:span 7}.bnd-ck .col-8{grid-column:span 8}
+@media(max-width:900px){.bnd-ck .ck-grid>*{grid-column:span 12!important}}
+.bnd-ck .card{background:var(--card);border:1px solid var(--rule);border-radius:16px;box-shadow:0 2px 8px rgba(11,31,26,.05)}
+.bnd-ck .card__t{font-family:var(--head);font-weight:700;color:var(--ink);padding:16px 18px 4px}
+.bnd-ck .ring-wrap{display:flex;align-items:center;gap:16px;padding:8px 18px 18px;flex-wrap:wrap}
+.bnd-ck .ring{width:168px;height:168px;flex:0 0 auto}
+.bnd-ck .ring__center{font-family:var(--num);font-size:34px;font-weight:800;fill:var(--ink)}
+.bnd-ck .leg{display:flex;flex-direction:column;gap:8px}
+.bnd-ck .leg__row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink)}
+.bnd-ck .leg__dot{width:10px;height:10px;border-radius:3px}
+.bnd-ck .leg__n{font-family:var(--num);font-weight:700;margin-inline-start:auto}
+.bnd-ck .line-card{padding-bottom:10px}
+.bnd-ck .line{width:100%;height:220px;display:block}
+.bnd-ck .line__path{fill:none;stroke:var(--g-soft);stroke-width:2.5}
+.bnd-ck .line__dot{fill:var(--g-soft)}
+.bnd-ck .line__marker{fill:var(--brass)}
+.bnd-ck .line__xlabels{display:flex;justify-content:space-between;padding:4px 14px 0;color:var(--stone);font-size:11px}
+.bnd-ck .ck-queue{display:flex;flex-direction:column;padding:6px 0 10px}
+.bnd-ck .q{display:flex;align-items:center;gap:12px;padding:11px 18px;text-decoration:none;color:inherit;transition:background .12s}
+.bnd-ck .q:hover{background:var(--paper)}
+.bnd-ck .q__ic{width:36px;height:36px;border-radius:9px;background:var(--mint-soft);color:var(--g);display:grid;place-items:center;flex:0 0 auto}
+.bnd-ck .q--danger .q__ic{background:var(--rust-soft);color:var(--rust)}
+.bnd-ck .q__t{font-weight:600;color:var(--ink);font-size:13.5px}
+.bnd-ck .q__s{font-size:12px;color:var(--stone)}
+.bnd-ck .q__amt{margin-inline-start:auto;font-family:var(--num);font-weight:700;color:var(--ink);white-space:nowrap}
+.bnd-ck .rank__row{display:flex;align-items:center;gap:12px;padding:10px 18px}
+.bnd-ck .ck-empty{padding:26px;text-align:center;color:var(--stone)}
+.bnd-ck .ck-skel{border-radius:16px;background:linear-gradient(90deg,var(--rule),var(--card),var(--rule));background-size:200% 100%;animation:ck-sh 1.3s infinite}
+@keyframes ck-sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.bnd-ck *{transition:none!important;animation:none!important}}
+`;
+	const s = document.createElement("style");
+	s.id = "bnd-ck-css";
+	s.textContent = css;
+	document.head.appendChild(s);
+}
