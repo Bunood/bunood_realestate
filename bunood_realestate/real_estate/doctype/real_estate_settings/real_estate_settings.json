@@ -31,7 +31,8 @@
   "late_fee_value",
   "late_fee_cap",
   "notifications_section",
-  "enable_auto_notifications"
+  "enable_auto_notifications",
+  "auto_draft_renewals"
  ],
  "fields": [
   {
@@ -209,6 +210,13 @@
    "fieldname": "enable_auto_notifications",
    "fieldtype": "Check",
    "label": "Enable Renewal & Collection Notifications"
+  },
+  {
+   "default": "0",
+   "description": "When on, a daily job prepares a Draft renewal (via the standard Renew flow) for each auto-renew lease expiring within 30 days, for the operator to review and submit. Idempotent — never double-drafts.",
+   "fieldname": "auto_draft_renewals",
+   "fieldtype": "Check",
+   "label": "Auto-draft Renewals (auto-renew leases)"
   }
  ],
  "index_web_pages_for_search": 1,

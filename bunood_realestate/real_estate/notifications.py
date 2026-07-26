@@ -150,6 +150,57 @@ def _run_overdue_reminders(today=None):
 
 
 # ---------------------------------------------------------------------------
+# Auto-draft renewals — completes the renewal loop (reuses renew_lease; no new path)
+# ---------------------------------------------------------------------------
+
+AUTO_RENEW_WINDOW = 30  # days before end_date to prepare the renewal draft
+
+
+def auto_draft_renewals():
+	"""Daily scheduler entry — no-op unless enabled in settings."""
+	if not frappe.db.get_single_value("Real Estate Settings", "auto_draft_renewals"):
+		return 0
+	return _run_auto_renewals()
+
+
+@frappe.whitelist()
+def run_auto_renewals_now():
+	"""Manual trigger (desk button). Ignores the settings gate; role-gated."""
+	frappe.only_for(["Accounts Manager", "System Manager"])
+	return _run_auto_renewals()
+
+
+def _run_auto_renewals(today=None):
+	"""For each Active lease flagged auto_renew and expiring within the window, create a
+	Draft renewal (via the existing renew_lease — the ONE renewal path) for the operator
+	to review and submit. Idempotent: a lease that already has a renewal is skipped."""
+	from bunood_realestate.real_estate.doctype.lease_contract.lease_contract import renew_lease
+
+	today = getdate(today or nowdate())
+	until = add_days(today, AUTO_RENEW_WINDOW)
+	leases = frappe.get_all(
+		"Lease Contract",
+		filters={"status": "Active", "docstatus": 1, "auto_renew": 1, "end_date": ["between", [today, until]]},
+		fields=["name"],
+	)
+	created = 0
+	for lease in leases:
+		try:
+			if frappe.db.exists("Lease Contract", {"parent_lease": lease.name}):
+				continue  # already has a renewal — never double-draft
+			renew_lease(lease.name)
+			created += 1
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Bunood: auto-renewal draft failed",
+				message=f"Lease {lease.name}\n\n{frappe.get_traceback()}",
+			)
+	return created
+
+
+# ---------------------------------------------------------------------------
 # Preview data (desk buttons) — no side effects
 # ---------------------------------------------------------------------------
 

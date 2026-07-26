@@ -55,3 +55,28 @@ class TestNotificationEngine(FrappeTestCase):
 	def test_upcoming_renewals_returns_list(self):
 		# Smoke: company-scoped, no crash, returns a list.
 		self.assertIsInstance(notifications.upcoming_renewals(90), list)
+
+	def test_auto_renewals_are_idempotent(self):
+		from frappe.utils import add_days, nowdate
+
+		lease = frappe.get_all(
+			"Lease Contract",
+			filters={
+				"status": "Active", "docstatus": 1, "auto_renew": 1,
+				"end_date": ["between", [nowdate(), add_days(nowdate(), 30)]],
+			},
+			pluck="name", limit=1,
+		)
+		if not lease:
+			self.skipTest("No in-window auto-renew lease on this site")
+		name = lease[0]
+		had_renewal = bool(frappe.db.exists("Lease Contract", {"parent_lease": name}))
+
+		notifications._run_auto_renewals()
+		self.assertTrue(frappe.db.exists("Lease Contract", {"parent_lease": name}), "a renewal draft should exist")
+		# Every in-window lease now has a renewal → an immediate re-run drafts nothing new.
+		self.assertEqual(notifications._run_auto_renewals(), 0)
+
+		if not had_renewal:
+			for r in frappe.get_all("Lease Contract", filters={"parent_lease": name, "docstatus": 0}, pluck="name"):
+				frappe.delete_doc("Lease Contract", r, force=True, ignore_permissions=True)

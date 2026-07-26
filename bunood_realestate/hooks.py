@@ -56,6 +56,8 @@ scheduler_events = {
         # expiring soon (T-60/30/7) and on tenants with overdue rent. Idempotent (logged once).
         "bunood_realestate.real_estate.notifications.notify_expiring_leases",
         "bunood_realestate.real_estate.notifications.send_overdue_reminders",
+        # Prepare Draft renewals for auto-renew leases nearing expiry (reuses renew_lease).
+        "bunood_realestate.real_estate.notifications.auto_draft_renewals",
     ],
 }
 
