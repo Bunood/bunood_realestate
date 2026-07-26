@@ -1,16 +1,18 @@
 # Copyright (c) 2026, Bunood and contributors
 # For license information, please see license.txt
-"""Tenant portal helpers. Every query is scoped to the Customer(s) linked to the
-logged-in portal user (via Contact → Dynamic Link) — a tenant can only ever see
-their OWN leases, invoices and dues. Guests get nothing."""
+"""Portal helpers. Every query is scoped to the party (Customer for tenants, Supplier
+for owners) linked to the logged-in portal user via Contact → Dynamic Link — a tenant
+sees only their OWN leases/invoices/dues, an owner only their OWN properties/payouts.
+Guests get nothing."""
 
 import frappe
 from frappe import _
 
 
-def customers_for_user(user=None):
-	"""The Customer(s) the logged-in portal user is linked to (via their Contact).
-	Returns [] for Guest or an unlinked user — callers MUST treat [] as 'no access'."""
+def _linked_parties(link_doctype, user=None):
+	"""The record(s) of `link_doctype` the logged-in portal user is linked to (via their
+	Contact → Dynamic Link). Returns [] for Guest or an unlinked user — callers MUST
+	treat [] as 'no access'. One implementation for every party type (no duplication)."""
 	user = user or frappe.session.user
 	if not user or user == "Guest":
 		return []
@@ -19,10 +21,20 @@ def customers_for_user(user=None):
 		return []
 	links = frappe.get_all(
 		"Dynamic Link",
-		filters={"parenttype": "Contact", "parent": ["in", contacts], "link_doctype": "Customer"},
+		filters={"parenttype": "Contact", "parent": ["in", contacts], "link_doctype": link_doctype},
 		pluck="link_name",
 	)
 	return sorted(set(filter(None, links)))
+
+
+def customers_for_user(user=None):
+	"""The Customer(s) the portal user is linked to (tenant scope)."""
+	return _linked_parties("Customer", user)
+
+
+def suppliers_for_user(user=None):
+	"""The Supplier(s) the portal user is linked to (owner scope)."""
+	return _linked_parties("Supplier", user)
 
 
 def _require_tenant():
@@ -32,6 +44,40 @@ def _require_tenant():
 	if not customers:
 		frappe.throw(_("Your account is not linked to a tenant."), frappe.PermissionError)
 	return customers
+
+
+def _require_owner():
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Please log in to access the owner portal."), frappe.PermissionError)
+	suppliers = suppliers_for_user()
+	if not suppliers:
+		frappe.throw(_("Your account is not linked to an owner."), frappe.PermissionError)
+	return suppliers
+
+
+@frappe.whitelist()
+def owner_properties():
+	"""The logged-in owner's properties (scoped to their linked Supplier[s])."""
+	suppliers = _require_owner()
+	return frappe.get_all(
+		"Property",
+		filters={"owner_party": ["in", suppliers]},
+		fields=["name", "property_name", "company", "management_behavior", "management_fee_percentage"],
+		order_by="property_name asc",
+	)
+
+
+@frappe.whitelist()
+def owner_payouts():
+	"""The logged-in owner's posted payouts (scoped to their linked Supplier[s])."""
+	suppliers = _require_owner()
+	return frappe.get_all(
+		"Owner Payout",
+		filters={"owner_party": ["in", suppliers], "status": "Posted"},
+		fields=["name", "property", "from_date", "to_date", "rent_base", "fee_amount", "owner_payout", "journal_entry"],
+		order_by="from_date desc",
+		limit=100,
+	)
 
 
 @frappe.whitelist()
