@@ -4,18 +4,29 @@
 
 {% block page_content %}
 <div class="bnd-portal" dir="rtl" style="max-width: 900px; margin: 0 auto; padding: 24px 12px;">
-  <h1 style="font-weight:800;">{{ _("Contractor Portal") }}</h1>
 
   {% if not linked %}
+    <h1 style="font-weight:800;">{{ _("Contractor Portal") }}</h1>
     <div class="alert alert-warning">{{ _("Your account is not linked to a contractor yet. Please contact the property office.") }}</div>
   {% else %}
 
-    <p class="text-muted">{{ _("Your assigned maintenance work orders. Update the status as you progress.") }}</p>
+    <div class="bp-hero"><span class="bp-hero__sadu"></span>
+      <div class="bp-hero__row">
+        <div>
+          <h1>{{ _("Contractor Portal") }}</h1>
+          <div class="bp-stat__lbl">{{ _("Your assigned maintenance work orders. Update the status as you progress.") }}</div>
+        </div>
+        <div style="text-align:end;">
+          <div class="bp-stat__lbl">{{ _("Work Orders") }}</div>
+          <div class="bp-stat__val">{{ work_orders|length }}</div>
+        </div>
+      </div>
+    </div>
 
     {% if work_orders %}
     <div id="bnd-wo-list">
       {% for w in work_orders %}
-      <div class="bnd-wo" data-name="{{ w.name }}" style="border:1px solid #e5e7eb; border-radius:12px; padding:14px 16px; margin-bottom:12px;">
+      <div class="bnd-wo bp-card" data-name="{{ w.name }}" style="padding:14px 16px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
           <div>
             <strong>{{ w.name }}</strong>
@@ -36,7 +47,7 @@
       </div>
       {% endfor %}
     </div>
-    {% else %}<p class="text-muted">{{ _("No work orders assigned.") }}</p>{% endif %}
+    {% else %}<div class="bp-empty">{{ _("No work orders assigned.") }}</div>{% endif %}
 
   {% endif %}
 </div>

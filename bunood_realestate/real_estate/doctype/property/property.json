@@ -249,7 +249,8 @@
   {
    "fieldname": "owner_id_num",
    "fieldtype": "Data",
-   "label": "Owner ID Number"
+   "label": "Owner ID Number",
+   "permlevel": 1
   },
   {
    "fieldname": "owner_email",
@@ -265,7 +266,8 @@
    "fieldname": "owner_iban",
    "fieldtype": "Data",
    "label": "Owner IBAN",
-   "description": "Used to remit collected rent to the owner."
+   "description": "Used to remit collected rent to the owner.",
+   "permlevel": 1
   },
   {
    "fieldname": "owner_nationality",
@@ -397,6 +399,17 @@
    "role": "Accounts Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "Accounts Manager"
   }
  ],
  "sort_field": "modified",

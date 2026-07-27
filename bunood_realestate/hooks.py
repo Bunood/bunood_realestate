@@ -9,6 +9,10 @@ app_license = "mit"
 # this app only owns the domain layer (Property, Unit, Lease, Rent Schedule).
 required_apps = ["erpnext"]
 
+# Portal (website) styling — the "Sadu Modern" design system, scoped to .bnd-portal so
+# it only affects the tenant / owner / contractor portals, never the rest of the site.
+web_include_css = "/assets/bunood_realestate/css/bunood_portal.css"
+
 # ------------------------------------------------------------------------------
 # Fixtures — DATA (not code) shipped with the app; installs on every site.
 # This is how we extend ERPNext WITHOUT touching core (see docs/plan-realestate.md §0.2):

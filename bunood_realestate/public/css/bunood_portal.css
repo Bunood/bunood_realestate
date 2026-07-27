@@ -1,0 +1,47 @@
+/* Bunood portal design system — "Sadu Modern", scoped to .bnd-portal so it never
+   leaks into the rest of the website. Loaded via web_include_css. Palette hardcoded
+   with system-font fallbacks; RTL/LTR-aware via logical properties. */
+
+.bnd-portal {
+  --g: #1F5145; --g-deep: #0F2A24; --brass: #C8923C; --brass-bright: #F6D08A;
+  --mint: #9BE0CB; --ink: #0B1F1A; --stone: #5B6760; --rule: #E8E9E2;
+  --card: #FFFFFF; --paper: #F4F5F0; --danger: #DC2626;
+  --num: 'Space Grotesk','Readex Pro',system-ui,sans-serif;
+}
+
+.bnd-portal .bp-hero {
+  position: relative; overflow: hidden; border-radius: 18px; padding: 24px 28px;
+  color: #fff; background: linear-gradient(120deg, var(--g), var(--g-deep));
+  box-shadow: 0 14px 30px rgba(15,42,36,.16); margin-bottom: 22px;
+}
+.bnd-portal .bp-hero__sadu {
+  position: absolute; inset-block: 0; inset-inline-start: 0; width: 7px;
+  background: repeating-linear-gradient(180deg, var(--brass) 0 8px, var(--g-deep) 8px 12px, var(--mint) 12px 20px, var(--g-deep) 20px 24px);
+}
+.bnd-portal .bp-hero__row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.bnd-portal .bp-hero h1 { font-weight: 800; font-size: 23px; margin: 0 0 2px; }
+.bnd-portal .bp-stat__lbl { opacity: .85; font-size: 13px; }
+.bnd-portal .bp-stat__val { font-size: 26px; font-weight: 800; font-family: var(--num); }
+
+.bnd-portal .bp-sec { font-size: 17px; font-weight: 700; color: var(--ink); margin: 26px 0 12px; display: flex; align-items: center; gap: 9px; }
+.bnd-portal .bp-sec::before { content: ""; width: 4px; height: 18px; border-radius: 3px; background: var(--brass); }
+
+.bnd-portal .bp-card { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; box-shadow: 0 2px 8px rgba(11,31,26,.05); overflow: hidden; }
+.bnd-portal .bp-card + .bp-card { margin-top: 12px; }
+
+.bnd-portal table.bp-tbl { width: 100%; border-collapse: collapse; margin: 0; }
+.bnd-portal .bp-tbl thead th { background: var(--paper); color: var(--stone); font-size: 12px; font-weight: 700; text-align: start; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.bnd-portal .bp-tbl td { padding: 11px 14px; border-bottom: 1px solid var(--rule); font-size: 13.5px; color: var(--ink); }
+.bnd-portal .bp-tbl tbody tr:last-child td { border-bottom: none; }
+.bnd-portal .bp-tbl tbody tr:hover td { background: #f7f9f8; }
+.bnd-portal .bp-tbl .bp-num { font-family: var(--num); font-weight: 600; }
+.bnd-portal .bp-tbl .bp-owe { color: var(--danger); font-weight: 700; }
+
+.bnd-portal .bp-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #eef2f1; color: var(--g); }
+.bnd-portal .bp-empty { padding: 26px; text-align: center; color: var(--stone); }
+
+.bnd-portal .bp-cta { background: var(--brass); color: #1a1205; border: none; border-radius: 10px; padding: 9px 18px; font-weight: 700; text-decoration: none; display: inline-block; }
+.bnd-portal .bp-cta:hover { filter: brightness(1.04); color: #1a1205; }
+.bnd-portal .btn-primary { background: var(--g); border-color: var(--g); border-radius: 9px; font-weight: 600; }
+.bnd-portal .btn-primary:hover { background: var(--g-deep); border-color: var(--g-deep); }
+.bnd-portal .form-control { border-radius: 9px; }
