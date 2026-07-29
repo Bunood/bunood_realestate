@@ -6,9 +6,9 @@ import re
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, add_months, date_diff, flt, getdate
+from frappe.utils import add_days, add_months, date_diff, flt, getdate, nowdate
 
-from bunood_realestate.real_estate.gl_utils import assert_company_access
+from bunood_realestate.real_estate.gl_utils import assert_company_access, resolve_cost_center
 
 # ZATCA VAT number: 15 digits, starts and ends with 3 (bunood_core parity).
 ZATCA_VAT_RE = re.compile(r"^3\d{13}3$")
@@ -39,6 +39,10 @@ class LeaseContract(Document):
 	def _validate_dates(self):
 		if self.start_date and self.end_date and getdate(self.end_date) < getdate(self.start_date):
 			frappe.throw(_("End Date cannot be before Start Date."))
+		# Escalation sanity: ≤ -100% would generate zero/negative rent periods from year 2 on.
+		# (A mild negative step-down stays legal — some renegotiations do reduce rent.)
+		if flt(self.get("escalation_pct")) <= -100:
+			frappe.throw(_("Annual Escalation % must be greater than -100."))
 
 	def _validate_commercial_vat(self):
 		"""Commercial leases require a valid ZATCA tenant VAT number; residential are unaffected."""
@@ -91,23 +95,32 @@ class LeaseContract(Document):
 	def on_submit(self):
 		from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import generate_for_lease
 
+		from bunood_realestate.real_estate.charge_engine import seed_charges_for_lease
+
 		self.db_set("status", "Active")
 		self._set_units_status("Occupied", current_lease=self.name)
 		# Generate the full planned rent schedule (due dates + prorated installments).
 		generate_for_lease(self)
+		# Seed the recurring-charge schedule (utilities/services) on its own independent rail.
+		seed_charges_for_lease(self)
 		# A submitted renewal marks its parent contract Renewed.
 		if self.contract_subtype == "Renewal" and self.parent_lease:
 			frappe.db.set_value("Lease Contract", self.parent_lease, "status", "Renewed")
 		# Raise one-time fees as pending Charges (Bunood Core engine).
 		self._raise_fee_charges()
+		# Migration: carry an imported contract's outstanding as an is_opening invoice.
+		self._raise_opening_balance()
 
 	def on_cancel(self):
 		from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import cancel_for_lease
+
+		from bunood_realestate.real_estate.charge_engine import cancel_charges_for_lease
 
 		self._block_cancel_if_invoiced()
 		self.db_set("status", "Cancelled")
 		self._free_units()
 		cancel_for_lease(self)
+		cancel_charges_for_lease(self)
 		self._cancel_fee_charges()
 		# Reverse the on_submit side effect on the parent: a cancelled renewal must not
 		# leave the original lease stuck in "Renewed" (which would block re-renewal).
@@ -167,6 +180,58 @@ class LeaseContract(Document):
 					tax_template=tax_template,
 				)
 
+	def _raise_opening_balance(self):
+		"""Migration (import_historical_seed): post the imported contract's carried-forward
+		outstanding as an ``is_opening`` Sales Invoice — Dr Debtors / Cr Opening Balance
+		account — linked to the lease and tagged with the Property dimension.
+
+		is_opening keeps the amount OUT of current-period rent income (no revenue distortion),
+		yet shows on the tenant's Statement of Account and AR aging and can be matched against a
+		future payment. ``seed_future_periods`` has already stopped the past periods from
+		becoming back-dated invoices, so this is the ONLY thing billed for the historical part."""
+		if not self.import_historical_seed or self.opening_invoice:
+			return
+		amount = flt(self.import_contract_total)
+		if amount <= 0:
+			return
+		settings = frappe.get_single("Real Estate Settings")
+		if not settings.opening_balance_account:
+			frappe.throw(
+				_("Set an Opening Balance Account in Real Estate Settings before importing a contract with an outstanding balance.")
+			)
+		if not settings.default_rent_item:
+			frappe.throw(_("Set a Default Rent Item in Real Estate Settings first."))
+
+		si = frappe.new_doc("Sales Invoice")
+		si.customer = self.customer
+		si.company = self.company
+		si.is_opening = "Yes"  # excludes it from current-period revenue; AR opening entry
+		si.set_posting_time = 1
+		si.posting_date = nowdate()
+		si.due_date = nowdate()
+		si.currency = frappe.get_cached_value("Company", self.company, "default_currency")
+		si.conversion_rate = 1
+		if settings.receivable_account:
+			si.debit_to = settings.receivable_account
+		si.property = self.property
+		si.remarks = _("Opening balance for imported lease {0}").format(self.name)
+
+		item = si.append("items", {})
+		item.item_code = settings.default_rent_item
+		item.qty = 1
+		item.rate = amount
+		item.income_account = settings.opening_balance_account  # Temporary Opening, not rent income
+		item.description = _("Opening balance — imported lease {0}").format(self.name)
+		cc = resolve_cost_center(self.company)
+		if cc:
+			item.cost_center = cc
+		item.property = self.property
+
+		si.flags.ignore_permissions = True
+		si.insert()
+		si.submit()  # submitted so it appears on the Statement of Account / AR aging
+		self.db_set("opening_invoice", si.name)
+
 	def _cancel_fee_charges(self):
 		"""Cancel still-pending fee charges when the lease is cancelled."""
 		pending = frappe.get_all(
@@ -208,6 +273,23 @@ class LeaseContract(Document):
 				""",
 				self.name,
 			)
+		if not live:
+			# A submitted recurring-charge (utility/service) invoice is real billing too.
+			live = frappe.db.sql(
+				"""
+				SELECT si.name
+				FROM `tabCharge Schedule` cs
+				JOIN `tabSales Invoice` si ON si.name = cs.sales_invoice
+				WHERE cs.lease_contract = %s AND si.docstatus = 1
+				LIMIT 1
+				""",
+				self.name,
+			)
+		if not live and self.opening_invoice:
+			# A submitted opening-balance invoice is real billing too — block cancel until it
+			# is cancelled/credited (mirror of the rent/fee discipline).
+			if frappe.db.get_value("Sales Invoice", self.opening_invoice, "docstatus") == 1:
+				live = [[self.opening_invoice]]
 		if live:
 			frappe.throw(
 				_("Cancel or credit the issued Sales Invoice(s) first, or use Terminate instead.")
@@ -226,8 +308,17 @@ class LeaseContract(Document):
 
 @frappe.whitelist()
 def renew_lease(lease_contract, rent_bump_pct=0, months=None):
-	"""Create a Draft renewal: same units/terms, dates shifted to follow the old term,
-	rent bumped by rent_bump_pct (the only place rent increases — no mid-contract escalation)."""
+	"""Create a Draft renewal: same units/terms, dates shifted to follow the old term.
+
+	Rent basis: unit rows always hold the YEAR-1 base (escalation is a billing-time
+	computation), so an escalated source lease is first rolled FORWARD to its final
+	escalated year — the rate the tenant is actually paying — and only then bumped by
+	``rent_bump_pct``. Without the roll-forward, renewing a 3-year 10%-escalated lease
+	would silently reset the rent below the last-billed rate."""
+	from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import (
+		escalation_segments,
+	)
+
 	frappe.only_for(["Accounts Manager", "System Manager"])
 	src = frappe.get_doc("Lease Contract", lease_contract)
 	assert_company_access(src.company)  # record/company scope beyond the role gate
@@ -246,6 +337,10 @@ def renew_lease(lease_contract, rent_bump_pct=0, months=None):
 	new.end_date = end
 
 	factor = (100 + flt(rent_bump_pct)) / 100.0
+	esc = flt(src.get("escalation_pct"))
+	if esc:
+		# Roll to the source's FINAL escalated year: (1+esc)^(segments-1).
+		factor *= ((100.0 + esc) / 100.0) ** (escalation_segments(src.start_date, src.end_date) - 1)
 	for u in new.units:
 		u.annual_rent = flt(u.annual_rent) * factor
 
@@ -366,7 +461,13 @@ def _build_lease(c, units, publish=0):
 		frappe.throw(_("Not permitted for this company."), frappe.PermissionError)
 
 	lease = frappe.new_doc("Lease Contract")
-	lease.customer = _get_or_create_customer(c.get("tenant_name"), c.get("tenant_phone"))
+	# Wizard autocomplete: an explicitly PICKED existing Customer wins (referential
+	# integrity — no risk of minting a near-duplicate); free-typed text keeps the
+	# fast-onboarding dedupe/mint path.
+	if c.get("customer") and frappe.db.exists("Customer", c.get("customer")):
+		lease.customer = c.get("customer")
+	else:
+		lease.customer = _get_or_create_customer(c.get("tenant_name"), c.get("tenant_phone"))
 	lease.property = prop
 	lease.company = company
 	lease.contract_type = c.get("contract_type") if c.get("contract_type") in ("Residential", "Commercial") else "Residential"
@@ -487,3 +588,59 @@ def import_leases(file_url):
 			frappe.db.rollback()
 			errors.append({"row": n, "error": str(e)[:200]})
 	return {"created": created, "errors": errors}
+
+
+# ------------------------------------------------------------------------------
+# Lease auto-expiry (daily scheduler). Without this a lease stays Active — and its
+# units stay Occupied — forever after end_date, drifting the occupancy KPI and making
+# a genuinely-free unit unbookable in the wizard (which trusts unit.status). All in-app,
+# no ERPNext-core change: it only flips the app's own Lease/Unit status via native writes.
+# ------------------------------------------------------------------------------
+def lease_is_expired(end_date, today):
+	"""Pure predicate (offline-testable): an Active lease is due for auto-expiry once its
+	end_date is STRICTLY before `today` — the end_date day itself is still covered."""
+	if not end_date:
+		return False
+	return getdate(end_date) < getdate(today)
+
+
+def expire_due_leases():
+	"""Daily: move Active leases past their end_date to Expired and free their units.
+	Idempotent + concurrency-safe: each lease is re-checked under a row lock, and only
+	Active leases are touched, so a re-run (or a race with submit/terminate/renew) no-ops.
+	Fail-loud per row (rollback + log) so one bad lease never blocks the rest."""
+	names = frappe.get_all(
+		"Lease Contract",
+		filters={"docstatus": 1, "status": "Active", "end_date": ["<", getdate(nowdate())]},
+		pluck="name",
+	)
+	expired = 0
+	for name in names:
+		try:
+			if _expire_one_lease(name):
+				expired += 1
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error(
+				title="Bunood: lease auto-expiry failed",
+				message=f"Lease {name}\n\n{frappe.get_traceback()}",
+			)
+	return expired
+
+
+def _expire_one_lease(name):
+	"""Expire a single lease under a row lock. Returns True if it was expired."""
+	# Locking read returns the latest COMMITTED status, so a lease terminated/renewed/
+	# cancelled by a concurrent worker is seen here and skipped (no double transition).
+	guard = frappe.db.get_value(
+		"Lease Contract", name, ["status", "end_date"], for_update=True, as_dict=True
+	)
+	if not guard or guard.status != "Active" or not lease_is_expired(guard.end_date, nowdate()):
+		return False
+	doc = frappe.get_doc("Lease Contract", name)
+	# Flip status first so _free_units' "any OTHER Active lease still holds this unit?" query
+	# no longer counts this lease, then release units not held by another active lease.
+	doc.db_set("status", "Expired")
+	doc._free_units()
+	return True

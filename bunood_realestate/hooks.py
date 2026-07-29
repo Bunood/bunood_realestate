@@ -9,9 +9,17 @@ app_license = "mit"
 # this app only owns the domain layer (Property, Unit, Lease, Rent Schedule).
 required_apps = ["erpnext"]
 
-# Portal (website) styling — the "Sadu Modern" design system, scoped to .bnd-portal so
+# Design tokens — the SINGLE source of the "Sadu Modern" palette, loaded on BOTH surfaces
+# (desk + website). Every page/wizard/portal references --bnd-* (or a legacy alias) from here;
+# no brand hex is hardcoded anywhere else.
+app_include_css = "/assets/bunood_realestate/css/bunood_tokens.css"
+
+# Portal (website) styling — tokens first, then the portal skin scoped to .bnd-portal so
 # it only affects the tenant / owner / contractor portals, never the rest of the site.
-web_include_css = "/assets/bunood_realestate/css/bunood_portal.css"
+web_include_css = [
+    "/assets/bunood_realestate/css/bunood_tokens.css",
+    "/assets/bunood_realestate/css/bunood_portal.css",
+]
 
 # ------------------------------------------------------------------------------
 # Fixtures — DATA (not code) shipped with the app; installs on every site.
@@ -56,12 +64,18 @@ scheduler_events = {
         "bunood_realestate.real_estate.collections.apply_late_fees",
         # Expire abandoned unit holds so a unit never stays stuck "Reserved".
         "bunood_realestate.real_estate.doctype.unit_booking.unit_booking.expire_bookings",
+        # Expire Active leases past their end_date and free their units, so a unit never
+        # stays "Occupied" after its lease ended (keeps occupancy KPIs + wizard truthful).
+        "bunood_realestate.real_estate.doctype.lease_contract.lease_contract.expire_due_leases",
         # Notifications (no-op unless enabled in Real Estate Settings): alert on leases
         # expiring soon (T-60/30/7) and on tenants with overdue rent. Idempotent (logged once).
         "bunood_realestate.real_estate.notifications.notify_expiring_leases",
         "bunood_realestate.real_estate.notifications.send_overdue_reminders",
         # Prepare Draft renewals for auto-renew leases nearing expiry (reuses renew_lease).
         "bunood_realestate.real_estate.notifications.auto_draft_renewals",
+        # Charge Engine: turn due Planned Charge Schedule rows (utilities/services) into
+        # native Sales Invoices, grouped by each lease's Billing Policy. Rent-independent.
+        "bunood_realestate.real_estate.charge_engine.generate_due_charge_invoices",
     ],
 }
 
@@ -73,18 +87,43 @@ doc_events = {
     "Sales Invoice": {
         "on_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
         "on_update_after_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
-        "on_cancel": "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
-        "on_trash": "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
+        "on_cancel": [
+            "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
+            "bunood_realestate.real_estate.charge_engine.reset_charge_schedule_on_invoice",
+        ],
+        "on_trash": [
+            "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
+            "bunood_realestate.real_estate.charge_engine.reset_charge_schedule_on_invoice",
+        ],
     },
     "Payment Entry": {
         "on_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
-        "on_cancel": "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
+        "on_cancel": [
+            "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
+            # Cash-basis: a cancelled settling payment may leave an owner over-paid — flag it.
+            "bunood_realestate.real_estate.events.flag_owner_payout_on_payment_cancel",
+        ],
     },
     # Keep the lease's cached deposit balance in step with the GL: if a deposit /
     # refund Journal Entry is cancelled or deleted, reset the mirror so the app never
     # refunds/settles against a liability that no longer exists (no parallel ledger).
     "Journal Entry": {
-        "on_cancel": "bunood_realestate.real_estate.events.reconcile_deposit_on_je",
-        "on_trash": "bunood_realestate.real_estate.events.reconcile_deposit_on_je",
+        # An amended payout JE (cancel-then-resubmit) must re-attach its Owner Payout, or the
+        # re-created owner credit would sit in the GL with no Posted payout guarding re-runs.
+        "on_submit": "bunood_realestate.real_estate.events.relink_owner_payout_on_je_amend",
+        "on_cancel": [
+            "bunood_realestate.real_estate.events.reconcile_deposit_on_je",
+            "bunood_realestate.real_estate.events.reconcile_owner_payout_on_je",
+        ],
+        "on_trash": [
+            "bunood_realestate.real_estate.events.reconcile_deposit_on_je",
+            "bunood_realestate.real_estate.events.owner_payout_unlink_on_je_trash",
+        ],
+    },
+    # If a Maintenance Work Order's contractor bill is cancelled/deleted, clear the work
+    # order's link so a corrected bill can be re-posted (reset-on-cancel discipline).
+    "Purchase Invoice": {
+        "on_cancel": "bunood_realestate.real_estate.events.reset_work_order_on_pi_cancel",
+        "on_trash": "bunood_realestate.real_estate.events.reset_work_order_on_pi_cancel",
     },
 }

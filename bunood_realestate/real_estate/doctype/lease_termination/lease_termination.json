@@ -12,6 +12,8 @@
   "column_break_head",
   "termination_date",
   "status",
+  "inspection_section",
+  "inspection",
   "deductions_section",
   "deposit_held",
   "deductions",
@@ -21,7 +23,9 @@
   "refund_section",
   "refund_account",
   "refund_journal_entry",
-  "amended_from"
+  "amended_from",
+  "credits_section",
+  "credits"
  ],
  "fields": [
   {
@@ -69,6 +73,18 @@
    "no_copy": 1,
    "options": "Draft\nSettled\nCancelled",
    "read_only": 1
+  },
+  {
+   "fieldname": "inspection_section",
+   "fieldtype": "Section Break",
+   "label": "Move-out Inspection",
+   "description": "Condition report at hand-over. Document each area; lines with a suggested charge can be pulled into the deductions below (once each)."
+  },
+  {
+   "fieldname": "inspection",
+   "fieldtype": "Table",
+   "label": "Inspection",
+   "options": "Lease Inspection Item"
   },
   {
    "fieldname": "deductions_section",
@@ -133,6 +149,22 @@
    "options": "Lease Termination",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "credits_section",
+   "fieldtype": "Section Break",
+   "label": "Unused Rent Credits",
+   "collapsible": 1,
+   "description": "Credit Notes raised on submit for invoiced rent periods extending past the termination date (prorated by unused days). Cancelled symmetrically if this termination is cancelled."
+  },
+  {
+   "fieldname": "credits",
+   "fieldtype": "Table",
+   "label": "Credits",
+   "options": "Lease Termination Credit",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
   }
  ],
  "is_submittable": 1,

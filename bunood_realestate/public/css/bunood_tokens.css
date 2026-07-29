@@ -1,0 +1,66 @@
+/* ============================================================================
+   Bunood design tokens — the SINGLE source of truth for the "Sadu Modern" brand.
+   Loaded on BOTH surfaces (desk via app_include_css, portals via web_include_css).
+
+   Rules:
+   - Canonical tokens are the --bnd-* family. New code uses ONLY these.
+   - The legacy short names (--g / --brass / --mint / …) used by the portal CSS and
+     the dashboard cockpit are defined here as ALIASES of the canonical tokens, so
+     every existing surface inherits the same palette with no big-bang refactor.
+   - Never hardcode a brand hex anywhere else: change it here, it changes everywhere.
+   ========================================================================== */
+
+:root {
+  /* Brand core */
+  --bnd-primary: #1F5145;        /* Sadu green */
+  --bnd-primary-700: #12352C;
+  --bnd-primary-deep: #0F2A24;
+  --bnd-primary-050: #E8F0ED;
+  --bnd-gold: #C8923C;           /* brass */
+  --bnd-gold-600: #A9781F;
+  --bnd-gold-050: #FBF3E4;
+  --bnd-gold-bright: #F6D08A;
+  --bnd-mint: #9BE0CB;
+
+  /* Neutrals */
+  --bnd-ink: #0B1F1A;            /* primary text */
+  --bnd-muted: #5C6B66;          /* secondary text */
+  --bnd-border: #DCE6E2;         /* rules / borders */
+  --bnd-bg: #F6F8F7;             /* page background */
+  --bnd-surface: #FFFFFF;        /* cards */
+  --bnd-surface-2: #EEF3F1;      /* subtle fills */
+
+  /* Semantic */
+  --bnd-danger: #DC2626;
+
+  /* Type */
+  --bnd-font-num: 'Space Grotesk', 'Readex Pro', system-ui, sans-serif;
+
+  /* ---- Legacy aliases (portal `.bnd-portal` + cockpit `.bnd-ck` vocabulary) ---- */
+  --g: var(--bnd-primary);
+  --g-deep: var(--bnd-primary-deep);
+  --brass: var(--bnd-gold);
+  --brass-bright: var(--bnd-gold-bright);
+  --mint: var(--bnd-mint);
+  --ink: var(--bnd-ink);
+  --stone: var(--bnd-muted);
+  --rule: var(--bnd-border);
+  --card: var(--bnd-surface);
+  --paper: var(--bnd-bg);
+  --danger: var(--bnd-danger);
+  --num: var(--bnd-font-num);
+}
+
+/* Dark desk theme — flips the neutral tokens; brand hues stay recognisable.
+   Surfaces that reference tokens (wizards, cockpit, building view) inherit this
+   automatically; hardcoded-hex remnants are being migrated to tokens. */
+:root[data-theme="dark"] {
+  --bnd-ink: #E7EFEA;
+  --bnd-muted: #9FB3AC;
+  --bnd-border: #2A3B35;
+  --bnd-bg: #101B17;
+  --bnd-surface: #16241F;
+  --bnd-surface-2: #1D2F28;
+  --bnd-primary-050: #1B2E28;
+  --bnd-gold-050: #2A2415;
+}

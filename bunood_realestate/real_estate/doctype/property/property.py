@@ -85,6 +85,12 @@ def create_property_with_units(data):
 	if b.get("management_fee_percentage"):
 		prop.management_fee_percentage = flt(b.get("management_fee_percentage"))
 
+	# Wizard autocomplete: an explicitly PICKED existing Supplier becomes the payout
+	# party (referential integrity for managed properties); free-typed owner details
+	# are still captured as plain fields below.
+	if b.get("owner_party") and frappe.db.exists("Supplier", b.get("owner_party")):
+		prop.owner_party = b.get("owner_party")
+
 	for f in (
 		"owner_name", "owner_phone", "owner_id_num", "owner_email", "owner_iban",
 		"owner_nationality", "owner_date_of_birth", "owner_address",

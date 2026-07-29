@@ -1,0 +1,27 @@
+{
+ "actions": [],
+ "creation": "2026-07-27 00:00:00",
+ "description": "One move-out condition-report line: the area/item, its condition, a note, and any suggested charge. Charged lines can be pulled into the termination's deductions.",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": ["area", "condition", "note", "charge", "pulled"],
+ "fields": [
+  {"fieldname": "area", "fieldtype": "Select", "in_list_view": 1, "label": "Area / Item", "reqd": 1, "options": "Walls\nFloors\nKitchen\nBathroom\nAC & Cooling\nElectrical\nPlumbing\nDoors & Windows\nFurniture\nKeys\nMeters\nGeneral\nOther"},
+  {"default": "Good", "fieldname": "condition", "fieldtype": "Select", "in_list_view": 1, "label": "Condition", "options": "Good\nFair\nDamaged\nMissing"},
+  {"fieldname": "note", "fieldtype": "Small Text", "in_list_view": 1, "label": "Note"},
+  {"default": "0", "fieldname": "charge", "fieldtype": "Currency", "in_list_view": 1, "label": "Suggested Charge"},
+  {"default": "0", "fieldname": "pulled", "fieldtype": "Check", "label": "Charged", "read_only": 1, "no_copy": 1, "description": "Set once this line's charge has been pulled into the deductions — so it is never charged twice."}
+ ],
+ "links": [],
+ "modified": "2026-07-27 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Lease Inspection Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

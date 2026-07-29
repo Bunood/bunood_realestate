@@ -17,7 +17,7 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 		publish: false,
 		c: {
 			contract_type: "residential", contract_subtype: "New", ejar_contract_no: "",
-			tenant_name: "", tenant_phone: "",
+			tenant_name: "", tenant_phone: "", customer: "",
 			start_date: frappe.datetime.get_today(), end_date: "",
 			hijri_start_date: "", hijri_end_date: "", sealing_date: "",
 			billing_cycle: "Monthly", payment_day: "", retainer_fee: "", security_deposit_extra: "", payment_methods_text: "",
@@ -71,14 +71,17 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 	// ---- render ------------------------------------------------------------
 	function render() {
 		const steps = [__("Contract Type"), __("Lessor"), __("Tenant"), __("Broker"), __("Deed & Activity"), __("Financials"), __("Review & Publish")];
+		// Direction follows the user's language (frappe.utils.is_rtl) — the ONE RTL
+		// strategy across the app. Steps are written in logical order; dir handles flow.
+		const dir = frappe.utils.is_rtl && frappe.utils.is_rtl() ? "rtl" : "ltr";
 		$root.html(
-			'<div class="np">' +
+			'<div class="np" dir="' + dir + '">' +
 			'<div class="np-head"><div class="np-title">' + esc(__("Create New Lease")) + '</div><div class="np-sub">' + esc(__("Saudi Ejar-style • Residential (exempt) or Commercial (15% VAT + ZATCA)")) + "</div></div>" +
 			'<div class="np-steps np-steps7">' +
 			steps.map((l, i) => {
 				const n = i + 1, cls = n === S.step ? "active" : n < S.step ? "done" : "";
-				return '<div class="np-step ' + cls + '"><div class="np-step-n">' + (n < S.step ? "✓" : n) + '</div><div class="np-step-l">' + esc(l) + "</div></div>";
-			}).reverse().join("") +
+				return '<div class="np-step ' + cls + '"' + (n === S.step ? ' aria-current="step"' : "") + '><div class="np-step-n">' + (n < S.step ? "✓" : n) + '</div><div class="np-step-l">' + esc(l) + "</div></div>";
+			}).join("") +
 			"</div>" +
 			'<div class="np-card">' + [step1, step2, step3, step4, step5, step6, step7][S.step - 1]() + "</div></div>"
 		);
@@ -208,7 +211,9 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 	function head(t, s) { return '<div class="np-step-head"><h3>' + esc(t) + "</h3><p>" + esc(s) + "</p></div>"; }
 	function orgTypes() { return [["Individual", __("Individual")], ["Commercial", __("Company")], ["Government", __("Government")], ["Non-profit", __("Non-profit")]]; }
 	function card(key, icon, title, sub, selected, attr, badge) {
-		return '<div class="np-cardsel ' + (key === selected ? "sel" : "") + '" ' + attr + '="' + key + '"><div class="np-cardsel-ic">' + frappe.utils.icon(icon, "lg") + '</div><div class="np-cardsel-t">' + esc(title) + '</div><div class="np-cardsel-s">' + esc(sub) + "</div>" + (badge ? '<div class="np-badge">' + esc(badge) + "</div>" : "") + "</div>";
+		// A real <button>: keyboard-focusable, Enter/Space activate natively, and
+		// aria-pressed announces the selection state to assistive tech.
+		return '<button type="button" class="np-cardsel ' + (key === selected ? "sel" : "") + '" ' + attr + '="' + key + '" aria-pressed="' + (key === selected ? "true" : "false") + '"><div class="np-cardsel-ic">' + frappe.utils.icon(icon, "lg") + '</div><div class="np-cardsel-t">' + esc(title) + '</div><div class="np-cardsel-s">' + esc(sub) + "</div>" + (badge ? '<div class="np-badge">' + esc(badge) + "</div>" : "") + "</button>";
 	}
 	function sumCell(l, v) { return '<div><span>' + esc(v) + "</span>" + esc(l) + "</div>"; }
 	function nav(last) {
@@ -219,6 +224,7 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 	// ---- binding -----------------------------------------------------------
 	function bind() {
 		$root.find("[data-k]").on("input change", function () { S.c[$(this).data("k")] = $(this).val(); });
+		attachCustomerAutocomplete();
 		$root.find("[data-ctype]").on("click", function () { S.c.contract_type = $(this).data("ctype"); render(); });
 		$root.find(".np-pk").on("input change", function () { S.picker[$(this).data("pk")] = $(this).val(); if ($(this).data("pk") === "property") { S.picker.unit = ""; render(); } });
 		$root.find(".np-addunit").on("click", addUnit);
@@ -228,6 +234,41 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 		$root.find(".np-back").on("click", () => { S.step--; render(); });
 		$root.find(".np-submit").on("click", submit);
 	}
+	function attachCustomerAutocomplete() {
+		// Link the free-text tenant field to real Customer records: picking a suggestion
+		// stores S.c.customer (referential integrity — the backend links THAT party);
+		// free typing leaves it empty and the backend dedupes/mints as before. Progressive
+		// enhancement: without Awesomplete the field is a plain input, as it always was.
+		const inp = $root.find('input[data-k="tenant_name"]').get(0);
+		if (!inp || !window.Awesomplete || inp._bnd_aw) return;
+		const aw = new Awesomplete(inp, { minChars: 2, autoFirst: false, list: [] });
+		inp._bnd_aw = aw;
+		$(inp).on(
+			"input",
+			frappe.utils.debounce(function () {
+				S.c.customer = ""; // typing invalidates a previous pick
+				if ((inp.value || "").length < 2) return;
+				frappe.call({
+					method: "frappe.desk.search.search_link",
+					args: { doctype: "Customer", txt: inp.value, page_length: 8 },
+					callback(r) {
+						const rows = r.message || r.results || [];
+						aw.list = rows.map((d) => ({
+							label: (d.description ? d.value + " — " + d.description : d.value),
+							value: d.value,
+						}));
+						aw.evaluate();
+					},
+				});
+			}, 300)
+		);
+		inp.addEventListener("awesomplete-selectcomplete", function (e) {
+			S.c.customer = e.text.value;
+			inp.value = e.text.value;
+			S.c.tenant_name = inp.value;
+		});
+	}
+
 	function addUnit() {
 		const pk = S.picker;
 		if (!pk.unit) { frappe.msgprint(__("Select a unit.")); return; }
@@ -296,6 +337,8 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 .np-req{color:#DC2626;}
 .np-cards{display:grid;gap:12px;}
 .np-cardsel{position:relative;border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.12s;}
+button.np-cardsel{width:100%;background:var(--bnd-surface,#fff);font:inherit;color:inherit;display:block;}
+.np-cardsel:focus-visible{outline:2px solid var(--bnd-gold,#C8923C);outline-offset:2px;}
 .np-cardsel:hover{border-color:var(--bnd-primary,#1F5145);}
 .np-cardsel.sel{border-color:var(--bnd-primary,#1F5145);background:var(--bnd-primary-050,#E8F0ED);box-shadow:0 0 0 2px var(--bnd-primary-050,#E8F0ED);}
 .np-cardsel-ic{color:var(--bnd-primary,#1F5145);}

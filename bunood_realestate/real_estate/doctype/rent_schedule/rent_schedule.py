@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import add_days, add_months, date_diff, flt, getdate
+from frappe.utils import add_days, add_months, date_diff, flt, getdate, nowdate
 
 # Billing cycle -> installments per year and months covered per period.
 INSTALLMENTS_PER_YEAR = {"Monthly": 12, "Quarterly": 4, "Semi-Annual": 2, "Annual": 1}
@@ -75,16 +75,88 @@ def build_periods(start_date, end_date, billing_cycle, annual_rent_total):
 	return periods
 
 
+def build_escalated_periods(start_date, end_date, billing_cycle, annual_rent_total, escalation_pct=0):
+	"""Escalating variant of :func:`build_periods` (pure, testable).
+
+	The lease term is split into anniversary YEARS; year *n* (0-based) bills
+	``annual_rent_total × (1 + pct/100)^n`` — the standard commercial step-up at each
+	anniversary. Each year segment is generated through the VERIFIED ``build_periods``
+	primitive, so every year keeps the exact-sum + cumulative-rounding + final-proration
+	guarantees; period numbering continues across years. ``pct=0`` returns the identical
+	output of plain ``build_periods`` (backward compatible)."""
+	pct = flt(escalation_pct)
+	if not pct:
+		return build_periods(start_date, end_date, billing_cycle, annual_rent_total)
+	start, end = getdate(start_date), getdate(end_date)
+	factor = (100.0 + pct) / 100.0
+	periods = []
+	n = 0
+	while True:
+		seg_start = getdate(add_months(start, 12 * n))
+		if seg_start > end:
+			break
+		# Mirror build_periods' boundary-artifact rule at SEGMENT level: an end date landing
+		# exactly on an anniversary is covered by the prior year — without this, the 1-day
+		# sliver becomes the new segment's exempt first period and bills a bogus 1-day invoice.
+		if n > 0 and seg_start == end:
+			break
+		seg_end = min(getdate(add_days(add_months(start, 12 * (n + 1)), -1)), end)
+		annual = flt(annual_rent_total) * (factor**n)
+		segment = build_periods(seg_start, seg_end, billing_cycle, annual)
+		# Keep year coverage CONTIGUOUS despite day-clamping (Feb-29 start → a non-leap
+		# anniversary clamps to Feb-28 and re-anchoring build_periods there can drop the
+		# segment's terminal day): extend the last period of a NON-final segment to seg_end.
+		if segment and seg_end < end and getdate(segment[-1]["period_end"]) < seg_end:
+			segment[-1]["period_end"] = seg_end
+		for p in segment:
+			p["period_no"] = len(periods) + 1
+			periods.append(p)
+		n += 1
+	return periods
+
+
+def escalation_segments(start_date, end_date):
+	"""Pure: how many anniversary-year segments an escalated term spans (mirrors the
+	build_escalated_periods loop, including its boundary-artifact rule). Used by renewal
+	to roll rent forward to the FINAL escalated year before applying the renewal bump."""
+	start, end = getdate(start_date), getdate(end_date)
+	n = 0
+	while True:
+		seg_start = getdate(add_months(start, 12 * n))
+		if seg_start > end or (n > 0 and seg_start == end):
+			break
+		n += 1
+	return max(1, n)
+
+
+def seed_future_periods(periods, cutoff):
+	"""Pure/testable: for an imported (historical-seed) lease, drop periods already due before
+	``cutoff`` — they are historical and must NOT become back-dated Sales Invoices (they are
+	carried as an opening balance instead). ``cutoff=None`` (a normal, non-imported lease)
+	keeps every period."""
+	if not cutoff:
+		return periods
+	cut = getdate(cutoff)
+	return [p for p in periods if getdate(p["period_start"]) >= cut]
+
+
 def generate_for_lease(lease):
-	"""Create Planned Rent Schedule rows for a submitted lease. Idempotent."""
+	"""Create Planned Rent Schedule rows for a submitted lease. Idempotent.
+
+	Migration: a lease imported mid-term with ``import_historical_seed`` set bills only FUTURE
+	periods (from today on); periods already due in the past are historical and are skipped
+	here so activating an old contract never fires a batch of back-dated invoices."""
 	if frappe.db.exists("Rent Schedule", {"lease_contract": lease.name}):
 		return 0
 	if not lease.units or not flt(lease.annual_rent_total):
 		return 0
 
-	periods = build_periods(
-		lease.start_date, lease.end_date, lease.billing_cycle, lease.annual_rent_total
+	periods = build_escalated_periods(
+		lease.start_date, lease.end_date, lease.billing_cycle, lease.annual_rent_total,
+		lease.get("escalation_pct"),
 	)
+	cutoff = nowdate() if lease.get("import_historical_seed") else None
+	periods = seed_future_periods(periods, cutoff)
 	for p in periods:
 		frappe.get_doc(
 			{

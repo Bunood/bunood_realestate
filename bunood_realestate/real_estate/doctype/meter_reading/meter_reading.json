@@ -1,0 +1,200 @@
+{
+ "actions": [],
+ "autoname": "MRDG-.#####",
+ "creation": "2026-07-29 00:00:00",
+ "description": "An audit-grade meter reading for a metered Lease Charge. On submit it computes consumption (guarding negative readings and meter rollover/replacement), fills the matching 'Awaiting Reading' Charge Schedule row (base_amount = consumption x tariff -> Planned), and advances the charge's rolling previous_reading. Submittable so readings have a corrections trail.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "lease_contract",
+  "lease_charge_row",
+  "charge_schedule",
+  "column_break_head",
+  "meter_no",
+  "reading_date",
+  "readings_section",
+  "previous_reading",
+  "current_reading",
+  "consumption",
+  "column_break_readings",
+  "meter_replaced",
+  "replaced_meter_final",
+  "context_section",
+  "property",
+  "unit",
+  "company",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "lease_contract",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Lease Contract",
+   "options": "Lease Contract",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "description": "The metered Lease Charge child-row this reading is for.",
+   "fieldname": "lease_charge_row",
+   "fieldtype": "Data",
+   "label": "Lease Charge Row",
+   "reqd": 1
+  },
+  {
+   "description": "The 'Awaiting Reading' Charge Schedule period this reading fills (optional; else the earliest open period for the charge).",
+   "fieldname": "charge_schedule",
+   "fieldtype": "Link",
+   "label": "Charge Schedule",
+   "options": "Charge Schedule"
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "meter_no",
+   "fieldtype": "Data",
+   "label": "Meter No"
+  },
+  {
+   "fieldname": "reading_date",
+   "fieldtype": "Date",
+   "label": "Reading Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "readings_section",
+   "fieldtype": "Section Break",
+   "label": "Readings"
+  },
+  {
+   "description": "The charge's rolling previous reading (defaulted; the baseline for consumption).",
+   "fieldname": "previous_reading",
+   "fieldtype": "Float",
+   "label": "Previous Reading"
+  },
+  {
+   "fieldname": "current_reading",
+   "fieldtype": "Float",
+   "label": "Current Reading",
+   "reqd": 1
+  },
+  {
+   "description": "current - previous (or, on a replaced meter, current + the replaced meter's final reading).",
+   "fieldname": "consumption",
+   "fieldtype": "Float",
+   "label": "Consumption",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_readings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Tick if the meter was replaced or rolled over since the previous reading (avoids a false negative consumption).",
+   "fieldname": "meter_replaced",
+   "fieldtype": "Check",
+   "label": "Meter Replaced / Rolled Over"
+  },
+  {
+   "depends_on": "meter_replaced",
+   "description": "The final reading of the OLD meter before replacement (added to the new reading so consumption stays correct).",
+   "fieldname": "replaced_meter_final",
+   "fieldtype": "Float",
+   "label": "Old Meter Final Reading"
+  },
+  {
+   "fieldname": "context_section",
+   "fieldtype": "Section Break",
+   "label": "Context"
+  },
+  {
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "label": "Property",
+   "options": "Property",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "label": "Unit",
+   "options": "Real Estate Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Meter Reading",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-29 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Meter Reading",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "cancel": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

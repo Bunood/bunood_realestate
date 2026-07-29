@@ -23,8 +23,8 @@ frappe.pages["property-finance"].on_page_load = function (wrapper) {
 	}
 
 	function kpi(label, value, tone) {
-		const colors = { green: "#1F5145", gold: "#C8923C", red: "#DC2626", slate: "#475569" };
-		const c = colors[tone] || "#1F5145";
+		const colors = { green: "var(--bnd-primary, #1F5145)", gold: "var(--bnd-gold, #C8923C)", red: "var(--bnd-danger, #DC2626)", slate: "#475569" };
+		const c = colors[tone] || colors.green;
 		return `<div style="flex:1; min-width:150px; background:#fff; border:1px solid #e8eae7;
 			border-radius:14px; padding:16px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
 			<div style="font-size:12.5px; color:#6b7280;">${esc(label)}</div>
@@ -37,7 +37,7 @@ frappe.pages["property-finance"].on_page_load = function (wrapper) {
 			return `<div style="flex:1; min-width:260px;"><h4 style="margin:0 0 8px;">${esc(title)}</h4>
 				<p class="text-muted" style="font-size:13px;">${__("Nothing recorded for this period.")}</p></div>`;
 		}
-		const bar = tone === "red" ? "#DC2626" : "#1F5145";
+		const bar = tone === "red" ? "var(--bnd-danger, #DC2626)" : "var(--bnd-primary, #1F5145)";
 		const max = Math.max.apply(null, items.map((i) => Math.abs(flt(i.amount)))) || 1;
 		let rows = "";
 		items.forEach((i) => {
@@ -62,16 +62,16 @@ frappe.pages["property-finance"].on_page_load = function (wrapper) {
 			const x0 = pad + i * bw;
 			const ih = Math.round((flt(m.income[i]) / max) * (h - pad * 2));
 			const eh = Math.round((flt(m.expense[i]) / max) * (h - pad * 2));
-			bars += `<rect x="${x0 + bw * 0.15}" y="${h - pad - ih}" width="${bw * 0.3}" height="${ih}" fill="#1F5145"></rect>`;
-			bars += `<rect x="${x0 + bw * 0.55}" y="${h - pad - eh}" width="${bw * 0.3}" height="${eh}" fill="#C8923C"></rect>`;
+			bars += `<rect x="${x0 + bw * 0.15}" y="${h - pad - ih}" width="${bw * 0.3}" height="${ih}" fill="var(--bnd-primary, #1F5145)"></rect>`;
+			bars += `<rect x="${x0 + bw * 0.55}" y="${h - pad - eh}" width="${bw * 0.3}" height="${eh}" fill="var(--bnd-gold, #C8923C)"></rect>`;
 			if (i % 2 === 0) {
 				bars += `<text x="${x0 + bw / 2}" y="${h - 8}" font-size="9" fill="#6b7280" text-anchor="middle">${esc(m.labels[i])}</text>`;
 			}
 		}
 		return `<div style="margin-top:18px;"><h4 style="margin:0 0 6px;">${__("Income vs Expense (12 months)")}</h4>
 			<div style="display:flex; gap:14px; font-size:12px; color:#6b7280; margin-bottom:6px;">
-				<span><span style="display:inline-block;width:10px;height:10px;background:#1F5145;border-radius:2px;"></span> ${__("Income")}</span>
-				<span><span style="display:inline-block;width:10px;height:10px;background:#C8923C;border-radius:2px;"></span> ${__("Expense")}</span></div>
+				<span><span style="display:inline-block;width:10px;height:10px;background:var(--bnd-primary,#1F5145);border-radius:2px;"></span> ${__("Income")}</span>
+				<span><span style="display:inline-block;width:10px;height:10px;background:var(--bnd-gold,#C8923C);border-radius:2px;"></span> ${__("Expense")}</span></div>
 			<div style="overflow-x:auto;"><svg viewBox="0 0 ${w} ${h}" style="width:100%; min-width:600px; height:auto;">
 				<line x1="${pad}" y1="${h - pad}" x2="${w - pad}" y2="${h - pad}" stroke="#e5e7eb"></line>${bars}</svg></div></div>`;
 	}
@@ -106,6 +106,10 @@ frappe.pages["property-finance"].on_page_load = function (wrapper) {
 			method: "bunood_realestate.real_estate.property_finance.property_finance",
 			args: { property: property, from_date: fromField.get_value(), to_date: toField.get_value() },
 			callback: (r) => render($body, r.message),
+			error: () => {
+				// Never leave the page silently blank on a server error.
+				$body.html(`<div class="text-muted" style="padding:28px;">${__("Could not load the finance view. Check the filters and try again.")}</div>`);
+			},
 		});
 	}
 

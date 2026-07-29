@@ -1,0 +1,304 @@
+{
+ "actions": [],
+ "autoname": "CSCH-.#####",
+ "creation": "2026-07-29 00:00:00",
+ "description": "One planned charge installment per (lease charge, period) — the structural twin of Rent Schedule for utilities/services. Standalone & indexed (status/due_date/lease) so the daily generator queries it directly. base_amount is ex-VAT; the Sales Invoice applies the tax template at generation time. Metered rows start 'Awaiting Reading' and are billed only once a Meter Reading fills base_amount.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "lease_contract",
+  "lease_charge_row",
+  "charge_type",
+  "category",
+  "billing_method",
+  "column_break_head",
+  "customer",
+  "property",
+  "unit",
+  "company",
+  "period_section",
+  "period_no",
+  "period_start",
+  "period_end",
+  "due_date",
+  "billing_cycle",
+  "amounts_section",
+  "base_amount",
+  "is_prorated",
+  "status",
+  "meter_section",
+  "meter_no",
+  "previous_reading",
+  "current_reading",
+  "tariff",
+  "consumption",
+  "bill",
+  "accounting_section",
+  "revenue_account",
+  "tax_template",
+  "invoice_section",
+  "sales_invoice",
+  "invoice_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "lease_contract",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Lease Contract",
+   "options": "Lease Contract",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "description": "The parent Lease Charge child-row name — idempotency key: at most one Charge Schedule per (lease_charge_row, period_no).",
+   "fieldname": "lease_charge_row",
+   "fieldtype": "Data",
+   "label": "Lease Charge Row",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "charge_type",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Charge Type",
+   "options": "Charge Type",
+   "read_only": 1
+  },
+  {
+   "description": "Snapshot of Charge Type kind — used by the Group-by-Category billing policy.",
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category",
+   "read_only": 1
+  },
+  {
+   "fieldname": "billing_method",
+   "fieldtype": "Select",
+   "label": "Method",
+   "options": "Fixed\nMetered",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Tenant (Customer)",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "property",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Property",
+   "options": "Property",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "label": "Unit",
+   "options": "Real Estate Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "period_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "period_no",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Period No"
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Period Start"
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End"
+  },
+  {
+   "description": "Advance charges fall due on the period start; Arrears on the period end.",
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Due Date",
+   "search_index": 1
+  },
+  {
+   "fieldname": "billing_cycle",
+   "fieldtype": "Data",
+   "label": "Billing Cycle",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amounts_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Charge for this period, excluding VAT. Fixed: set at seed. Metered: set to consumption x tariff when the reading is captured.",
+   "fieldname": "base_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount (ex-VAT)"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_prorated",
+   "fieldtype": "Check",
+   "label": "Prorated",
+   "read_only": 1
+  },
+  {
+   "default": "Planned",
+   "description": "Planned = ready to invoice. Awaiting Reading = metered row with no reading yet (generator skips it). Invoiced = a Sales Invoice exists.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Planned\nAwaiting Reading\nInvoiced\nCancelled\nFailed",
+   "search_index": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.billing_method=='Metered'",
+   "fieldname": "meter_section",
+   "fieldtype": "Section Break",
+   "label": "Meter Reading (this period)"
+  },
+  {
+   "fieldname": "meter_no",
+   "fieldtype": "Data",
+   "label": "Meter No",
+   "read_only": 1
+  },
+  {
+   "fieldname": "previous_reading",
+   "fieldtype": "Float",
+   "label": "Previous Reading",
+   "read_only": 1
+  },
+  {
+   "fieldname": "current_reading",
+   "fieldtype": "Float",
+   "label": "Current Reading",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tariff",
+   "fieldtype": "Currency",
+   "label": "Tariff / Unit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "consumption",
+   "fieldtype": "Float",
+   "label": "Consumption",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bill",
+   "fieldtype": "Currency",
+   "label": "Bill (consumption x tariff)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accounting_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting"
+  },
+  {
+   "description": "Effective revenue account for the invoice line (denormalized from the Lease Charge / Charge Type / settings).",
+   "fieldname": "revenue_account",
+   "fieldtype": "Link",
+   "label": "Revenue Account",
+   "options": "Account",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tax_template",
+   "fieldtype": "Link",
+   "label": "Tax Template",
+   "options": "Sales Taxes and Charges Template",
+   "read_only": 1
+  },
+  {
+   "fieldname": "invoice_section",
+   "fieldtype": "Section Break",
+   "label": "Invoice"
+  },
+  {
+   "description": "Set by the charge generator; the link-guard for idempotency.",
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "description": "Mirrors the Sales Invoice status. Source of truth is ERPNext, not stored here.",
+   "fieldname": "invoice_status",
+   "fieldtype": "Data",
+   "label": "Invoice Status",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-29 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Charge Schedule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

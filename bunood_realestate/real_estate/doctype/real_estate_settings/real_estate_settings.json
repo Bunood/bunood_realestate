@@ -15,7 +15,11 @@
   "items_section",
   "default_rent_item",
   "head_lease_item",
+  "maintenance_item",
+  "maintenance_expense_account",
   "owner_payout_expense_account",
+  "opening_balance_account",
+  "deduction_income_account",
   "tax_section",
   "commercial_tax_template",
   "residential_tax_template",
@@ -99,11 +103,39 @@
    "description": "Service item for head-lease rent paid to the original owner (Master Lease)."
   },
   {
+   "fieldname": "maintenance_item",
+   "fieldtype": "Link",
+   "label": "Maintenance Item",
+   "options": "Item",
+   "description": "Service Item used for contractor Purchase Invoices raised from a completed Maintenance Work Order."
+  },
+  {
+   "fieldname": "maintenance_expense_account",
+   "fieldtype": "Link",
+   "label": "Maintenance Expense Account",
+   "options": "Account",
+   "description": "Expense head for contractor Purchase Invoices raised from a completed Maintenance Work Order."
+  },
+  {
    "fieldname": "owner_payout_expense_account",
    "fieldtype": "Link",
    "label": "Owner Payout Expense Account (Management)",
    "options": "Account",
    "description": "Expense account debited when paying the owner their share (managed properties)."
+  },
+  {
+   "fieldname": "opening_balance_account",
+   "fieldtype": "Link",
+   "label": "Opening Balance Account",
+   "options": "Account",
+   "description": "Account credited on the is_opening Sales Invoice for an imported contract's carried-forward balance (e.g. Temporary Opening) — keeps it OUT of current-period rent income."
+  },
+  {
+   "fieldname": "deduction_income_account",
+   "fieldtype": "Link",
+   "label": "Deposit Deduction Income Account",
+   "options": "Account",
+   "description": "Income account credited for move-out deduction charges pulled from the inspection."
   },
   {
    "description": "Saudi ZATCA rule: residential rent is VAT-EXEMPT (0%), commercial rent is 15%. The Lease Contract picks the template from its contract_type.",

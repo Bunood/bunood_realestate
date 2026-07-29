@@ -3,9 +3,12 @@
 """Management model (إدارة أملاك, behavior='managed') owner accounting.
 
 The company collects rent from tenants (rent Sales Invoice), but KEEPS only its
-management fee %; the rest is owed to the owner. This posts the owner payout:
+management fee %; the rest is owed to the owner. Owner accounting is CASH-BASIS: the
+payout is a share of rent actually COLLECTED in the window (see
+``_rent_collected_for_property``), so the company never remits money it has not yet
+received. This posts the owner payout:
 
-    Dr  Owner Payout Expense           (rent × (1 − fee%))
+    Dr  Owner Payout Expense           (collected rent × (1 − fee%))
     Cr  Creditors  (party = owner Supplier)
 
 Net company income for the property = the management fee %. All via ERPNext native
@@ -34,21 +37,136 @@ def compute_owner_payout(rent_base, fee_pct):
 	return {"rent_base": flt(rent_base, 2), "fee": fee, "owner_payout": owner}
 
 
-def _rent_income_for_property(property, from_date, to_date):
-	"""Net (pre-VAT) rent income tagged with the Property accounting dimension in the period.
-	Fee-charge invoices are NOT tagged with the Property dimension, so this captures rent only."""
+def _rent_collected_for_property(property, from_date, to_date, rent_income_account, rent_item):
+	"""Net (pre-VAT) rent CASH COLLECTED for this property's rent invoices in the window.
+
+	Cash-basis owner accounting (the solid-foundation choice): the owner is paid a share of
+	what the tenant ACTUALLY PAID — never merely what was invoiced — so the company never
+	remits money it has not received.
+
+	Source is ERPNext's Payment Ledger Entry, the single native record of every settlement
+	against a receivable. Using it (rather than only Payment Entry Reference) means:
+	  * BOTH Payment Entry receipts AND Journal Entry receipts count — a JE "Dr Bank / Cr
+	    Debtors" against the rent invoice is a first-class collection route.
+	  * amounts are in COMPANY currency (``ple.amount``), immune to the multi-currency
+	    mis-denomination a party-currency ``allocated_amount`` sum would suffer.
+	We keep only: settlement rows (``voucher_no`` <> the invoice's own booking row), from
+	cash vouchers (Payment/Journal Entry — excludes credit-note applications, which are not
+	cash), not delinked (so a cancelled/reversed payment drops out), and scale each by the
+	PROPERTY's own RENT net line share on that invoice (line-exact + VAT-stripped) so a
+	multi-property invoice attributes only its P-lines' cash to P. Settlements reduce a
+	receivable (negative ``amount``), hence ``-ple.amount``.
+
+	CRITICAL: rent lines are identified POSITIVELY — ``item_code = rent_item`` (rent invoices
+	always use the Default Rent Item; the charge engine hard-refuses to bill that item) AND
+	``income_account = rent_income_account``. Account equality alone is NOT a safe
+	discriminator: a utility charge line with no explicit revenue account can resolve (via
+	item/company defaults) to the very same income account as rent, and its property-tagged
+	cash would then be folded into the owner's rent base (over-pay). The item filter closes
+	that hole; the account filter stays as defense-in-depth."""
 	res = frappe.db.sql(
 		"""
-		SELECT COALESCE(SUM(sii.base_net_amount), 0)
-		FROM `tabSales Invoice Item` sii
-		JOIN `tabSales Invoice` si ON si.name = sii.parent
-		WHERE si.docstatus = 1
-		  AND si.posting_date BETWEEN %s AND %s
-		  AND sii.property = %s
+		SELECT COALESCE(SUM(
+			(-ple.amount) * (pl.net_p / NULLIF(si.base_grand_total, 0))
+		), 0)
+		FROM `tabPayment Ledger Entry` ple
+		JOIN `tabSales Invoice` si ON si.name = ple.against_voucher_no
+		JOIN (
+			SELECT parent, SUM(base_net_amount) AS net_p
+			FROM `tabSales Invoice Item`
+			WHERE property = %(property)s
+			  AND item_code = %(rent_item)s
+			  AND income_account = %(rent_income_account)s
+			GROUP BY parent
+		) pl ON pl.parent = si.name
+		WHERE ple.against_voucher_type = 'Sales Invoice'
+		  AND ple.company = si.company
+		  AND ple.delinked = 0
+		  AND ple.voucher_no <> ple.against_voucher_no
+		  AND ple.voucher_type IN ('Payment Entry', 'Journal Entry')
+		  AND ple.posting_date BETWEEN %(from_date)s AND %(to_date)s
+		  AND si.docstatus = 1
 		""",
-		(from_date, to_date, property),
+		{
+			"property": property, "from_date": from_date, "to_date": to_date,
+			"rent_income_account": rent_income_account, "rent_item": rent_item,
+		},
 	)
 	return flt(res[0][0]) if res else 0.0
+
+
+def _collected_net_for_invoice(si_name, to_date, property, rent_income_account, rent_item):
+	"""Net-scaled cash collected against ONE invoice up to ``to_date`` (same PLE frame as
+	:func:`_rent_collected_for_property`, unbounded start — cash to date)."""
+	res = frappe.db.sql(
+		"""
+		SELECT COALESCE(SUM(
+			(-ple.amount) * (pl.net_p / NULLIF(si.base_grand_total, 0))
+		), 0)
+		FROM `tabPayment Ledger Entry` ple
+		JOIN `tabSales Invoice` si ON si.name = ple.against_voucher_no
+		JOIN (
+			SELECT parent, SUM(base_net_amount) AS net_p
+			FROM `tabSales Invoice Item`
+			WHERE property = %(property)s
+			  AND item_code = %(rent_item)s
+			  AND income_account = %(rent_income_account)s
+			GROUP BY parent
+		) pl ON pl.parent = si.name
+		WHERE si.name = %(si_name)s
+		  AND ple.against_voucher_type = 'Sales Invoice'
+		  AND ple.company = si.company
+		  AND ple.delinked = 0
+		  AND ple.voucher_no <> ple.against_voucher_no
+		  AND ple.voucher_type IN ('Payment Entry', 'Journal Entry')
+		  AND ple.posting_date <= %(to_date)s
+		""",
+		{
+			"si_name": si_name, "to_date": to_date, "property": property,
+			"rent_income_account": rent_income_account, "rent_item": rent_item,
+		},
+	)
+	return flt(res[0][0]) if res else 0.0
+
+
+def _credited_rent_for_property(property, from_date, to_date, rent_income_account, rent_item):
+	"""Ex-VAT rent CREDITED BACK to tenants (termination credit notes posted in the window),
+	each capped at the cash actually collected on its originating invoice.
+
+	Why: a standalone credit note writes no settlement PLE row the collected query can see,
+	so a paid-then-credited period would otherwise pay the owner on money the company now
+	owes back to the tenant. The cap keeps the other direction safe too — crediting a NEVER
+	PAID invoice must not reduce the owner base below the cash actually held."""
+	rows = frappe.db.sql(
+		"""
+		SELECT ltc.sales_invoice AS orig, cn.name AS cn
+		FROM `tabLease Termination Credit` ltc
+		JOIN `tabSales Invoice` cn ON cn.name = ltc.credit_note
+		WHERE cn.docstatus = 1 AND cn.is_return = 1
+		  AND cn.posting_date BETWEEN %(from_date)s AND %(to_date)s
+		""",
+		{"from_date": from_date, "to_date": to_date},
+		as_dict=True,
+	)
+	total = 0.0
+	for r in rows:
+		credit_net = flt(
+			frappe.db.sql(
+				"""
+				SELECT COALESCE(SUM(-base_net_amount), 0)
+				FROM `tabSales Invoice Item`
+				WHERE parent = %s AND property = %s AND item_code = %s AND income_account = %s
+				""",
+				(r.cn, property, rent_item, rent_income_account),
+			)[0][0]
+		)
+		if credit_net <= 0:
+			continue
+		collected = _collected_net_for_invoice(
+			r.orig, to_date, property, rent_income_account, rent_item
+		)
+		total += min(credit_net, max(0.0, collected))
+	return flt(total, 2)
 
 
 def _overlapping_payout(property, from_date, to_date):
@@ -98,6 +216,12 @@ def generate_owner_payout(property, from_date, to_date):
 	settings = frappe.get_single("Real Estate Settings")
 	if not settings.owner_payout_expense_account:
 		frappe.throw(_("Set the Owner Payout Expense Account in Real Estate Settings."))
+	if not settings.rent_income_account:
+		# Needed to identify RENT cash (vs utility/service charge cash) in _rent_collected_for_property.
+		frappe.throw(_("Set the Rent Income Account in Real Estate Settings (used to separate rent cash from other charges)."))
+	if not settings.default_rent_item:
+		# The rent Service Item is the positive rent-line discriminator in the collected-cash query.
+		frappe.throw(_("Set the Default Rent Item in Real Estate Settings (used to identify rent lines for the owner payout)."))
 	payable = frappe.get_cached_value("Company", p.company, "default_payable_account")
 	if not payable:
 		frappe.throw(_("Set a Default Payable Account on the company."))
@@ -113,9 +237,13 @@ def generate_owner_payout(property, from_date, to_date):
 			)
 		)
 
-	rent_base = _rent_income_for_property(property, from_date, to_date)
+	rent_base = _rent_collected_for_property(
+		property, from_date, to_date, settings.rent_income_account, settings.default_rent_item
+	) - _credited_rent_for_property(
+		property, from_date, to_date, settings.rent_income_account, settings.default_rent_item
+	)
 	if rent_base <= 0:
-		frappe.throw(_("No rent income found for this property in the selected period."))
+		frappe.throw(_("No rent was collected for this property in the selected period (owner payout is cash-basis — paid on collected rent, not merely invoiced)."))
 
 	calc = compute_owner_payout(rent_base, fee_pct)
 	payout = calc["owner_payout"]

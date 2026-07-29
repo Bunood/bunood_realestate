@@ -1,7 +1,8 @@
 // Copyright (c) 2026, Bunood and contributors
 // Real Estate Command Center — the "Sadu Modern" cockpit (bunood_core design),
 // rendered inside a Frappe Page. All figures are company-scoped and GL/lease-sourced
-// (re_dashboard.dashboard_data). Styling: bunood_theme/public/css/bunood_cockpit.css.
+// (re_dashboard.dashboard_data). Styling: injected below (bnd_inject_cockpit_css); palette
+// comes from the shared design tokens (public/css/bunood_tokens.css) via var(--bnd-*).
 
 frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 	bnd_inject_cockpit_css();
@@ -36,7 +37,6 @@ frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 		$ck.html(
 			hero(ck) +
 			hk(ck) +
-			aging(data.overdue || [], ck) +
 			sectionHead("map", __("Performance")) +
 			'<div class="ck-grid">' +
 				'<div class="col-4 card">' + '<div class="card__t">' + esc(__("Occupancy")) + "</div>" + ringCard(ring) + "</div>" +
@@ -87,11 +87,6 @@ frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 		);
 	}
 
-	function aging(overdue, ck) {
-		if (!flt(ck.outstanding)) return "";
-		return "";
-	}
-
 	function sectionHead(icon, title) {
 		return '<div class="ck-h"><span class="ck-h__ic">' + ic(icon) + '</span><span class="ck-h__t">' + esc(title) + "</span></div>";
 	}
@@ -139,7 +134,7 @@ frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 		const dots = pts.map((p) => '<circle class="line__dot" cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3"></circle>').join("");
 		const xl = labels.map((l) => "<span>" + esc(l) + "</span>").join("");
 		return (
-			'<svg class="line" viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none">' +
+			'<svg class="line" viewBox="0 0 ' + W + " " + H + '">' +
 			'<defs><linearGradient id="ckla" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2D6F5E" stop-opacity=".18"/><stop offset="1" stop-color="#2D6F5E" stop-opacity="0"/></linearGradient></defs>' +
 			'<path d="' + area + '" fill="url(#ckla)"></path>' +
 			'<path class="line__path" d="' + path + '"></path>' + dots +
@@ -178,7 +173,7 @@ frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 function bnd_inject_cockpit_css() {
 	if (document.getElementById("bnd-ck-css")) return;
 	const css = `
-.bnd-ck{--g:#1F5145;--g-deep:#0F2A24;--g-ink:#0A201B;--g-soft:#2D6F5E;--g-line:#1B463C;--brass:#C8923C;--brass-bright:#F6D08A;--ochre-deep:#8E641E;--mint:#9BE0CB;--mint-bright:#C4F0E0;--mint-soft:#E3F1EB;--mint-deep:#2F7D66;--paper:#F4F5F0;--card:#FFFFFF;--rule:#E8E9E2;--rule-d:#D9DCD3;--ink:#0B1F1A;--stone:#5B6760;--rust:#B5563C;--rust-soft:#F2D8CE;--slate:#3D5260;--on-g-1:#fff;--on-g-2:rgba(255,255,255,.85);--on-g-3:rgba(255,255,255,.72);--spring:cubic-bezier(.34,1.56,.64,1);--ease-out:cubic-bezier(.22,1,.36,1);--num:'Space Grotesk','Readex Pro',system-ui,sans-serif;--head:'El Messiri','Readex Pro',system-ui,sans-serif;max-width:1280px;margin-inline:auto;padding:6px 2px 48px}
+.bnd-ck{--g:var(--bnd-primary,#1F5145);--g-deep:var(--bnd-primary-deep,#0F2A24);--g-ink:#0A201B;--g-soft:#2D6F5E;--g-line:#1B463C;--brass:var(--bnd-gold,#C8923C);--brass-bright:var(--bnd-gold-bright,#F6D08A);--ochre-deep:var(--bnd-gold-600,#8E641E);--mint:var(--bnd-mint,#9BE0CB);--mint-bright:#C4F0E0;--mint-soft:#E3F1EB;--mint-deep:#2F7D66;--paper:var(--bnd-bg,#F4F5F0);--card:var(--bnd-surface,#FFFFFF);--rule:var(--bnd-border,#E8E9E2);--rule-d:#D9DCD3;--ink:var(--bnd-ink,#0B1F1A);--stone:var(--bnd-muted,#5B6760);--rust:#B5563C;--rust-soft:#F2D8CE;--slate:#3D5260;--on-g-1:#fff;--on-g-2:rgba(255,255,255,.85);--on-g-3:rgba(255,255,255,.72);--spring:cubic-bezier(.34,1.56,.64,1);--ease-out:cubic-bezier(.22,1,.36,1);--num:var(--bnd-font-num,'Space Grotesk','Readex Pro',system-ui,sans-serif);--head:'El Messiri','Readex Pro',system-ui,sans-serif;max-width:1280px;margin-inline:auto;padding:6px 2px 48px}
 html[data-theme="dark"] .bnd-ck{--paper:#0C1512;--card:#111F1A;--rule:#223229;--rule-d:#223229;--ink:#EAF2EE;--stone:#8FA39B}
 .bnd-ck .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}
 .bnd-ck .ck-hero{position:relative;overflow:hidden;border-radius:18px;padding:26px 30px;color:#fff;background:linear-gradient(120deg,var(--g),var(--g-deep));box-shadow:0 18px 36px rgba(15,42,36,.16)}

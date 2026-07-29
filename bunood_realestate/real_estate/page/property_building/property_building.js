@@ -15,7 +15,7 @@ frappe.pages["property-building"].on_page_load = function (wrapper) {
 	const esc = (s) => frappe.utils.escape_html(String(s == null ? "" : s));
 	const STATE = {
 		Occupied: { c: "#2D6F5E", t: "#fff", label: __("Occupied") },
-		Reserved: { c: "#C8923C", t: "#1a1205", label: __("Reserved") },
+		Reserved: { c: "var(--bnd-gold, #C8923C)", t: "#1a1205", label: __("Reserved") },
 		Vacant: { c: "#E7EAE6", t: "#5B6760", label: __("Vacant") },
 		Maintenance: { c: "#B5563C", t: "#fff", label: __("Maintenance") },
 	};
@@ -57,7 +57,7 @@ frappe.pages["property-building"].on_page_load = function (wrapper) {
 			u.rooms_count ? `${u.rooms_count} ${__("rooms")}` : null,
 			u.bathrooms ? `${u.bathrooms} ${__("baths")}` : null,
 		].filter(Boolean).map(esc).join(" · ");
-		return `<div class="bld-card" data-unit="${esc(u.name)}">
+		return `<div class="bld-card" data-unit="${esc(u.name)}" role="button" tabindex="0" aria-label="${esc(u.unit_number)} — ${st.label}">
 			<div class="bld-card__top">
 				<span class="bld-card__no">${esc(u.unit_number)}</span>
 				<span class="bld-badge" style="background:${st.c};color:${st.t};">${st.label}</span>
@@ -130,11 +130,19 @@ frappe.pages["property-building"].on_page_load = function (wrapper) {
 			args: { property: property },
 			freeze: true, freeze_message: __("Loading..."),
 			callback: (r) => render(r.message),
+			error: () => {
+				// Never leave the page silently blank on a server error.
+				$body.html(`<div class="bld-empty">${__("Could not load the building view. Check the property and try again.")}</div>`);
+			},
 		});
 	}
 
 	propField.$input.on("change", load);
 	$body.on("click", ".bld-cell, .bld-card", function () { unitDialog($(this).data("unit")); });
+	// Keyboard parity for the role="button" cards (unit cells are real <button>s already).
+	$body.on("keydown", ".bld-card", function (e) {
+		if (e.key === "Enter" || e.key === " ") { e.preventDefault(); unitDialog($(this).data("unit")); }
+	});
 	load();
 
 	frappe.pages["property-building"].bnd_set_property = function (name) {
@@ -148,19 +156,19 @@ function bnd_inject_building_css() {
 	const css = `
 .bnd-bld{max-width:1100px;margin-inline:auto;padding:12px 6px 40px;}
 .bnd-bld .bld-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
-.bnd-bld .bld-head__name{font-size:20px;font-weight:800;color:#1F5145;}
+.bnd-bld .bld-head__name{font-size:20px;font-weight:800;color:var(--bnd-primary,#1F5145);}
 .bnd-bld .bld-head__sub{color:#6b7280;font-size:13px;}
 .bnd-bld .bld-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:6px 0 14px;font-size:12.5px;color:#374151;}
 .bnd-bld .bld-leg{display:inline-flex;align-items:center;gap:6px;}
-.bnd-bld .bld-leg b{margin-inline-start:4px;color:#1F5145;}
+.bnd-bld .bld-leg b{margin-inline-start:4px;color:var(--bnd-primary,#1F5145);}
 .bnd-bld .bld-leg__dot{width:12px;height:12px;border-radius:3px;display:inline-block;}
 .bnd-bld .bld-leg--occ{margin-inline-start:auto;font-weight:600;}
 .bnd-bld .bld-building{border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#f7f9f8,#eef2f1);box-shadow:0 8px 24px rgba(15,42,36,.08);}
-.bnd-bld .bld-roof{height:14px;background:repeating-linear-gradient(90deg,#C8923C 0 10px,#0F2A24 10px 14px,#9BE0CB 14px 22px,#0F2A24 22px 26px);}
-.bnd-bld .bld-base{height:10px;background:#0F2A24;}
+.bnd-bld .bld-roof{height:14px;background:repeating-linear-gradient(90deg,var(--bnd-gold,#C8923C) 0 10px,var(--bnd-primary-deep,#0F2A24) 10px 14px,var(--bnd-mint,#9BE0CB) 14px 22px,var(--bnd-primary-deep,#0F2A24) 22px 26px);}
+.bnd-bld .bld-base{height:10px;background:var(--bnd-primary-deep,#0F2A24);}
 .bnd-bld .bld-floor{display:flex;align-items:stretch;border-top:1px solid rgba(15,42,36,.06);}
 .bnd-bld .bld-floor:first-of-type{border-top:none;}
-.bnd-bld .bld-floor__tag{flex:0 0 92px;display:flex;flex-direction:column;justify-content:center;padding:10px 12px;background:rgba(15,42,36,.04);font-size:12px;font-weight:700;color:#1F5145;}
+.bnd-bld .bld-floor__tag{flex:0 0 92px;display:flex;flex-direction:column;justify-content:center;padding:10px 12px;background:rgba(15,42,36,.04);font-size:12px;font-weight:700;color:var(--bnd-primary,#1F5145);}
 .bnd-bld .bld-floor__n{font-size:11px;color:#6b7280;font-weight:600;}
 .bnd-bld .bld-floor__cells{flex:1;display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;}
 .bnd-bld .bld-cell{width:72px;height:56px;border:none;border-radius:9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 1px 2px rgba(0,0,0,.12);transition:transform .12s cubic-bezier(.34,1.56,.64,1);}
@@ -169,6 +177,7 @@ function bnd_inject_building_css() {
 .bnd-bld .bld-cell__ty{font-size:9.5px;opacity:.85;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .bnd-bld .bld-board-h{margin:22px 0 10px;}
 .bnd-bld .bld-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+.bnd-bld .bld-card:focus-visible{outline:2px solid var(--bnd-gold,#C8923C);outline-offset:2px;}
 .bnd-bld .bld-card{border:1px solid #e8eae7;border-radius:12px;background:#fff;padding:12px 14px;cursor:pointer;transition:box-shadow .14s,transform .14s;}
 .bnd-bld .bld-card:hover{box-shadow:0 10px 24px rgba(15,42,36,.1);transform:translateY(-2px);}
 .bnd-bld .bld-card__top{display:flex;justify-content:space-between;align-items:center;}

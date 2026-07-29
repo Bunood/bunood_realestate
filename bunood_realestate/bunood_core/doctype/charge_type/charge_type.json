@@ -13,6 +13,10 @@
   "default_rate",
   "taxable",
   "is_active",
+  "is_recurring",
+  "default_billing_method",
+  "default_tariff",
+  "uom",
   "rule_section",
   "condition",
   "rate_formula",
@@ -87,6 +91,32 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Description"
+  },
+  {
+   "fieldname": "is_recurring",
+   "fieldtype": "Check",
+   "label": "Recurring",
+   "description": "Marks this as a recurring facility/service the Charge Engine can schedule (vs a one-off fee)."
+  },
+  {
+   "fieldname": "default_billing_method",
+   "fieldtype": "Select",
+   "label": "Default Method",
+   "options": "Fixed\nMetered",
+   "default": "Fixed"
+  },
+  {
+   "fieldname": "default_tariff",
+   "fieldtype": "Currency",
+   "label": "Default Tariff / Unit",
+   "description": "Metered default price per unit (e.g. per kWh / m3)."
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "description": "Metered unit of measure (kWh, m3, ...)."
   }
  ],
  "links": [],

@@ -20,6 +20,7 @@
   "items_section",
   "items",
   "total_cost",
+  "purchase_invoice",
   "notes_section",
   "notes"
  ],
@@ -117,6 +118,14 @@
    "fieldtype": "Currency",
    "label": "Total Cost",
    "read_only": 1
+  },
+  {
+   "fieldname": "purchase_invoice",
+   "fieldtype": "Link",
+   "label": "Contractor Bill",
+   "options": "Purchase Invoice",
+   "read_only": 1,
+   "description": "The contractor Purchase Invoice posted for this work order (idempotency link)."
   },
   {
    "fieldname": "notes_section",

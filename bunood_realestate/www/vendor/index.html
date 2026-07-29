@@ -3,7 +3,7 @@
 {% block title %}{{ _("Contractor Portal") }}{% endblock %}
 
 {% block page_content %}
-<div class="bnd-portal" dir="rtl" style="max-width: 900px; margin: 0 auto; padding: 24px 12px;">
+<div class="bnd-portal" dir="{{ 'rtl' if (lang or 'ar') in ('ar', 'he', 'fa', 'ur') else 'ltr' }}" style="max-width: 900px; margin: 0 auto; padding: 24px 12px;">
 
   {% if not linked %}
     <h1 style="font-weight:800;">{{ _("Contractor Portal") }}</h1>

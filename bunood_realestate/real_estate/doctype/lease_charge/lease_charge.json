@@ -1,0 +1,160 @@
+{
+ "actions": [],
+ "creation": "2026-07-29 00:00:00",
+ "description": "One recurring charge (utility/service/fee) on a lease. The facility is a Link to Charge Type, so new facilities are new rows in that taxonomy, never new columns. Fixed shows by default; Metered reveals the meter fields. allow_on_submit lets a charge be added/stopped mid-term without touching rent.",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "charge_type",
+  "billing_method",
+  "amount",
+  "billing_cycle",
+  "billing_timing",
+  "col_break_1",
+  "unit",
+  "charge_start_date",
+  "charge_end_date",
+  "is_active",
+  "acct_section",
+  "revenue_account",
+  "tax_template",
+  "meter_section",
+  "meter_no",
+  "previous_reading",
+  "tariff"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "charge_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Charge Type",
+   "options": "Charge Type",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "Fixed",
+   "fieldname": "billing_method",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Method",
+   "options": "Fixed\nMetered"
+  },
+  {
+   "columns": 2,
+   "depends_on": "eval:doc.billing_method=='Fixed'",
+   "description": "Fixed method: the per-PERIOD amount (e.g. 200 / month internet).",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount / Period"
+  },
+  {
+   "columns": 2,
+   "default": "Monthly",
+   "description": "Independent of the rent cycle.",
+   "fieldname": "billing_cycle",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Cycle",
+   "options": "Monthly\nQuarterly\nSemi-Annual\nAnnual"
+  },
+  {
+   "default": "Arrears",
+   "description": "Advance = bill at period start (like rent). Arrears = bill after the service period (utilities; Metered is always Arrears).",
+   "fieldname": "billing_timing",
+   "fieldtype": "Select",
+   "label": "Timing",
+   "options": "Advance\nArrears"
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Accounting dimension for this charge's invoice line. Blank = property-level.",
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "label": "Unit",
+   "options": "Real Estate Unit"
+  },
+  {
+   "description": "Optional: start billing this charge from this date (defaults to the lease start).",
+   "fieldname": "charge_start_date",
+   "fieldtype": "Date",
+   "label": "Charge Start"
+  },
+  {
+   "description": "Optional: stop billing this charge after this date (defaults to the lease end).",
+   "fieldname": "charge_end_date",
+   "fieldtype": "Date",
+   "label": "Charge End"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Active"
+  },
+  {
+   "fieldname": "acct_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting (optional overrides)"
+  },
+  {
+   "description": "Revenue account for this charge's invoice line. Else the Charge Type's Service Item income account; else the settings default.",
+   "fieldname": "revenue_account",
+   "fieldtype": "Link",
+   "label": "Revenue Account",
+   "options": "Account"
+  },
+  {
+   "description": "VAT template override. Else resolved from the lease's contract type, like rent.",
+   "fieldname": "tax_template",
+   "fieldtype": "Link",
+   "label": "Tax Template",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "depends_on": "eval:doc.billing_method=='Metered'",
+   "fieldname": "meter_section",
+   "fieldtype": "Section Break",
+   "label": "Meter"
+  },
+  {
+   "depends_on": "eval:doc.billing_method=='Metered'",
+   "description": "Defaults from the unit's electricity/water meter where available.",
+   "fieldname": "meter_no",
+   "fieldtype": "Data",
+   "label": "Meter No"
+  },
+  {
+   "depends_on": "eval:doc.billing_method=='Metered'",
+   "description": "Rolling latest meter reading; seeds period 1 and is advanced by each captured Meter Reading.",
+   "fieldname": "previous_reading",
+   "fieldtype": "Float",
+   "label": "Previous Reading"
+  },
+  {
+   "depends_on": "eval:doc.billing_method=='Metered'",
+   "description": "Price per metered unit (e.g. per kWh / m3).",
+   "fieldname": "tariff",
+   "fieldtype": "Currency",
+   "label": "Tariff / Unit"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-29 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Lease Charge",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

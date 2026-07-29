@@ -17,7 +17,7 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		},
 		operation: "owned",
 		fee: 5,
-		owner: { owner_name: "", owner_phone: "", owner_id_num: "", owner_email: "", owner_iban: "", owner_nationality: "السعودية", owner_date_of_birth: "", owner_address: "" },
+		owner: { owner_name: "", owner_party: "", owner_phone: "", owner_id_num: "", owner_email: "", owner_iban: "", owner_nationality: "السعودية", owner_date_of_birth: "", owner_address: "" },
 		location: { city: "الرياض", district: "", street: "", building_no: "", postal_code: "", description: "" },
 		floors: [],
 		sameAll: true,
@@ -29,6 +29,40 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 	function block(type, count, rooms, living, bath, area, rent, deposit) {
 		return { type, count, rooms, living, bath, area, rent, deposit };
 	}
+	function attachOwnerAutocomplete() {
+		// Link the free-text owner field to real Supplier records: picking a suggestion
+		// stores S.owner.owner_party (the Property's payout party); free typing keeps the
+		// plain capture path. Progressive enhancement — plain input without Awesomplete.
+		const inp = $root.find('input[data-g="owner"][data-k="owner_name"]').get(0);
+		if (!inp || !window.Awesomplete || inp._bnd_aw) return;
+		const aw = new Awesomplete(inp, { minChars: 2, autoFirst: false, list: [] });
+		inp._bnd_aw = aw;
+		$(inp).on(
+			"input",
+			frappe.utils.debounce(function () {
+				S.owner.owner_party = ""; // typing invalidates a previous pick
+				if ((inp.value || "").length < 2) return;
+				frappe.call({
+					method: "frappe.desk.search.search_link",
+					args: { doctype: "Supplier", txt: inp.value, page_length: 8 },
+					callback(r) {
+						const rows = r.message || r.results || [];
+						aw.list = rows.map((d) => ({
+							label: (d.description ? d.value + " — " + d.description : d.value),
+							value: d.value,
+						}));
+						aw.evaluate();
+					},
+				});
+			}, 300)
+		);
+		inp.addEventListener("awesomplete-selectcomplete", function (e) {
+			S.owner.owner_party = e.text.value;
+			inp.value = e.text.value;
+			S.owner.owner_name = inp.value;
+		});
+	}
+
 	function applyPreset(name) {
 		if (name === "villa") S.floors = [{ blocks: [block("Villa", 1, 5, 2, 4, 400, 8000, 8000)] }];
 		else if (name === "commercial")
@@ -84,8 +118,10 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 
 	// ---- render ------------------------------------------------------------
 	function render() {
+		// Direction follows the user's language (the ONE RTL strategy across the app).
+		const dir = frappe.utils.is_rtl && frappe.utils.is_rtl() ? "rtl" : "ltr";
 		$root.html(
-			'<div class="np">' + header() + stepper() +
+			'<div class="np" dir="' + dir + '">' + header() + stepper() +
 			'<div class="np-card">' + (S.step === 1 ? step1() : S.step === 2 ? step2() : step3()) + "</div>" +
 			"</div>"
 		);
@@ -105,9 +141,8 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 			labels
 				.map((l, i) => {
 					const n = i + 1, cls = n === S.step ? "active" : n < S.step ? "done" : "";
-					return '<div class="np-step ' + cls + '"><div class="np-step-n">' + (n < S.step ? "✓" : n) + '</div><div class="np-step-l">' + esc(l) + "</div></div>";
+					return '<div class="np-step ' + cls + '"' + (n === S.step ? ' aria-current="step"' : "") + '><div class="np-step-n">' + (n < S.step ? "✓" : n) + '</div><div class="np-step-l">' + esc(l) + "</div></div>";
 				})
-				.reverse()
 				.join("") +
 			"</div>"
 		);
@@ -138,9 +173,9 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 			items
 				.map(
 					(it) =>
-						'<div class="np-cardsel ' + (it.key === selected ? "sel" : "") + '" ' + dataAttr + '="' + esc(it.key) + '">' +
+						'<button type="button" class="np-cardsel ' + (it.key === selected ? "sel" : "") + '" ' + dataAttr + '="' + esc(it.key) + '" aria-pressed="' + (it.key === selected ? "true" : "false") + '">' +
 						'<div class="np-cardsel-ic">' + frappe.utils.icon(it.icon, "lg") + "</div>" +
-						'<div class="np-cardsel-t">' + esc(it.title) + '</div><div class="np-cardsel-s">' + esc(it.sub) + "</div></div>"
+						'<div class="np-cardsel-t">' + esc(it.title) + '</div><div class="np-cardsel-s">' + esc(it.sub) + "</div></button>"
 				)
 				.join("") +
 			"</div>"
@@ -217,7 +252,7 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 				{ key: "mixed", icon: "retail", title: __("Mixed"), sub: __("Shops + offices + apartments") },
 				{ key: "commercial", icon: "project", title: __("Office Tower"), sub: __("5 floors × 6 offices") },
 			]
-				.map((p) => '<div class="np-cardsel" data-preset="' + p.key + '"><div class="np-cardsel-ic">' + frappe.utils.icon(p.icon, "lg") + '</div><div class="np-cardsel-t">' + esc(p.title) + '</div><div class="np-cardsel-s">' + esc(p.sub) + "</div></div>")
+				.map((p) => '<button type="button" class="np-cardsel" data-preset="' + p.key + '"><div class="np-cardsel-ic">' + frappe.utils.icon(p.icon, "lg") + '</div><div class="np-cardsel-t">' + esc(p.title) + '</div><div class="np-cardsel-s">' + esc(p.sub) + "</div></button>")
 				.join("") +
 			"</div>" +
 			'<div class="np-builder">' +
@@ -328,6 +363,7 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		$root.find("[data-type]").on("click", function () { S.basics.property_type = $(this).data("type"); render(); });
 		$root.find("[data-op]").on("click", function () { S.operation = $(this).data("op"); render(); });
 		$root.find("[data-preset]").on("click", function () { applyPreset($(this).data("preset")); render(); });
+		attachOwnerAutocomplete();
 		$root.find(".np-ov-toggle").on("click", function () {
 			const b = S.floors[$(this).data("fi")].blocks[$(this).data("bi")];
 			b.expand = !b.expand;
@@ -407,6 +443,8 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 .np-presets{grid-template-columns:repeat(4,1fr);}
 @media(max-width:700px){.np-cards,.np-presets{grid-template-columns:1fr 1fr;}}
 .np-cardsel{border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.12s;}
+button.np-cardsel{width:100%;background:var(--bnd-surface,#fff);font:inherit;color:inherit;display:block;}
+.np-cardsel:focus-visible{outline:2px solid var(--bnd-gold,#C8923C);outline-offset:2px;}
 .np-cardsel:hover{border-color:var(--bnd-primary,#1F5145);}
 .np-cardsel.sel{border-color:var(--bnd-primary,#1F5145);background:var(--bnd-primary-050,#E8F0ED);box-shadow:0 0 0 2px var(--bnd-primary-050,#E8F0ED);}
 .np-cardsel-ic{color:var(--bnd-primary,#1F5145);}

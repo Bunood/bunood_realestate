@@ -106,6 +106,11 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 	si = frappe.new_doc("Sales Invoice")
 	si.customer = row.customer
 	si.company = row.company
+	# Pin to company currency — Rent Schedule base_amount is company-denominated (parity
+	# with charge.py / head_lease.py). Without this, a customer whose default_currency
+	# differs from the company would have the annual-rent slice mis-denominated/converted.
+	si.currency = frappe.get_cached_value("Company", row.company, "default_currency")
+	si.conversion_rate = 1
 	si.set_posting_time = 1
 	si.posting_date = row.due_date  # accrual: recognise revenue on the due date
 	si.due_date = row.due_date

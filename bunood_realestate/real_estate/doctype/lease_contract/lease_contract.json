@@ -20,6 +20,7 @@
   "start_date",
   "end_date",
   "billing_cycle",
+  "escalation_pct",
   "status",
   "tax_section",
   "tenant_vat_number",
@@ -105,10 +106,14 @@
   "import_installments",
   "import_col",
   "import_historical_seed",
+  "opening_invoice",
   "more_section",
   "parent_lease",
   "notes",
-  "amended_from"
+  "amended_from",
+  "charges_section",
+  "billing_policy",
+  "charges"
  ],
  "fields": [
   {
@@ -563,17 +568,23 @@
   {
    "fieldname": "electricity_annual",
    "fieldtype": "Currency",
-   "label": "Electricity (annual)"
+   "label": "Electricity (annual)",
+   "read_only": 1,
+   "description": "Legacy field — superseded by the Charges table. Kept read-only for history."
   },
   {
    "fieldname": "water_annual",
    "fieldtype": "Currency",
-   "label": "Water (annual)"
+   "label": "Water (annual)",
+   "read_only": 1,
+   "description": "Legacy field — superseded by the Charges table. Kept read-only for history."
   },
   {
    "fieldname": "gas_annual",
    "fieldtype": "Currency",
-   "label": "Gas (annual)"
+   "label": "Gas (annual)",
+   "read_only": 1,
+   "description": "Legacy field — superseded by the Charges table. Kept read-only for history."
   },
   {
    "fieldname": "utilities_annual_col",
@@ -582,12 +593,16 @@
   {
    "fieldname": "parking_annual",
    "fieldtype": "Currency",
-   "label": "Parking (annual)"
+   "label": "Parking (annual)",
+   "read_only": 1,
+   "description": "Legacy field — superseded by the Charges table. Kept read-only for history."
   },
   {
    "fieldname": "parking_lots_rented",
    "fieldtype": "Int",
-   "label": "Parking Lots Rented"
+   "label": "Parking Lots Rented",
+   "read_only": 1,
+   "description": "Legacy field — superseded by the Charges table. Kept read-only for history."
   },
   {
    "fieldname": "terms_tab",
@@ -679,6 +694,14 @@
    "default": "0"
   },
   {
+   "fieldname": "opening_invoice",
+   "fieldtype": "Link",
+   "label": "Opening Balance Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1,
+   "description": "is_opening Sales Invoice posted for an imported contract's outstanding balance (link + idempotency)."
+  },
+  {
    "collapsible": 1,
    "fieldname": "more_section",
    "fieldtype": "Section Break",
@@ -705,6 +728,33 @@
    "options": "Lease Contract",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "charges_section",
+   "fieldtype": "Section Break",
+   "label": "Recurring Charges (Utilities / Services)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "billing_policy",
+   "fieldtype": "Link",
+   "label": "Billing Policy",
+   "options": "Billing Policy",
+   "description": "How the Charge Engine groups this lease's charges into Sales Invoices (default: Separate Invoices)."
+  },
+  {
+   "fieldname": "charges",
+   "fieldtype": "Table",
+   "label": "Charges",
+   "options": "Lease Charge",
+   "allow_on_submit": 1,
+   "description": "Recurring utilities/services billed independently of rent. Add or stop a charge mid-term without touching rent."
+  },
+  {
+   "fieldname": "escalation_pct",
+   "fieldtype": "Percent",
+   "label": "Annual Escalation %",
+   "description": "Step-up applied to the rent at EACH lease anniversary (year 2 onward). 0 = flat rent. Standard for multi-year commercial leases; the schedule is generated year-by-year through the verified period builder."
   }
  ],
  "is_submittable": 1,

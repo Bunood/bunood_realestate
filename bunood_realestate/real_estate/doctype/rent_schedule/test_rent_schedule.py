@@ -5,8 +5,14 @@ Covers the money/date algorithms that must never drift."""
 
 import unittest
 
-from bunood_realestate.real_estate.doctype.lease_contract.lease_contract import ZATCA_VAT_RE
-from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import build_periods
+from bunood_realestate.real_estate.doctype.lease_contract.lease_contract import ZATCA_VAT_RE, lease_is_expired
+from bunood_realestate.real_estate.doctype.lease_termination.lease_termination import unused_rent_credit
+from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import (
+	build_escalated_periods,
+	build_periods,
+	escalation_segments,
+	seed_future_periods,
+)
 from bunood_realestate.real_estate.collections import compute_late_fee
 from bunood_realestate.real_estate.management import compute_owner_payout
 from bunood_realestate.real_estate.notifications import expiry_milestone
@@ -105,6 +111,41 @@ class TestExpiryMilestone(unittest.TestCase):
 		self.assertIsNone(expiry_milestone("2025-01-01", "2026-01-01", "2026-01-01"))  # today
 
 
+class TestSeedFuturePeriods(unittest.TestCase):
+	def _year(self):
+		return build_periods("2026-01-01", "2026-12-31", "Monthly", 120000)
+
+	def test_none_cutoff_keeps_all(self):
+		self.assertEqual(len(seed_future_periods(self._year(), None)), 12)
+
+	def test_drops_periods_due_before_cutoff(self):
+		kept = seed_future_periods(self._year(), "2026-07-01")
+		self.assertEqual(len(kept), 6)  # Jul..Dec
+		self.assertEqual(str(kept[0]["period_start"]), "2026-07-01")
+
+	def test_cutoff_after_end_keeps_none(self):
+		self.assertEqual(seed_future_periods(self._year(), "2027-01-01"), [])
+
+	def test_cutoff_keeps_period_starting_exactly_on_cutoff(self):
+		# The period due exactly on the cutoff is still future (>=), so it is kept.
+		kept = seed_future_periods(self._year(), "2026-03-01")
+		self.assertEqual(len(kept), 10)  # Mar..Dec
+
+
+class TestLeaseExpiry(unittest.TestCase):
+	def test_expired_when_end_strictly_before_today(self):
+		self.assertTrue(lease_is_expired("2026-01-01", "2026-01-02"))
+
+	def test_not_expired_on_the_end_day_itself(self):
+		self.assertFalse(lease_is_expired("2026-01-02", "2026-01-02"))
+
+	def test_not_expired_when_end_in_future(self):
+		self.assertFalse(lease_is_expired("2026-02-01", "2026-01-02"))
+
+	def test_no_end_date_is_never_expired(self):
+		self.assertFalse(lease_is_expired(None, "2026-01-02"))
+
+
 class TestZatcaVatRegex(unittest.TestCase):
 	def test_valid(self):
 		self.assertTrue(ZATCA_VAT_RE.match("300000000000003"))
@@ -114,3 +155,76 @@ class TestZatcaVatRegex(unittest.TestCase):
 
 	def test_invalid_boundaries(self):
 		self.assertFalse(ZATCA_VAT_RE.match("100000000000001"))
+
+
+class TestEscalatedPeriods(unittest.TestCase):
+	def test_zero_pct_identical_to_plain(self):
+		a = build_periods("2026-01-01", "2027-12-31", "Monthly", 120000)
+		b = build_escalated_periods("2026-01-01", "2027-12-31", "Monthly", 120000, 0)
+		self.assertEqual(a, b)
+
+	def test_two_year_monthly_five_pct(self):
+		ps = build_escalated_periods("2026-01-01", "2027-12-31", "Monthly", 120000, 5)
+		self.assertEqual(len(ps), 24)
+		year1 = round(sum(p["base_amount"] for p in ps[:12]), 2)
+		year2 = round(sum(p["base_amount"] for p in ps[12:]), 2)
+		self.assertEqual(year1, 120000)
+		self.assertEqual(year2, 126000)  # +5%
+		# numbering continues across years
+		self.assertEqual([p["period_no"] for p in ps], list(range(1, 25)))
+
+	def test_partial_second_year_is_exact(self):
+		# 18-month lease: year 2 has exactly 6 full months at the escalated rate.
+		ps = build_escalated_periods("2026-01-01", "2027-06-30", "Monthly", 120000, 5)
+		self.assertEqual(len(ps), 18)
+		year2 = round(sum(p["base_amount"] for p in ps[12:]), 2)
+		self.assertEqual(year2, 63000)  # 126000 / 2
+
+	def test_three_year_compounding(self):
+		ps = build_escalated_periods("2026-01-01", "2028-12-31", "Annual", 100000, 10)
+		self.assertEqual([p["base_amount"] for p in ps], [100000, 110000, 121000.0])
+
+
+class TestUnusedRentCredit(unittest.TestCase):
+	def test_termination_before_period_credits_full(self):
+		self.assertEqual(unused_rent_credit("2026-02-01", "2026-02-28", 2800, "2026-01-15"), 2800)
+
+	def test_termination_mid_period_prorates_by_days(self):
+		# 30-day period, termination on day 15 → 15 unused days.
+		self.assertEqual(unused_rent_credit("2026-04-01", "2026-04-30", 3000, "2026-04-15"), 1500)
+
+	def test_termination_on_period_end_credits_nothing(self):
+		self.assertEqual(unused_rent_credit("2026-04-01", "2026-04-30", 3000, "2026-04-30"), 0.0)
+
+	def test_termination_after_period_credits_nothing(self):
+		self.assertEqual(unused_rent_credit("2026-04-01", "2026-04-30", 3000, "2026-05-10"), 0.0)
+
+	def test_last_day_only_unused(self):
+		# termination on day 29 of 30 → exactly one unused day.
+		self.assertEqual(unused_rent_credit("2026-04-01", "2026-04-30", 3000, "2026-04-29"), 100.0)
+
+
+class TestEscalationBoundaries(unittest.TestCase):
+	def test_anniversary_end_no_sliver_period(self):
+		# End date exactly ON the anniversary: same coverage as pct=0 (no bogus 1-day period).
+		flat = build_periods("2026-01-01", "2027-01-01", "Monthly", 120000)
+		esc = build_escalated_periods("2026-01-01", "2027-01-01", "Monthly", 120000, 5)
+		self.assertEqual(len(esc), len(flat))
+		self.assertEqual(_total(esc), _total(flat))
+
+	def test_feb29_start_contiguous_coverage(self):
+		# Feb-29 start: every period_start must be exactly prev period_end + 1 day (no gaps).
+		import datetime
+		ps = build_escalated_periods("2024-02-29", "2029-02-27", "Annual", 100000, 5)
+		for a, b in zip(ps, ps[1:]):
+			self.assertEqual(
+				b["period_start"], a["period_end"] + datetime.timedelta(days=1),
+				f"gap between {a['period_end']} and {b['period_start']}",
+			)
+
+	def test_escalation_segments_counts(self):
+		self.assertEqual(escalation_segments("2026-01-01", "2026-12-31"), 1)
+		self.assertEqual(escalation_segments("2026-01-01", "2028-12-31"), 3)
+		# End ON the anniversary → the sliver year does NOT count (mirror of the builder).
+		self.assertEqual(escalation_segments("2026-01-01", "2027-01-01"), 1)
+		self.assertEqual(escalation_segments("2026-01-01", "2027-06-30"), 2)

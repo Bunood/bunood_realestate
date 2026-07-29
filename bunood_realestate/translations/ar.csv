@@ -676,3 +676,187 @@ Auto-renew only,ذاتية التجديد فقط
 Days Left,الأيام المتبقية
 Renewal Drafted,مسودة تجديد
 Work Orders,أوامر العمل
+Move-out Inspection,فحص الإخلاء
+Inspection,الفحص
+Area / Item,المنطقة / البند
+Note,ملاحظة
+Suggested Charge,الرسم المقترح
+Charged,محتسب
+Pull Inspection Charges,سحب رسوم الفحص
+Pulling charges...,جارٍ السحب...
+Added {0} deduction(s),أُضيف {0} خصم
+No new charges to pull,لا رسوم جديدة للسحب
+Deposit Deduction Income Account,حساب إيراد خصومات الوديعة
+Only a draft termination can be edited.,لا يمكن التعديل إلا على إنهاء مسودة.
+Set the Deposit Deduction Income Account in Real Estate Settings first.,عيّن حساب إيراد خصومات الوديعة في إعدادات العقارات أولاً.
+Damaged,متضرر
+Missing,مفقود
+Fair,مقبول
+Walls,جدران
+Kitchen,مطبخ
+Bathroom,حمام
+AC & Cooling,تكييف وتبريد
+Electrical,كهرباء
+Plumbing,سباكة
+Doors & Windows,أبواب ونوافذ
+Furniture,أثاث
+Keys,مفاتيح
+Meters,عدّادات
+General,عام
+(mirrored to all {0} floors),(منسوخ إلى كل الطوابق {0})
+A Tenant VAT Number is required for a Commercial lease.,الرقم الضريبي للمستأجر مطلوب للعقد التجاري.
+A converted booking cannot be cancelled — cancel its lease instead.,لا يمكن إلغاء حجز تم تحويله — ألغِ عقد الإيجار بدلاً من ذلك.
+A deposit has already been recorded for this lease.,تم تسجيل تأمين لهذا العقد مسبقًا.
+A head-lease schedule applies only to Master-Lease (استثماري) properties.,جدول العقد الرئيسي يسري فقط على العقارات الاستثمارية (تأجير من الباطن).
+Add at least one unit to the contract.,أضف وحدة واحدة على الأقل إلى العقد.
+All units on a contract must belong to the same property.,يجب أن تتبع كل وحدات العقد نفس العقار.
+Amount must be greater than zero.,يجب أن يكون المبلغ أكبر من صفر.
+Annual,سنوي
+Annual Escalation % must be greater than -100.,نسبة الزيادة السنوية يجب أن تكون أكبر من -100.
+"Cancel or credit the issued Sales Invoice(s) first, or use Terminate instead.",ألغِ الفواتير الصادرة أو أصدر إشعارًا دائنًا أولًا، أو استخدم الإنهاء بدلاً من الإلغاء.
+Cannot delete a Posted owner payout while its Journal Entry {0} is still submitted — the owner would be paid twice on the next run. Cancel the Journal Entry first (that reverses the GL and marks this payout Cancelled).,لا يمكن حذف دفعة مالك مرحّلة وقيدها اليومي {0} ما زال معتمدًا — سيُدفع للمالك مرتين في التشغيل القادم. ألغِ القيد اليومي أولًا (فيُعكس الأثر المحاسبي وتتحول الدفعة إلى ملغاة).
+Charge Type {0} is not active.,نوع الرسم {0} غير مفعّل.
+Charge Type {0} uses the Rent Service Item ({1}). Charges must carry their own Service Item so charge cash is never counted as rent for the owner payout.,نوع الرسم {0} يستخدم صنف الإيجار ({1}). يجب أن يكون لكل رسم صنف خدمة خاص به حتى لا تُحتسب مبالغ الرسوم إيجارًا في دفعة المالك.
+Charge amount must be greater than zero (Charge Type {0}).,مبلغ الرسم يجب أن يكون أكبر من صفر (نوع الرسم {0}).
+Charge period {0} is no longer awaiting a reading (already captured or invoiced). Refresh and pick the correct period.,فترة الرسم {0} لم تعد بانتظار قراءة (سُجّلت أو فُوترت). حدّث الصفحة واختر الفترة الصحيحة.
+Charged {0} late fee(s),تم فرض {0} غرامة تأخير
+Charges,الرسوم
+Charges for lease {0},رسوم عقد الإيجار {0}
+Collected (month),المحصّل (الشهر)
+Collection Rate,نسبة التحصيل
+Company is required.,الشركة مطلوبة.
+Computed owner payout is zero.,دفعة المالك المحسوبة تساوي صفرًا.
+Contractor bill posted.,تم ترحيل فاتورة المقاول.
+Could not load the building view. Check the property and try again.,تعذّر تحميل عرض المبنى. تحقق من العقار وحاول مجددًا.
+Could not load the finance view. Check the filters and try again.,تعذّر تحميل العرض المالي. تحقق من عوامل التصفية وحاول مجددًا.
+Created invoice(s): {0},تم إنشاء الفواتير: {0}
+Created {0} charge invoice(s),تم إنشاء {0} فاتورة رسوم
+Created {0} invoice(s),تم إنشاء {0} فاتورة
+Created {0} period(s),تم إنشاء {0} فترة
+Created {0} purchase invoice(s),تم إنشاء {0} فاتورة شراء
+Created {0} unit(s),تم إنشاء {0} وحدة
+Creating units...,جارٍ إنشاء الوحدات...
+Credit Note {0} (lease termination) is issued against this invoice — cancel it first.,الإشعار الدائن {0} (إنهاء عقد) صادر مقابل هذه الفاتورة — ألغِه أولًا.
+Credit for unused rent ({0} to {1}) — lease {2} terminated {3}; against {4},إشعار دائن عن إيجار غير مستخدم ({0} إلى {1}) — العقد {2} أُنهي في {3}؛ مقابل {4}
+"Current reading {0} is below the previous reading {1}. If the meter was replaced or rolled over, tick 'Meter Replaced'.",القراءة الحالية {0} أقل من القراءة السابقة {1}. إن كان العداد قد استُبدل أو تجاوز حده، فعّل خيار «استبدال العداد».
+Customer,العميل
+Customize each unit,تخصيص كل وحدة
+Deposit amount must be greater than zero.,مبلغ التأمين يجب أن يكون أكبر من صفر.
+Deposit settlement — Lease {0},تسوية التأمين — العقد {0}
+Draft rent invoice(s) {0} cover periods affected by this termination. Submit or delete them first.,فواتير إيجار مسودة {0} تغطي فترات يشملها هذا الإنهاء. اعتمدها أو احذفها أولًا.
+Each deduction needs an Income Account.,كل استقطاع يحتاج إلى حساب إيراد.
+End Date cannot be before Start Date.,تاريخ النهاية لا يمكن أن يسبق تاريخ البداية.
+End Date must be after Start Date.,تاريخ النهاية يجب أن يكون بعد تاريخ البداية.
+Expected (month),المتوقع (الشهر)
+Follow-up & Activity,المتابعة والنشاط
+From Date must be on or before To Date.,تاريخ البداية يجب أن يكون في تاريخ النهاية أو قبله.
+Generate Charge Invoices,توليد فواتير الرسوم
+Generating charge invoices...,جارٍ توليد فواتير الرسوم...
+Generating invoices...,جارٍ توليد الفواتير...
+Head Lease Schedule {0} has no head landlord.,جدول العقد الرئيسي {0} بلا مالك رئيسي.
+Head-lease {0} ({1} to {2}),عقد رئيسي {0} ({1} إلى {2})
+Hold-until date cannot be before the booking date.,تاريخ انتهاء الحجز لا يمكن أن يسبق تاريخ الحجز.
+Invalid photo reference.,مرجع الصورة غير صالح.
+Invalid status.,حالة غير صالحة.
+Land expense — {0} · {1},مصروف أرض — {0} · {1}
+Land revenue — {0} · {1},إيراد أرض — {0} · {1}
+"Late fee — period {0}, due {1}",غرامة تأخير — الفترة {0}، الاستحقاق {1}
+Lease Termination {0} already exists for this lease.,يوجد إنهاء عقد {0} مسجل لهذا العقد مسبقًا.
+Lease {0} not found.,العقد {0} غير موجود.
+Maintenance {0},صيانة {0}
+Monthly,شهري
+No Cost Center found for company {0}. Set a default Cost Center on the Company (or a matching one in Real Estate Settings) before posting.,لا يوجد مركز تكلفة للشركة {0}. عيّن مركز تكلفة افتراضيًا على الشركة (أو مركزًا مطابقًا في إعدادات العقارات) قبل الترحيل.
+No company configured — set one in Real Estate Settings.,لا توجد شركة مهيأة — عيّنها في إعدادات العقارات.
+No data,لا توجد بيانات
+No matching Business Type found — seed RE Business Type (residential/commercial) first.,لا يوجد نوع نشاط مطابق — أنشئ أنواع النشاط العقاري (سكني/تجاري) أولًا.
+No open (Awaiting Reading) charge period found for this meter/charge.,لا توجد فترة رسم مفتوحة (بانتظار قراءة) لهذا العداد/الرسم.
+No pending fee charges,لا توجد رسوم معلقة
+"No rent was collected for this property in the selected period (owner payout is cash-basis — paid on collected rent, not merely invoiced).",لم يُحصَّل إيجار لهذا العقار في الفترة المحددة (دفعة المالك على الأساس النقدي — تُدفع من الإيجار المحصّل لا المفوتر فقط).
+Not permitted for this company.,غير مصرّح لهذه الشركة.
+Number of units must be between 1 and 500.,عدد الوحدات يجب أن يكون بين 1 و500.
+Only Customer charges can be posted to a Sales Invoice for now.,حاليًا تُرحّل رسوم العملاء فقط إلى فاتورة مبيعات.
+Only an Active lease can be terminated (this lease is {0}).,لا يُنهى إلا عقد نشط (حالة هذا العقد: {0}).
+Only an active reservation can be converted.,لا يُحوّل إلا حجز نشط.
+Open Contractor Bill,فتح فاتورة المقاول
+Opening balance for imported lease {0},رصيد افتتاحي لعقد مستورد {0}
+Opening balance — imported lease {0},رصيد افتتاحي — عقد مستورد {0}
+Overview,نظرة عامة
+Owner payout applies only to Managed (إدارة أملاك) properties.,دفعة المالك تسري فقط على عقارات إدارة الأملاك.
+Owner payout {0} already covers {1} to {2} for this property — periods must not overlap.,دفعة المالك {0} تغطي بالفعل {1} إلى {2} لهذا العقار — لا يجوز تداخل الفترات.
+Owner payout {0} posted ({1}),تم ترحيل دفعة المالك {0} ({1})
+"Owner payout — {0} ({1} to {2}), fee {3}%",دفعة المالك — {0} ({1} إلى {2})، العمولة {3}%
+Performance,الأداء
+Please log in to access the portal.,الرجاء تسجيل الدخول للوصول إلى البوابة.
+Please log in to access the tenant portal.,الرجاء تسجيل الدخول للوصول إلى بوابة المستأجر.
+Post,ترحيل
+Post Contractor Bill,ترحيل فاتورة المقاول
+Post the contractor bill only when the work order is Done.,رحّل فاتورة المقاول فقط عند اكتمال أمر العمل.
+Posting bills...,جارٍ ترحيل الفواتير...
+Posting contractor bill...,جارٍ ترحيل فاتورة المقاول...
+Posting fee charges...,جارٍ ترحيل الرسوم...
+Posting late fees...,جارٍ ترحيل غرامات التأخير...
+Posting...,جارٍ الترحيل...
+Property expense — {0} · {1},مصروف عقار — {0} · {1}
+Property not found.,العقار غير موجود.
+Property {0} already uses deed number {1}.,العقار {0} يستخدم رقم الصك {1} بالفعل.
+Quarterly,ربع سنوي
+Real Estate Command Center,مركز قيادة العقارات
+Real Estate Settings is set for company {0} but this charge is for {1}.,إعدادات العقارات مضبوطة للشركة {0} بينما هذا الرسم للشركة {1}.
+Real Estate Settings is set for company {0} but this lease is for {1}; one site currently supports a single company.,إعدادات العقارات مضبوطة للشركة {0} بينما هذا العقد للشركة {1}؛ الموقع يدعم حاليًا شركة واحدة.
+Refund amount must be greater than zero.,مبلغ الاسترداد يجب أن يكون أكبر من صفر.
+Refund exceeds the held deposit balance.,الاسترداد يتجاوز رصيد التأمين المحتجز.
+Rent Scheduled (12 months),الإيجار المجدول (12 شهرًا)
+"Rent for lease {0}, period {1} to {2}",إيجار العقد {0}، الفترة {1} إلى {2}
+Rent {0} ({1} to {2}),إيجار {0} ({1} إلى {2})
+Request not found.,الطلب غير موجود.
+Reset from default,إعادة الضبط من الافتراضي
+Security deposit received — Lease {0},استلام تأمين — العقد {0}
+Security deposit refund — Lease {0},استرداد تأمين — العقد {0}
+Set Default Rent Item and Rent Income Account in Real Estate Settings.,عيّن صنف الإيجار الافتراضي وحساب إيراد الإيجار في إعدادات العقارات.
+Set a Commercial Tax Template in Real Estate Settings before billing charges on a commercial lease (ZATCA requires 15% VAT).,عيّن قالب الضريبة التجاري في إعدادات العقارات قبل فوترة رسوم عقد تجاري (تتطلب زاتكا ضريبة 15%).
+Set a Commercial Tax Template in Real Estate Settings before invoicing a commercial lease (ZATCA requires 15% VAT).,عيّن قالب الضريبة التجاري في إعدادات العقارات قبل فوترة عقد تجاري (تتطلب زاتكا ضريبة 15%).
+Set a Default Payable Account on the company.,عيّن حساب الدائنين الافتراضي على الشركة.
+Set a Default Rent Item in Real Estate Settings first.,عيّن صنف الإيجار الافتراضي في إعدادات العقارات أولًا.
+Set a Head-Lease Item in Real Estate Settings.,عيّن صنف العقد الرئيسي في إعدادات العقارات.
+Set a Maintenance Expense Account in Real Estate Settings before billing a work order.,عيّن حساب مصروف الصيانة في إعدادات العقارات قبل فوترة أمر العمل.
+Set a Maintenance Item in Real Estate Settings before billing a work order.,عيّن صنف الصيانة في إعدادات العقارات قبل فوترة أمر العمل.
+Set a Service Item on Charge Type {0} before billing it.,عيّن صنف خدمة على نوع الرسم {0} قبل فوترته.
+Set a Service Item on Charge Type {0} before posting its charges.,عيّن صنف خدمة على نوع الرسم {0} قبل ترحيل رسومه.
+Set a positive Management Fee % on the property (a managed property keeps a fee).,عيّن نسبة عمولة إدارة موجبة على العقار (عقار الإدارة يحتفظ بعمولة).
+Set an Opening Balance Account in Real Estate Settings before importing a contract with an outstanding balance.,عيّن حساب الرصيد الافتتاحي في إعدادات العقارات قبل استيراد عقد عليه رصيد مستحق.
+"Set head landlord, annual rent, start/end dates and billing cycle first.",عيّن المالك الرئيسي والإيجار السنوي وتاريخي البداية والنهاية ودورة الفوترة أولًا.
+Set the Contractor (Supplier) on the work order first.,عيّن المقاول (المورد) على أمر العمل أولًا.
+Set the Default Rent Item in Real Estate Settings (used to identify rent lines for the owner payout).,عيّن صنف الإيجار الافتراضي في إعدادات العقارات (يُستخدم لتمييز أسطر الإيجار في دفعة المالك).
+Set the Owner (Supplier) on the property first.,عيّن المالك (المورد) على العقار أولًا.
+Set the Owner Payout Expense Account in Real Estate Settings.,عيّن حساب مصروف دفعات الملاك في إعدادات العقارات.
+Set the Refund account (net refund is {0}).,عيّن حساب الاسترداد (صافي الاسترداد {0}).
+Set the Rent Income Account in Real Estate Settings (used to separate rent cash from other charges).,عيّن حساب إيراد الإيجار في إعدادات العقارات (يُستخدم لفصل نقد الإيجار عن بقية الرسوم).
+Set the Tenant Security Deposit Account in Real Estate Settings.,عيّن حساب تأمينات المستأجرين في إعدادات العقارات.
+"Settling Payment Entry {0} covering this period was cancelled — collected rent fell, so this owner payout may be over-paid. Review and adjust the next payout.",أُلغي سند القبض {0} الذي كان يغطي هذه الفترة — انخفض الإيجار المحصّل وقد تكون دفعة المالك هذه زائدة. راجعها وسوِّ الفرق في الدفعة القادمة.
+Snapshot,لمحة سريعة
+Status,الحالة
+Tenant VAT Number must be 15 digits starting and ending with 3 (ZATCA format).,الرقم الضريبي للمستأجر يجب أن يكون 15 رقمًا يبدأ وينتهي بـ3 (صيغة زاتكا).
+Termination Date must fall inside the lease term ({0} to {1}).,تاريخ الإنهاء يجب أن يقع داخل مدة العقد ({0} إلى {1}).
+The attached photo could not be verified.,تعذّر التحقق من الصورة المرفقة.
+The land contract belongs to a different land.,عقد الأرض يعود لأرض مختلفة.
+The selected unit does not belong to this property.,الوحدة المختارة لا تتبع هذا العقار.
+Total deductions exceed the held deposit. Handle the excess as a separate charge.,إجمالي الاستقطاعات يتجاوز التأمين المحتجز. عالج الفائض كرسم مستقل.
+Unit {0} already has a contract ({1}) covering this period.,الوحدة {0} عليها عقد ({1}) يغطي هذه الفترة بالفعل.
+Unit {0} already has an active reservation ({1}).,الوحدة {0} عليها حجز نشط ({1}) بالفعل.
+Unit {0} is already leased under active contract {1} for an overlapping period.,الوحدة {0} مؤجرة بالفعل بعقد نشط {1} لفترة متداخلة.
+Unit {0} is not available (status: {1}).,الوحدة {0} غير متاحة (الحالة: {1}).
+Unit {0} is not available.,الوحدة {0} غير متاحة.
+Unit {0} not found.,الوحدة {0} غير موجودة.
+Unused rent {0} to {1},إيجار غير مستخدم {0} إلى {1}
+Work order not found.,أمر العمل غير موجود.
+Work order total cost is zero — nothing to bill.,إجمالي تكلفة أمر العمل صفر — لا شيء للفوترة.
+Write a message or attach a photo.,اكتب رسالة أو أرفق صورة.
+You are not permitted to post in company {0}.,غير مصرّح لك بالترحيل في الشركة {0}.
+You do not have access to this property's company.,لا تملك صلاحية على شركة هذا العقار.
+You do not have access to this request.,لا تملك صلاحية على هذا الطلب.
+You do not have access to this work order.,لا تملك صلاحية على أمر العمل هذا.
+Your account is not linked to a tenant.,حسابك غير مرتبط بمستأجر.
+Your account is not linked to a {0}.,حسابك غير مرتبط بـ{0}.
+contractor,مقاول
+owner,مالك
+{0} ({1} to {2}),{0} ({1} إلى {2})

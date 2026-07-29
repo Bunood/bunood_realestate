@@ -40,6 +40,25 @@ frappe.ui.form.on("Lease Contract", {
 			);
 
 			frm.add_custom_button(
+				__("Generate Charge Invoices"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.real_estate.charge_engine.generate_charges_now",
+						args: { lease_contract: frm.doc.name },
+						freeze: true,
+						freeze_message: __("Generating charge invoices..."),
+						callback: (r) => {
+							frappe.show_alert({
+								message: __("Created {0} charge invoice(s)", [r.message || 0]),
+								indicator: "green",
+							});
+						},
+					});
+				},
+				__("Charges")
+			);
+
+			frm.add_custom_button(
 				__("Post Fee Charges"),
 				() => {
 					frappe.call({

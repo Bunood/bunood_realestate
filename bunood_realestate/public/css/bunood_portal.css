@@ -1,12 +1,17 @@
-/* Bunood portal design system — "Sadu Modern", scoped to .bnd-portal so it never
-   leaks into the rest of the website. Loaded via web_include_css. Palette hardcoded
-   with system-font fallbacks; RTL/LTR-aware via logical properties. */
+/* Bunood portal skin — "Sadu Modern", scoped to .bnd-portal so it never leaks into
+   the rest of the website. Loaded via web_include_css AFTER bunood_tokens.css.
+   The palette comes from the token file (single source of truth); the local block
+   below only re-points the short names with fallbacks so the portal still renders
+   if the token file ever fails to load. RTL/LTR-aware via logical properties. */
 
 .bnd-portal {
-  --g: #1F5145; --g-deep: #0F2A24; --brass: #C8923C; --brass-bright: #F6D08A;
-  --mint: #9BE0CB; --ink: #0B1F1A; --stone: #5B6760; --rule: #E8E9E2;
-  --card: #FFFFFF; --paper: #F4F5F0; --danger: #DC2626;
-  --num: 'Space Grotesk','Readex Pro',system-ui,sans-serif;
+  --g: var(--bnd-primary, #1F5145); --g-deep: var(--bnd-primary-deep, #0F2A24);
+  --brass: var(--bnd-gold, #C8923C); --brass-bright: var(--bnd-gold-bright, #F6D08A);
+  --mint: var(--bnd-mint, #9BE0CB); --ink: var(--bnd-ink, #0B1F1A);
+  --stone: var(--bnd-muted, #5B6760); --rule: var(--bnd-border, #E8E9E2);
+  --card: var(--bnd-surface, #FFFFFF); --paper: var(--bnd-bg, #F4F5F0);
+  --danger: var(--bnd-danger, #DC2626);
+  --num: var(--bnd-font-num, 'Space Grotesk','Readex Pro',system-ui,sans-serif);
 }
 
 .bnd-portal .bp-hero {
