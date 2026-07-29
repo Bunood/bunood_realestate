@@ -160,7 +160,10 @@ frappe.pages["real-estate-dashboard"].on_page_load = function (wrapper) {
 			row(__("Active Leases"), ck.active_leases || 0) +
 			row(__("Total Units"), ck.units_total || 0) +
 			row(__("Collected (month)"), money(ck.collected_month)) +
-			row(__("Expected (month)"), money(ck.expected_month))
+			row(__("Expected (month)"), money(ck.expected_month)) +
+			row(__("Open Maintenance"), ck.open_maintenance || 0) +
+			row(__("Expiring (60 days)"), ck.expiring_60 || 0) +
+			row(__("Upcoming (30 days)"), money(ck.upcoming_30))
 		);
 	}
 

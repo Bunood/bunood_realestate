@@ -287,3 +287,46 @@ function recompute_annual_rent(frm) {
 	});
 	frm.set_value("annual_rent_total", total);
 }
+
+// ---------------------------------------------------------------------------
+// Financial Snapshot (plan-financial-reporting.md Phase 2): invoiced / collected /
+// outstanding for THIS lease (from its schedule-generated invoices), next due
+// installment and deposit status — inside the form, no report needed. Registered
+// as a second handler block so the main form logic above stays untouched.
+// ---------------------------------------------------------------------------
+frappe.ui.form.on("Lease Contract", {
+	refresh(frm) {
+		if (frm.is_new() || frm.doc.docstatus !== 1) return;
+		frappe.call({
+			method: "bunood_realestate.real_estate.snapshot.lease_snapshot",
+			args: { lease: frm.doc.name },
+			callback(r) {
+				if (r.message) bnd_render_lease_snapshot(frm, r.message);
+			},
+		});
+	},
+});
+
+function bnd_render_lease_snapshot(frm, s) {
+	const money = (v) => frappe.format(v, { fieldtype: "Currency" });
+	const row = (label, value, color) =>
+		`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-color);">
+			<span>${label}</span><span style="font-weight:600;${color ? `color:${color};` : ""}">${value}</span>
+		</div>`;
+
+	const next_due = s.next_due_date
+		? `${money(s.next_due_amount)} — ${frappe.datetime.str_to_user(s.next_due_date)}`
+		: __("Nothing planned");
+	const deposit = s.deposit_amount
+		? `${money(s.deposit_amount)} — ${s.deposit_received ? __("Received") : __("Not received")}`
+		: __("None");
+
+	const html =
+		row(__("Invoiced"), money(s.invoiced)) +
+		row(__("Collected"), money(s.collected), "var(--bnd-success,#16A34A)") +
+		row(__("Outstanding"), money(s.outstanding), s.outstanding > 0 ? "var(--bnd-danger,#DC2626)" : undefined) +
+		row(__("Next Due"), next_due) +
+		row(__("Security Deposit"), deposit);
+
+	frm.dashboard.add_section(html, __("Financial Snapshot"));
+}

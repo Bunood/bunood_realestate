@@ -87,6 +87,37 @@ def dashboard_data():
 	)
 	collection_rate = round(collected_month * 100.0 / expected_month, 1) if expected_month else 0.0
 
+	# Follow-up KPIs (plan-financial-reporting.md Phase 2): the three daily-attention
+	# numbers an executive scans — live maintenance load, leases needing renewal action,
+	# and the cash expected in the next 30 days (planned rent + charge installments).
+	open_maintenance = frappe.db.count(
+		"Maintenance Request",
+		{"company": ["in", companies], "status": ["in", ["Open", "Assigned", "In Progress", "On Hold"]]},
+	)
+	expiring_60 = frappe.db.count(
+		"Lease Contract",
+		{
+			"company": ["in", companies], "docstatus": 1, "status": "Active",
+			"end_date": ["between", [nowdate(), add_months(nowdate(), 2)]],
+		},
+	)
+	upcoming_30 = flt(
+		frappe.db.sql(
+			"""
+			SELECT COALESCE(SUM(t.base_amount), 0) FROM (
+				SELECT base_amount FROM `tabRent Schedule`
+				WHERE company IN %(comp)s AND status = 'Planned'
+				  AND due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+				UNION ALL
+				SELECT base_amount FROM `tabCharge Schedule`
+				WHERE company IN %(comp)s AND status = 'Planned'
+				  AND due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+			) t
+			""",
+			{"comp": comp},
+		)[0][0]
+	)
+
 	kpis = [
 		{"key": "properties", "label": _("Properties"), "value": properties, "tone": "green", "icon": "building"},
 		{"key": "occupancy", "label": _("Occupancy %"), "value": f"{occupancy_pct}%", "tone": "gold", "icon": "pie-chart"},
@@ -108,6 +139,9 @@ def dashboard_data():
 			"collected_month": collected_month,
 			"expected_month": expected_month,
 			"outstanding": overdue_amount,
+			"open_maintenance": open_maintenance,
+			"expiring_60": expiring_60,
+			"upcoming_30": upcoming_30,
 			"ring": {"occupied": int(occupied), "reserved": int(reserved), "vacant": int(vacant)},
 		},
 	}

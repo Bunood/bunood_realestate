@@ -143,17 +143,27 @@ def _scope_vouchers(customer, filters):
 			)
 		)
 	else:
-		item_filters = {"docstatus": 1, "customer": customer}
-		dim_filters = []
+		# Explicit SQL (not child-table filter syntax): the customer's submitted
+		# invoices having at least one line tagged with the property / unit.
+		dims = []
+		values = {"customer": customer}
 		if prop:
-			dim_filters.append(["Sales Invoice Item", "property", "=", prop])
+			dims.append("sii.property = %(prop)s")
+			values["prop"] = prop
 		if unit:
-			dim_filters.append(["Sales Invoice Item", "real_estate_unit", "=", unit])
+			dims.append("sii.real_estate_unit = %(unit)s")
+			values["unit"] = unit
 		si_names.update(
-			frappe.get_all(
-				"Sales Invoice",
-				filters=[["docstatus", "=", 1], ["customer", "=", customer]] + dim_filters,
-				pluck="name",
+			r[0]
+			for r in frappe.db.sql(
+				f"""
+				SELECT DISTINCT si.name
+				FROM `tabSales Invoice` si
+				JOIN `tabSales Invoice Item` sii ON sii.parent = si.name
+				WHERE si.docstatus = 1 AND si.customer = %(customer)s
+				  AND {" AND ".join(dims)}
+				""",
+				values,
 			)
 		)
 
