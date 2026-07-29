@@ -131,26 +131,16 @@ def _scope_vouchers(customer, filters):
 			)
 		# Termination credit notes belong to the lease's statement too.
 		si_names.update(
-			frappe.get_all(
-				"Lease Termination Credit",
-				filters={"credit_note": ["is", "set"]},
-				pluck="credit_note",
-				or_filters=None,
-				parent_doctype="Lease Termination",
+			r[0]
+			for r in frappe.db.sql(
+				"""
+				SELECT ltc.credit_note
+				FROM `tabLease Termination Credit` ltc
+				JOIN `tabLease Termination` lt ON lt.name = ltc.parent
+				WHERE lt.lease_contract = %s AND ltc.credit_note IS NOT NULL
+				""",
+				lease,
 			)
-			if False
-			else [
-				r[0]
-				for r in frappe.db.sql(
-					"""
-					SELECT ltc.credit_note
-					FROM `tabLease Termination Credit` ltc
-					JOIN `tabLease Termination` lt ON lt.name = ltc.parent
-					WHERE lt.lease_contract = %s AND ltc.credit_note IS NOT NULL
-					""",
-					lease,
-				)
-			]
 		)
 	else:
 		item_filters = {"docstatus": 1, "customer": customer}
