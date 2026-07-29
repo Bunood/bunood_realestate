@@ -186,3 +186,54 @@ function open_bulk_units_dialog(frm) {
 	});
 	d.show();
 }
+
+// ---------------------------------------------------------------------------
+// Wrapper reports (plan-financial-reporting.md Phase 3): "Property Profitability"
+// IS ERPNext's P&L + the Property dimension filter — a preset entry, not new SQL.
+// Same for the General Ledger. Appended as a second handler block so the main
+// form logic above stays untouched.
+// ---------------------------------------------------------------------------
+frappe.ui.form.on("Property", {
+	refresh(frm) {
+		if (frm.is_new()) return;
+		const route = (report, extra) =>
+			frappe.set_route(
+				"query-report",
+				report,
+				Object.assign({ company: frm.doc.company, property: frm.doc.name }, extra || {})
+			);
+
+		frm.add_custom_button(
+			__("Profit & Loss (Property)"),
+			() =>
+				route("Profit and Loss Statement", {
+					filter_based_on: "Date Range",
+					period_start_date: frappe.datetime.year_start(),
+					period_end_date: frappe.datetime.get_today(),
+					periodicity: "Yearly",
+				}),
+			__("Reports")
+		);
+		frm.add_custom_button(
+			__("General Ledger (Property)"),
+			() =>
+				route("General Ledger", {
+					from_date: frappe.datetime.year_start(),
+					to_date: frappe.datetime.get_today(),
+					group_by: "Group by Voucher (Consolidated)",
+				}),
+			__("Reports")
+		);
+		if (frm.doc.owner_party) {
+			frm.add_custom_button(
+				__("Owner Ledger"),
+				() =>
+					frappe.set_route("query-report", "Owner Ledger", {
+						owner: frm.doc.owner_party,
+						property: frm.doc.name,
+					}),
+				__("Reports")
+			);
+		}
+	},
+});

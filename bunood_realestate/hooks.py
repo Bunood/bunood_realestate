@@ -21,6 +21,13 @@ web_include_css = [
     "/assets/bunood_realestate/css/bunood_portal.css",
 ]
 
+# Wrapper doctrine (docs/plan-financial-reporting.md Phase 3): preset report entries
+# on the core party forms via the supported doctype_js hook — never a core file edit.
+doctype_js = {
+    "Customer": "public/js/bnd_customer.js",
+    "Supplier": "public/js/bnd_supplier.js",
+}
+
 # ------------------------------------------------------------------------------
 # Fixtures — DATA (not code) shipped with the app; installs on every site.
 # This is how we extend ERPNext WITHOUT touching core (see docs/plan-realestate.md §0.2):
