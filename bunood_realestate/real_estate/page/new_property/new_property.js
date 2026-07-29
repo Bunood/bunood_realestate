@@ -12,7 +12,12 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		step: 1,
 		basics: {
 			property_name: "", code: "", deed_number: "", construction_year: "",
-			property_type: "residential", residential_subtype: "Families",
+			// Building KIND (عمارة/فيلا/برج… from the RE Property Type master) is separate
+			// from USAGE (residential/commercial/mixed → VAT business type) — a tower can
+			// be residential and a villa can be an office. The old wizard conflated them.
+			property_kind: "عمارة",
+			usage_type: "residential", residential_subtype: "Families",
+			construction_status: "Ready",
 			total_area_sqm: "", floors_count: 1,
 		},
 		operation: "owned",
@@ -21,9 +26,26 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		location: { city: "الرياض", district: "", street: "", building_no: "", postal_code: "", description: "" },
 		floors: [],
 		sameAll: true,
+		kinds: [],
 	};
 	applyPreset("residential");
 	render();
+	loadKinds();
+
+	// Building kinds come from the RE Property Type MASTER (user-extensible taxonomy),
+	// never a hardcoded list — new kinds appear as cards automatically.
+	const KIND_ICONS = { "عمارة": "organization", "برج": "organization", "فيلا": "home", "مجمع": "retail", "مبنى مكاتب": "project", "أرض": "map" };
+	function loadKinds() {
+		frappe.call({
+			method: "frappe.client.get_list",
+			args: { doctype: "RE Property Type", filters: { is_active: 1 }, fields: ["name"], limit_page_length: 0, order_by: "creation asc" },
+			callback: (r) => {
+				S.kinds = (r.message || []).map((d) => d.name);
+				if (S.kinds.length && !S.kinds.includes(S.basics.property_kind)) S.basics.property_kind = S.kinds[0];
+				if (S.step === 1) render();
+			},
+		});
+	}
 
 	// ---- presets -----------------------------------------------------------
 	function block(type, count, rooms, living, bath, area, rent, deposit) {
@@ -154,10 +176,11 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		const req = opts.req ? ' <span class="np-req">*</span>' : "";
 		const t = opts.type || "text";
 		const ph = opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : "";
-		return (
-			'<div class="np-f"><label>' + esc(label) + req + "</label>" +
-			'<input type="' + t + '" data-g="' + group + '" data-k="' + key + '" value="' + esc(v) + '"' + ph + "></div>"
-		);
+		const input = '<input type="' + t + '" data-g="' + group + '" data-k="' + key + '" value="' + esc(v) + '"' + ph + ">";
+		const body = opts.suffix
+			? '<div class="np-inwrap">' + input + '<span class="np-suffix">' + esc(opts.suffix) + "</span></div>"
+			: input;
+		return '<div class="np-f"><label>' + esc(label) + req + "</label>" + body + "</div>";
 	}
 	function selectField(label, key, group, options) {
 		const v = S[group][key];
@@ -183,26 +206,32 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 	}
 
 	function step1() {
-		const showSub = S.basics.property_type !== "commercial";
+		const showSub = S.basics.usage_type !== "commercial";
+		const kindCards = (S.kinds.length ? S.kinds : [S.basics.property_kind]).map((k) => ({
+			key: k, icon: KIND_ICONS[k] || "home", title: k, sub: "",
+		}));
 		return (
-			'<div class="np-step-head"><h3>' + esc(__("Step 1: Basics")) + "</h3><p>" + esc(__("Property identity: name, code, deed, type.")) + "</p></div>" +
+			'<div class="np-step-head"><h3>' + esc(__("Step 1: Basics")) + "</h3><p>" + esc(__("Property identity: name, code, deed, kind & usage.")) + "</p></div>" +
 			'<div class="np-grid2">' + field(__("Property Name"), "property_name", "basics", { req: 1, ph: __("e.g. Al-Suwaidi Building") }) +
 			field(__("Code (internal reference)"), "code", "basics", { ph: "PROP-001" }) +
 			field(__("Deed Number"), "deed_number", "basics", { ph: "123456789" }) +
-			field(__("Construction Year"), "construction_year", "basics", { type: "number", ph: "2020" }) + "</div>" +
-			'<div class="np-label">' + esc(__("Property Type")) + "</div>" +
+			field(__("Construction Year"), "construction_year", "basics", { type: "number", ph: "2020" }) +
+			selectField(__("Property Status"), "construction_status", "basics", [["Ready", __("Ready")], ["Under Construction", __("Under Construction")], ["On Hold", __("On Hold")]]) + "</div>" +
+			'<div class="np-label">' + esc(__("Property Kind")) + "</div>" +
+			cardRow(kindCards, S.basics.property_kind, "data-kind") +
+			'<div class="np-label" style="margin-top:14px;">' + esc(__("Usage Type")) + "</div>" +
 			cardRow(
 				[
-					{ key: "residential", icon: "home", title: __("Residential"), sub: __("Buildings, apartments, villas") },
-					{ key: "commercial", icon: "project", title: __("Commercial"), sub: __("Offices, shops, warehouses") },
+					{ key: "residential", icon: "home", title: __("Residential"), sub: __("Exempt from VAT") },
+					{ key: "commercial", icon: "project", title: __("Commercial"), sub: __("15% VAT + ZATCA") },
 					{ key: "mixed", icon: "retail", title: __("Mixed"), sub: __("Shops below + apartments above") },
 				],
-				S.basics.property_type,
+				S.basics.usage_type,
 				"data-type"
 			) +
 			'<div class="np-grid2" style="margin-top:16px;">' +
 			(showSub ? selectField(__("Residential Subtype"), "residential_subtype", "basics", [["Families", __("Families")], ["Singles", __("Singles")], ["Group", __("Group")]]) : "") +
-			field(__("Total Area (sqm)"), "total_area_sqm", "basics", { type: "number" }) +
+			field(__("Total Area"), "total_area_sqm", "basics", { type: "number", suffix: __("m²") }) +
 			field(__("Floors Count"), "floors_count", "basics", { type: "number" }) + "</div>" +
 			navRow(false)
 		);
@@ -222,22 +251,29 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 				"data-op"
 			) +
 			(S.operation === "managed" ? '<div class="np-grid2" style="margin-top:12px;"><div class="np-f"><label>' + esc(__("Your share of income %")) + '</label><input type="number" data-g="root" data-k="fee" value="' + esc(S.fee) + '"></div></div>' : "") +
-			'<div class="np-label" style="margin-top:16px;">' + esc(__("Owner Details")) + "</div>" +
+			sectionHead("👤", __("Owner Details")) +
 			'<div class="np-grid2">' + field(__("Owner Name"), "owner_name", "owner", { req: 1 }) +
 			field(__("Owner Phone"), "owner_phone", "owner", { ph: "05XXXXXXXX" }) +
 			field(__("Owner ID Number"), "owner_id_num", "owner") +
 			field(__("Owner Email"), "owner_email", "owner", { type: "email" }) +
 			field(__("Owner IBAN"), "owner_iban", "owner", { ph: "SA00 0000 0000 0000 0000 0000" }) +
 			field(__("Owner Date of Birth"), "owner_date_of_birth", "owner", { type: "date" }) +
-			selectField(__("Nationality"), "owner_nationality", "owner", [["السعودية", "السعودية"], ["مصر", "مصر"], ["اليمن", "اليمن"], ["الأردن", "الأردن"], ["الهند", "الهند"], ["باكستان", "باكستان"], ["أخرى", __("Other")]]) +
-			field(__("Owner Address"), "owner_address", "owner") + "</div>" +
-			'<div class="np-label" style="margin-top:16px;">' + esc(__("Location")) + "</div>" +
+			selectField(__("Nationality"), "owner_nationality", "owner", [["السعودية", "السعودية"], ["مصر", "مصر"], ["اليمن", "اليمن"], ["الأردن", "الأردن"], ["الهند", "الهند"], ["باكستان", "باكستان"], ["أخرى", __("Other")]]) + "</div>" +
+			sectionHead("📍", __("Address & Location")) +
 			'<div class="np-grid2">' + field(__("City"), "city", "location") + field(__("District"), "district", "location") +
 			field(__("Street"), "street", "location") + field(__("Building No"), "building_no", "location") +
-			field(__("Postal Code"), "postal_code", "location") + "</div>" +
+			field(__("Postal Code"), "postal_code", "location") +
+			field(__("Owner Address"), "owner_address", "owner") + "</div>" +
+			sectionHead("📝", __("Notes")) +
 			'<div class="np-f"><label>' + esc(__("Property Notes")) + '</label><textarea data-g="location" data-k="description" rows="2">' + esc(S.location.description) + "</textarea></div>" +
 			navRow(false)
 		);
+	}
+
+	function sectionHead(emoji, label) {
+		// Internal step sections (reviewer feedback): the owner step asks for a lot —
+		// grouped headers make it scannable instead of one long wall of fields.
+		return '<div class="np-sec"><span class="np-sec-ic">' + emoji + "</span>" + esc(label) + "</div>";
 	}
 
 	function step3() {
@@ -360,7 +396,8 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 				else refreshStep3();
 			}
 		});
-		$root.find("[data-type]").on("click", function () { S.basics.property_type = $(this).data("type"); render(); });
+		$root.find("[data-kind]").on("click", function () { S.basics.property_kind = $(this).data("kind"); render(); });
+		$root.find("[data-type]").on("click", function () { S.basics.usage_type = $(this).data("type"); render(); });
 		$root.find("[data-op]").on("click", function () { S.operation = $(this).data("op"); render(); });
 		$root.find("[data-preset]").on("click", function () { applyPreset($(this).data("preset")); render(); });
 		attachOwnerAutocomplete();
@@ -445,6 +482,11 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 .np-cardsel{border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.12s;}
 button.np-cardsel{width:100%;background:var(--bnd-surface,#fff);font:inherit;color:inherit;display:block;}
 .np-cardsel:focus-visible{outline:2px solid var(--bnd-gold,#C8923C);outline-offset:2px;}
+.np-sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--bnd-border,#DCE6E2);font-weight:700;color:var(--bnd-primary,#1F5145);}
+.np-sec-ic{font-size:15px;}
+.np-inwrap{position:relative;display:flex;align-items:center;}
+.np-inwrap input{flex:1;}
+.np-suffix{position:absolute;inset-inline-end:10px;color:var(--bnd-muted,#5C6B66);font-size:12px;pointer-events:none;}
 .np-cardsel:hover{border-color:var(--bnd-primary,#1F5145);}
 .np-cardsel.sel{border-color:var(--bnd-primary,#1F5145);background:var(--bnd-primary-050,#E8F0ED);box-shadow:0 0 0 2px var(--bnd-primary-050,#E8F0ED);}
 .np-cardsel-ic{color:var(--bnd-primary,#1F5145);}

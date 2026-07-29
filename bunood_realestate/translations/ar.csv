@@ -860,3 +860,62 @@ Your account is not linked to a {0}.,حسابك غير مرتبط بـ{0}.
 contractor,مقاول
 owner,مالك
 {0} ({1} to {2}),{0} ({1} إلى {2})
+1. Revenues (cash collected),1. الإيرادات (النقد المحصّل)
+15% VAT + ZATCA,ضريبة 15% + زاتكا
+1–30 days,1–30 يومًا
+2. Expenses,2. المصروفات
+3. Deductions,3. الاستقطاعات
+31–60 days,31–60 يومًا
+4. Transfers to Owner,4. التحويلات للمالك
+61–90 days,61–90 يومًا
+90+ days,أكثر من 90 يومًا
+Account,الحساب
+Added {0} checklist item(s),أُضيف {0} عنصرًا لقائمة الجرد
+Address & Location,العنوان والموقع
+Checklist already loaded (or no handover snapshot),قائمة الجرد محمّلة مسبقًا (أو لا توجد لقطة تسليم)
+Credit note returned to tenant,إشعار دائن مُعاد للمستأجر
+Current (not due),جارٍ (غير مستحق)
+Exempt from VAT,معفى من الضريبة
+Expenses,المصروفات
+Load Handover Checklist,تحميل قائمة جرد التسليم
+Loading checklist...,جارٍ تحميل القائمة...
+Management fee {0}% ({1} to {2}),عمولة إدارة {0}% ({1} إلى {2})
+Net,الصافي
+Net Due to Owner,صافي مستحق المالك
+Net due to owner (صافي مستحق للمالك),صافي مستحق المالك
+No real-estate accounts are configured in Real Estate Settings yet.,لم تُهيأ حسابات العقارات في إعدادات العقارات بعد.
+Opening balance due to owner,رصيد افتتاحي مستحق للمالك
+Paid to Owner,المدفوع للمالك
+Paid to owner,مدفوع للمالك
+Payment Method,طريقة الدفع
+Payment Property {0} does not match the invoices' property {1}.,عقار الدفعة {0} لا يطابق عقار الفواتير {1}.
+Payout accrued to owner,دفعة مستحقة للمالك
+Property Kind,نوع العقار
+Property Status,حالة العقار
+"Property identity: name, code, deed, kind & usage.",هوية العقار: الاسم والرمز والصك والنوع والاستخدام.
+Property {0} does not belong to owner {1}.,العقار {0} لا يعود للمالك {1}.
+Qty must be at least 1.,الكمية يجب أن تكون 1 على الأقل.
+Ready,جاهز
+Real Estate Dimension Check,فحص الأبعاد العقارية
+"Real-estate payments must state a Mode of Payment (طريقة الدفع) — cash, transfer, cheque or POS — so statements can show how the money moved.",دفعات العقارات يجب أن تحدد طريقة الدفع — نقدًا أو تحويلًا أو شيكًا أو نقاط بيع — لتُظهر الكشوف كيفية انتقال المال.
+Revenue,الإيراد
+Revenues (collected),الإيرادات (المحصّلة)
+"Row {0}: Unit {1} belongs to property {2}, not {3}.",الصف {0}: الوحدة {1} تتبع العقار {2} لا {3}.
+Row {0}: this is a real-estate row ({1}) — set the Property dimension.,الصف {0}: هذا صف عقاري ({1}) — عيّن بُعد العقار.
+Section,القسم
+Service Charges,رسوم الخدمات
+This payment settles real-estate invoice(s) of {0} — set the Property dimension on the payment.,هذه الدفعة تسدد فواتير عقارية لـ{0} — عيّن بُعد العقار على الدفعة.
+Total Area,المساحة الإجمالية
+Total — {0},الإجمالي — {0}
+Under Construction,تحت الإنشاء
+Unit Readiness,جاهزية الوحدة
+Unit not found.,الوحدة غير موجودة.
+"Unit {0} — property {1} — leased to {2} ({3}, {4} to {5}).",الوحدة {0} — العقار {1} — مؤجرة لـ{2} ({3}، من {4} إلى {5}).
+Unit {0} — property {1} — no active lease (status: {2}).,الوحدة {0} — العقار {1} — بلا عقد نشط (الحالة: {2}).
+Unknown,غير معروف
+Usage Type,نوع الاستخدام
+unit-tagged,موسوم بالوحدة
+Market rent set,السعر السوقي محدد
+Utility meters recorded,العدادات مسجلة
+Furniture & fixtures registered,الأثاث والتجهيزات مسجلة
+Photos attached,الصور مرفقة

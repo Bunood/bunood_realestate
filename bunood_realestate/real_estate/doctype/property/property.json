@@ -16,6 +16,7 @@
   "residential_subtype",
   "column_break_main",
   "status",
+  "construction_status",
   "deed_number",
   "construction_year",
   "total_area_sqm",
@@ -358,6 +359,15 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "construction_status",
+   "fieldtype": "Select",
+   "label": "Construction Status",
+   "options": "Ready\nUnder Construction\nOn Hold",
+   "default": "Ready",
+   "in_standard_filter": 1,
+   "description": "Operational readiness of the building itself (separate from Active/Inactive)."
   }
  ],
  "links": [

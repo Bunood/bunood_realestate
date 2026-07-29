@@ -63,7 +63,10 @@ def create_property_with_units(data):
 	if not company:
 		frappe.throw(_("No company configured — set one in Real Estate Settings."))
 
-	business_type = _business_type_for(b.get("property_type"))
+	# Usage (residential/commercial/mixed → VAT business type) is SEPARATE from the
+	# building kind (عمارة/فيلا/… from the RE Property Type master). Old payloads sent
+	# the usage under "property_type" — keep accepting it for backward compatibility.
+	business_type = _business_type_for(b.get("usage_type") or b.get("property_type"))
 	if not business_type:
 		frappe.throw(_("No matching Business Type found — seed RE Business Type (residential/commercial) first."))
 
@@ -71,6 +74,10 @@ def create_property_with_units(data):
 	prop.company = company
 	prop.status = "Active"
 	prop.business_type = business_type
+	if b.get("property_kind") and frappe.db.exists("RE Property Type", b.get("property_kind")):
+		prop.property_type = b.get("property_kind")
+	if b.get("construction_status") in ("Ready", "Under Construction", "On Hold"):
+		prop.construction_status = b.get("construction_status")
 	prop.property_name = b.get("property_name").strip()
 	prop.residential_subtype = b.get("residential_subtype")
 	prop.code = b.get("code")
