@@ -144,10 +144,38 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		const dir = frappe.utils.is_rtl && frappe.utils.is_rtl() ? "rtl" : "ltr";
 		$root.html(
 			'<div class="np" dir="' + dir + '">' + header() + stepper() +
+			'<div class="np-cols">' +
 			'<div class="np-card">' + (S.step === 1 ? step1() : S.step === 2 ? step2() : step3()) + "</div>" +
-			"</div>"
+			liveSummary() +
+			"</div></div>"
 		);
 		bind();
+	}
+
+	// Live side summary (reviewer package 4): updates as the user types — the growing
+	// property takes shape next to the form instead of only at the review step.
+	function liveSummary() {
+		return '<aside class="np-live" aria-live="polite">' + liveSummaryBody() + "</aside>";
+	}
+	function liveSummaryBody() {
+		const t = totals();
+		const row = (l, v) => (v ? '<div class="np-live-r"><span>' + esc(l) + "</span><b>" + v + "</b></div>" : "");
+		const usage = { residential: __("Residential"), commercial: __("Commercial"), mixed: __("Mixed") }[S.basics.usage_type] || "";
+		return (
+			'<div class="np-live-h">' + esc(__("Property Summary")) + "</div>" +
+			row(__("Property Name"), esc(S.basics.property_name)) +
+			row(__("Property Kind"), esc(S.basics.property_kind)) +
+			row(__("Usage Type"), esc(usage)) +
+			row(__("Property Status"), esc(__(S.basics.construction_status || ""))) +
+			row(__("Owner"), esc(S.owner.owner_name)) +
+			row(__("Total Area"), S.basics.total_area_sqm ? esc(S.basics.total_area_sqm) + " " + esc(__("m²")) : "") +
+			row(__("Total Units"), t.units ? String(t.units) : "") +
+			row(__("Floors"), t.floors ? String(t.floors) : "") +
+			row(__("Expected Monthly Rent"), t.rent ? frappe.format(t.rent, { fieldtype: "Currency" }) : "")
+		);
+	}
+	function updateSummary() {
+		$root.find(".np-live").html(liveSummaryBody());
 	}
 
 	function header() {
@@ -395,6 +423,7 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 				if (bk === "count" && S.floors[fi].blocks[bi].expand) render();
 				else refreshStep3();
 			}
+			updateSummary();
 		});
 		$root.find("[data-kind]").on("click", function () { S.basics.property_kind = $(this).data("kind"); render(); });
 		$root.find("[data-type]").on("click", function () { S.basics.usage_type = $(this).data("type"); render(); });
@@ -520,6 +549,14 @@ button.np-cardsel{width:100%;background:var(--bnd-surface,#fff);font:inherit;col
 .np-inwrap{position:relative;display:flex;align-items:center;}
 .np-inwrap input{flex:1;}
 .np-suffix{position:absolute;inset-inline-end:10px;color:var(--bnd-muted,#5C6B66);font-size:12px;pointer-events:none;}
+.np-cols{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start;}
+.np-live{position:sticky;top:70px;background:var(--bnd-surface,#fff);border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:14px;}
+.np-live-h{font-weight:800;color:var(--bnd-primary,#1F5145);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bnd-border,#DCE6E2);}
+.np-live-r{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:12.5px;border-bottom:1px dashed var(--bnd-border,#DCE6E2);}
+.np-live-r:last-child{border-bottom:0;}
+.np-live-r span{color:var(--bnd-muted,#5C6B66);}
+.np-live-r b{text-align:end;overflow-wrap:anywhere;}
+@media (max-width:1000px){.np-cols{grid-template-columns:1fr;}.np-live{position:static;}}
 .np-cardsel:hover{border-color:var(--bnd-primary,#1F5145);}
 .np-cardsel.sel{border-color:var(--bnd-primary,#1F5145);background:var(--bnd-primary-050,#E8F0ED);box-shadow:0 0 0 2px var(--bnd-primary-050,#E8F0ED);}
 .np-cardsel-ic{color:var(--bnd-primary,#1F5145);}

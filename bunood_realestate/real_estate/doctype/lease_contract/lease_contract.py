@@ -435,6 +435,48 @@ def available_units():
 	)
 
 
+@frappe.whitelist()
+def unit_insight(unit):
+	"""Read-only card data the lease wizard shows right after a unit is picked: the unit's
+	own numbers plus its LAST lease (previous rent / last tenant) and any outstanding dues
+	on that lease's invoices — the questions an operator actually asks before re-letting."""
+	u = frappe.get_doc("Real Estate Unit", unit)
+	u.check_permission("read")
+	out = {
+		"unit": unit, "unit_number": u.unit_number, "area_sqm": u.area_sqm,
+		"market_rent": u.market_rent, "status": u.status,
+		"last_lease": None, "outstanding": 0,
+	}
+	last = frappe.db.sql(
+		"""
+		SELECT lc.name, lc.customer, lu.annual_rent, lc.end_date, lc.status
+		FROM `tabLease Contract` lc
+		JOIN `tabLease Unit` lu ON lu.parent = lc.name
+		WHERE lu.unit = %s AND lc.docstatus = 1
+		ORDER BY lc.end_date DESC
+		LIMIT 1
+		""",
+		unit, as_dict=True,
+	)
+	if last:
+		l = last[0]
+		outstanding = frappe.db.sql(
+			"""
+			SELECT COALESCE(SUM(si.outstanding_amount), 0)
+			FROM `tabRent Schedule` rs
+			JOIN `tabSales Invoice` si ON si.name = rs.sales_invoice
+			WHERE rs.lease_contract = %s AND si.docstatus = 1
+			""",
+			l.name,
+		)[0][0]
+		out["last_lease"] = {
+			"customer": l.customer, "annual_rent": flt(l.annual_rent),
+			"end_date": str(l.end_date or ""), "status": l.status,
+		}
+		out["outstanding"] = flt(outstanding)
+	return out
+
+
 def snapshot_rows(inventory_items):
 	"""Pure & testable: turn live Unit Inventory rows into immutable handover-snapshot rows
 	(plain values — a later master rename/delete must never alter an old contract)."""

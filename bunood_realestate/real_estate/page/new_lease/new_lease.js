@@ -14,6 +14,7 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 		available: [],
 		picker: { property: "", unit: "", annual_rent: "", deposit: "" },
 		units: [],
+		insight: null,
 		publish: false,
 		c: {
 			contract_type: "residential", contract_subtype: "New", ejar_contract_no: "",
@@ -70,7 +71,9 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 
 	// ---- render ------------------------------------------------------------
 	function render() {
-		const steps = [__("Contract Type"), __("Lessor"), __("Tenant"), __("Broker"), __("Deed & Activity"), __("Financials"), __("Review & Publish")];
+		// Reviewer's flow: operators think property → unit → tenant → terms, not
+		// contract-type-first. Steps follow that mental model.
+		const steps = [__("Property & Units"), __("Tenant"), __("Contract Terms"), __("Lessor & Broker"), __("Deed & Activity"), __("Financials"), __("Review & Publish")];
 		// Direction follows the user's language (frappe.utils.is_rtl) — the ONE RTL
 		// strategy across the app. Steps are written in logical order; dir handles flow.
 		const dir = frappe.utils.is_rtl && frappe.utils.is_rtl() ? "rtl" : "ltr";
@@ -83,24 +86,23 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 				return '<div class="np-step ' + cls + '"' + (n === S.step ? ' aria-current="step"' : "") + '><div class="np-step-n">' + (n < S.step ? "✓" : n) + '</div><div class="np-step-l">' + esc(l) + "</div></div>";
 			}).join("") +
 			"</div>" +
-			'<div class="np-card">' + [step1, step2, step3, step4, step5, step6, step7][S.step - 1]() + "</div></div>"
+			'<div class="np-cols">' +
+			'<div class="np-card">' + [step1, step2, step3, step4, step5, step6, step7][S.step - 1]() + "</div>" +
+			liveSummary() +
+			"</div></div>"
 		);
 		bind();
 	}
 
 	function step1() {
+		// The operator's first question is WHERE, not what kind of contract: pick the
+		// property, then a vacant unit (the picker shows vacant only), see the unit's
+		// history (previous rent / last tenant / dues), then set the dates.
 		return (
-			head(__("Step 1: Contract Type & Basics"), __("Choose the contract type (drives VAT) and the unit(s) and dates.")) +
-			'<div class="np-cards" style="grid-template-columns:1fr 1fr;">' +
-			card("residential", "home", __("Residential"), __("Individuals — apartments, villas • no VAT"), S.c.contract_type, "data-ctype", isCommercial() ? "" : "معفى") +
-			card("commercial", "project", __("Commercial"), __("Companies — offices, shops • 15% VAT + ZATCA"), S.c.contract_type, "data-ctype", isCommercial() ? "ZATCA 15%" : "") +
-			"</div>" +
-			'<div class="np-grid2" style="margin-top:14px;">' +
-			sel(__("Contract Subtype"), "contract_subtype", [["New", __("New")], ["Renewal", __("Renewal")], ["Transfer", __("Transfer")]]) +
-			field(__("Ejar Contract No"), "ejar_contract_no", { ph: "10354210842 / 1-0" }) + "</div>" +
+			head(__("Step 1: Property & Units"), __("Pick the property, then its vacant unit(s), and set the term dates.")) +
 			unitPicker() +
+			insightCard() +
 			'<div class="np-grid2" style="margin-top:14px;">' +
-			field(__("Tenant Name"), "tenant_name", { req: 1 }) + field(__("Tenant Phone"), "tenant_phone", { ph: "05XXXXXXXX" }) +
 			field(__("Start Date"), "start_date", { req: 1, type: "date" }) + field(__("End Date"), "end_date", { req: 1, type: "date" }) +
 			field(__("Hijri Start"), "hijri_start_date", { ph: "1447-07-12" }) + field(__("Hijri End"), "hijri_end_date", { ph: "1448-07-11" }) +
 			field(__("Sealing Date"), "sealing_date", { type: "date" }) + "</div>" +
@@ -108,29 +110,42 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 		);
 	}
 	function step2() {
-		const co = S.c.lessor_org_type !== "Individual";
-		return head(__("Step 2: Lessor (Owner)"), __("The lessor may be an individual or a company.")) +
-			'<div class="np-grid2">' + sel(__("Lessor Org Type"), "lessor_org_type", orgTypes()) + "</div>" +
-			(co ? '<div class="np-label">' + esc(__("Company Details")) + '</div><div class="np-grid2">' +
-				field(__("Lessor Company"), "lessor_company_name") + field(__("Lessor CR No"), "lessor_cr_number") +
-				field(__("Lessor Unified No (700)"), "lessor_unified_number") + field(__("Lessor VAT No"), "lessor_vat_number") + "</div>" : "") +
-			nav(false);
-	}
-	function step3() {
-		const co = isCommercial() || S.c.tenant_org_type !== "Individual";
-		return head(__("Step 3: Tenant"), __("Individual or company. Commercial contracts require a VAT number.")) +
-			'<div class="np-grid2">' + sel(__("Tenant Org Type"), "tenant_org_type", orgTypes()) + "</div>" +
+		const co = S.c.tenant_org_type !== "Individual";
+		return head(__("Step 2: Tenant"), __("Search an existing tenant or type a new name — a new Customer is created automatically.")) +
+			'<div class="np-grid2">' +
+			field(__("Tenant Name"), "tenant_name", { req: 1 }) + field(__("Tenant Phone"), "tenant_phone", { ph: "05XXXXXXXX" }) +
+			sel(__("Tenant Org Type"), "tenant_org_type", orgTypes()) + "</div>" +
 			(co ? '<div class="np-label">' + esc(__("Company Details")) + '</div><div class="np-grid2">' +
 				field(__("Tenant Company"), "tenant_company_name") + field(__("Tenant CR No"), "tenant_cr_number") +
-				field(__("Tenant Unified No (700)"), "tenant_unified_number") +
-				field(__("Tenant VAT Number") + (isCommercial() ? " *" : ""), "tenant_vat_number", { ph: "3XXXXXXXXXXXXX3" }) + "</div>" : "") +
+				field(__("Tenant Unified No (700)"), "tenant_unified_number") + "</div>" : "") +
 			'<div class="np-label">' + esc(__("Guarantor (optional)")) + '</div><div class="np-grid2">' +
 			field(__("Guarantor Name"), "guarantor_name") + field(__("Guarantor ID"), "guarantor_id_number") + field(__("Guarantor Phone"), "guarantor_phone") + "</div>" +
 			nav(false);
 	}
+	function step3() {
+		return (
+			head(__("Step 3: Contract Terms"), __("Contract type drives VAT (commercial 15% + ZATCA; residential exempt).")) +
+			'<div class="np-cards" style="grid-template-columns:1fr 1fr;">' +
+			card("residential", "home", __("Residential"), __("Individuals — apartments, villas • no VAT"), S.c.contract_type, "data-ctype", isCommercial() ? "" : "معفى") +
+			card("commercial", "project", __("Commercial"), __("Companies — offices, shops • 15% VAT + ZATCA"), S.c.contract_type, "data-ctype", isCommercial() ? "ZATCA 15%" : "") +
+			"</div>" +
+			'<div class="np-grid2" style="margin-top:14px;">' +
+			sel(__("Contract Subtype"), "contract_subtype", [["New", __("New")], ["Renewal", __("Renewal")], ["Transfer", __("Transfer")]]) +
+			field(__("Ejar Contract No"), "ejar_contract_no", { ph: "10354210842 / 1-0" }) +
+			(isCommercial() ? field(__("Tenant VAT Number") + " *", "tenant_vat_number", { ph: "3XXXXXXXXXXXXX3" }) : "") +
+			"</div>" +
+			nav(false)
+		);
+	}
 	function step4() {
-		return head(__("Step 4: Broker (optional)"), __("If a broker mediated the contract, add their details.")) +
-			'<div class="np-grid2">' + field(__("Broker Company"), "broker_company_name") + field(__("Broker CR No"), "broker_cr_number") +
+		const co = S.c.lessor_org_type !== "Individual";
+		return head(__("Step 4: Lessor & Broker"), __("The lessor may be an individual or a company; broker only if one mediated.")) +
+			'<div class="np-grid2">' + sel(__("Lessor Org Type"), "lessor_org_type", orgTypes()) + "</div>" +
+			(co ? '<div class="np-label">' + esc(__("Company Details")) + '</div><div class="np-grid2">' +
+				field(__("Lessor Company"), "lessor_company_name") + field(__("Lessor CR No"), "lessor_cr_number") +
+				field(__("Lessor Unified No (700)"), "lessor_unified_number") + field(__("Lessor VAT No"), "lessor_vat_number") + "</div>" : "") +
+			'<div class="np-label">' + esc(__("Broker (optional)")) + '</div><div class="np-grid2">' +
+			field(__("Broker Company"), "broker_company_name") + field(__("Broker CR No"), "broker_cr_number") +
 			field(__("Broker Employee"), "broker_employee_name") + "</div>" + nav(false);
 	}
 	function step5() {
@@ -207,6 +222,65 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 		);
 	}
 
+	// ---- unit insight card (reviewer package 3) ----------------------------
+	function insightCard() {
+		const d = S.insight;
+		if (!d) return "";
+		const cell = (l, v) => '<div class="np-ins-c"><span>' + v + "</span>" + esc(l) + "</div>";
+		let history = "";
+		if (d.last_lease) {
+			history =
+				cell(__("Previous rent"), money(d.last_lease.annual_rent)) +
+				cell(__("Last tenant"), esc(d.last_lease.customer || "—")) +
+				cell(__("Ended"), esc(d.last_lease.end_date || "—")) +
+				cell(__("Outstanding dues"), '<b class="' + (d.outstanding > 0 ? "np-due" : "") + '">' + money(d.outstanding) + "</b>");
+		} else {
+			history = '<div class="np-ins-first">' + esc(__("First lease for this unit — no history.")) + "</div>";
+		}
+		return (
+			'<div class="np-insight"><div class="np-ins-h">' + esc(__("Unit {0}", [d.unit_number])) + "</div>" +
+			'<div class="np-ins-grid">' +
+			cell(__("Area"), d.area_sqm ? esc(d.area_sqm) + " " + esc(__("m²")) : "—") +
+			cell(__("Market rent"), money(d.market_rent)) +
+			history + "</div></div>"
+		);
+	}
+
+	function loadInsight(unit) {
+		if (!unit) { S.insight = null; render(); return; }
+		frappe.call({
+			method: "bunood_realestate.real_estate.doctype.lease_contract.lease_contract.unit_insight",
+			args: { unit: unit },
+			callback: (r) => { S.insight = r.message || null; render(); },
+		});
+	}
+
+	// ---- live side summary (reviewer package 4) ----------------------------
+	function liveSummary() {
+		return '<aside class="np-live" aria-live="polite">' + liveSummaryBody() + "</aside>";
+	}
+	function liveSummaryBody() {
+		const t = totals();
+		const props = [];
+		S.units.forEach((u) => { if (props.indexOf(u.property_name || u.property) < 0) props.push(u.property_name || u.property); });
+		const row = (l, v) => (v ? '<div class="np-live-r"><span>' + esc(l) + "</span><b>" + v + "</b></div>" : "");
+		return (
+			'<div class="np-live-h">' + esc(__("Contract Summary")) + "</div>" +
+			row(__("Property"), esc(props.join("، "))) +
+			row(__("Units"), S.units.length ? String(S.units.length) : "") +
+			row(__("Tenant"), esc(S.c.tenant_name)) +
+			row(__("Type"), isCommercial() ? esc(__("Commercial")) + ' <span class="np-live-tag">15%</span>' : esc(__("Residential"))) +
+			row(__("Term"), S.c.start_date && S.c.end_date ? esc(S.c.start_date) + " ← " + esc(S.c.end_date) : "") +
+			row(__("Billing Cycle"), esc(__(S.c.billing_cycle))) +
+			row(__("Annual Rent"), t.annual ? money(t.annual) : "") +
+			row(__("Per Installment"), t.annual ? money(t.per) : "") +
+			(isCommercial() && t.annual ? row(__("Total incl. VAT"), money(t.total)) : "")
+		);
+	}
+	function updateSummary() {
+		$root.find(".np-live").html(liveSummaryBody());
+	}
+
 	// ---- small builders ----------------------------------------------------
 	function head(t, s) { return '<div class="np-step-head"><h3>' + esc(t) + "</h3><p>" + esc(s) + "</p></div>"; }
 	function orgTypes() { return [["Individual", __("Individual")], ["Commercial", __("Company")], ["Government", __("Government")], ["Non-profit", __("Non-profit")]]; }
@@ -223,10 +297,15 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 
 	// ---- binding -----------------------------------------------------------
 	function bind() {
-		$root.find("[data-k]").on("input change", function () { S.c[$(this).data("k")] = $(this).val(); });
+		$root.find("[data-k]").on("input change", function () { S.c[$(this).data("k")] = $(this).val(); updateSummary(); });
 		attachCustomerAutocomplete();
 		$root.find("[data-ctype]").on("click", function () { S.c.contract_type = $(this).data("ctype"); render(); });
-		$root.find(".np-pk").on("input change", function () { S.picker[$(this).data("pk")] = $(this).val(); if ($(this).data("pk") === "property") { S.picker.unit = ""; render(); } });
+		$root.find(".np-pk").on("input change", function () {
+			const pk = $(this).data("pk");
+			S.picker[pk] = $(this).val();
+			if (pk === "property") { S.picker.unit = ""; S.insight = null; render(); }
+			else if (pk === "unit") { loadInsight($(this).val()); }
+		});
 		$root.find(".np-addunit").on("click", addUnit);
 		$root.find(".np-rmunit").on("click", function () { S.units.splice($(this).data("i"), 1); render(); });
 		$root.find("#nl-publish").on("change", function () { S.publish = this.checked; });
@@ -282,10 +361,14 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 		render();
 	}
 	function next() {
+		// Step gates follow the new order: 1 = property/units/dates, 2 = tenant,
+		// 3 = contract terms (commercial ⇒ VAT number).
 		if (S.step === 1) {
 			if (!S.units.length) { frappe.msgprint(__("Add at least one unit.")); return; }
-			if (!S.c.tenant_name.trim()) { frappe.msgprint(__("Tenant name is required.")); return; }
 			if (!S.c.start_date || !S.c.end_date) { frappe.msgprint(__("Start and end dates are required.")); return; }
+		}
+		if (S.step === 2 && !S.c.tenant_name.trim()) {
+			frappe.msgprint(__("Tenant name is required.")); return;
 		}
 		if (S.step === 3 && isCommercial() && !(S.c.tenant_vat_number || "").trim()) {
 			frappe.msgprint(__("A commercial contract requires the tenant VAT number (15 digits, starts & ends with 3).")); return;
@@ -339,6 +422,22 @@ frappe.pages["new-lease"].on_page_load = function (wrapper) {
 .np-cardsel{position:relative;border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.12s;}
 button.np-cardsel{width:100%;background:var(--bnd-surface,#fff);font:inherit;color:inherit;display:block;}
 .np-cardsel:focus-visible{outline:2px solid var(--bnd-gold,#C8923C);outline-offset:2px;}
+.np-cols{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start;}
+.np-live{position:sticky;top:70px;background:var(--bnd-surface,#fff);border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:14px;}
+.np-live-h{font-weight:800;color:var(--bnd-primary,#1F5145);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bnd-border,#DCE6E2);}
+.np-live-r{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:12.5px;border-bottom:1px dashed var(--bnd-border,#DCE6E2);}
+.np-live-r:last-child{border-bottom:0;}
+.np-live-r span{color:var(--bnd-muted,#5C6B66);}
+.np-live-r b{text-align:end;overflow-wrap:anywhere;}
+.np-live-tag{background:var(--bnd-gold,#C8923C);color:#fff;border-radius:6px;padding:0 5px;font-size:10.5px;}
+@media (max-width:1000px){.np-cols{grid-template-columns:1fr;}.np-live{position:static;}}
+.np-insight{margin-top:12px;border:1px solid var(--bnd-border,#DCE6E2);border-inline-start:3px solid var(--bnd-gold,#C8923C);border-radius:12px;padding:12px;background:var(--bnd-primary-050,#E8F0ED);}
+.np-ins-h{font-weight:700;color:var(--bnd-primary,#1F5145);margin-bottom:8px;}
+.np-ins-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;}
+.np-ins-c{font-size:11.5px;color:var(--bnd-muted,#5C6B66);}
+.np-ins-c span,.np-ins-c b{display:block;font-size:13px;color:var(--bnd-ink,#132A23);}
+.np-due{color:#B5563C;}
+.np-ins-first{grid-column:1/-1;color:var(--bnd-muted,#5C6B66);font-size:12.5px;}
 .np-cardsel:hover{border-color:var(--bnd-primary,#1F5145);}
 .np-cardsel.sel{border-color:var(--bnd-primary,#1F5145);background:var(--bnd-primary-050,#E8F0ED);box-shadow:0 0 0 2px var(--bnd-primary-050,#E8F0ED);}
 .np-cardsel-ic{color:var(--bnd-primary,#1F5145);}
