@@ -200,7 +200,18 @@
    "read_only": 1
   }
  ],
- "links": [],
+ "links": [
+  {
+   "group": "Operations",
+   "link_doctype": "Unit Inventory Item",
+   "link_fieldname": "unit"
+  },
+  {
+   "group": "Operations",
+   "link_doctype": "Meter Reading",
+   "link_fieldname": "unit"
+  }
+ ],
  "modified": "2026-07-20 00:00:00",
  "modified_by": "Administrator",
  "module": "Real Estate",

@@ -117,6 +117,29 @@ frappe.pages["property-building"].on_page_load = function (wrapper) {
 			primary_action() { dlg.hide(); frappe.set_route("Form", "Real Estate Unit", u.name); },
 		});
 		dlg.show();
+		// Live readiness (computed server-side, never stored): what this unit still needs
+		// before it can be offered — pricing, meters, inventory, photos.
+		frappe.call({
+			method: "bunood_realestate.real_estate.readiness.unit_readiness",
+			args: { unit: u.name },
+			callback: (r) => {
+				const d = r.message;
+				if (!d || !dlg.$wrapper) return;
+				const items = d.checks.map((c) =>
+					`<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:${c.ok ? "var(--bnd-primary,#1F5145)" : "var(--bnd-muted,#5C6B66)"};">${c.ok ? "✓" : "○"} ${esc(__(c.label))}</span>`
+				).join('<span style="opacity:.35;margin:0 6px;">·</span>');
+				dlg.$wrapper.find(".modal-body").append(
+					`<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bnd-border,#DCE6E2);">
+						<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+							<b style="font-size:12.5px;">${esc(__("Unit Readiness"))}</b>
+							<b style="font-size:13px;color:var(--bnd-primary,#1F5145);">${d.pct}%</b></div>
+						<div style="height:6px;background:var(--bnd-surface-2,#EEF3F1);border-radius:4px;overflow:hidden;margin-bottom:8px;">
+							<div style="height:100%;width:${d.pct}%;background:var(--bnd-primary,#1F5145);"></div></div>
+						<div style="display:flex;flex-wrap:wrap;gap:4px;">${items}</div>
+					</div>`
+				);
+			},
+		});
 	}
 
 	function load() {

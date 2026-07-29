@@ -92,6 +92,32 @@ class LeaseContract(Document):
 					)
 				)
 
+	def before_submit(self):
+		self._snapshot_handover()
+
+	def _snapshot_handover(self):
+		"""Copy each leased unit's CURRENT inventory into the immutable `handover` child
+		table (values, not references). Assets outlive contracts: the live inventory may
+		change tomorrow, but this contract must forever show what was actually delivered.
+		Runs in before_submit so the snapshot is part of the submitted document itself."""
+		if self.amended_from or self.get("handover"):
+			# An AMENDED copy always inherits its original snapshot (even an empty one) —
+			# re-snapshotting at amend time could assert items the tenant never received.
+			# Renewals/duplicates arrive here EMPTY (no_copy + renew_lease reset) and get
+			# a fresh snapshot of the live inventory, which is exactly right for them.
+			return
+		units = [row.unit for row in (self.units or []) if row.unit]
+		if not units:
+			return
+		items = frappe.get_all(
+			"Unit Inventory Item",
+			filters={"unit": ["in", units]},
+			fields=["unit", "item_type", "qty", "brand", "condition"],
+			order_by="unit asc, item_type asc",
+		)
+		for r in snapshot_rows(items):
+			self.append("handover", r)
+
 	def on_submit(self):
 		from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import generate_for_lease
 
@@ -354,6 +380,11 @@ def renew_lease(lease_contract, rent_bump_pct=0, months=None):
 	):
 		new.set(f, None)
 
+	# A renewal is a NEW handover moment: drop the copied snapshot so before_submit
+	# re-snapshots the unit's CURRENT inventory at renewal submit (a fridge added or a
+	# sofa removed mid-term must be reflected — the old contract keeps its own record).
+	new.set("handover", [])
+
 	# Enforce create-perm on the copied lease (the gated roles hold it) instead of
 	# bypassing it, matching the wizard/importer creation paths.
 	new.insert()
@@ -402,6 +433,24 @@ def available_units():
 		{"comp": comp},
 		as_dict=True,
 	)
+
+
+def snapshot_rows(inventory_items):
+	"""Pure & testable: turn live Unit Inventory rows into immutable handover-snapshot rows
+	(plain values — a later master rename/delete must never alter an old contract)."""
+	rows = []
+	for it in inventory_items or []:
+		qty = int(it.get("qty") or 0)
+		if qty < 1:
+			continue
+		rows.append({
+			"item_label": it.get("item_type") or "",
+			"qty": qty,
+			"brand": it.get("brand") or "",
+			"condition": it.get("condition") or "",
+			"source_unit": it.get("unit") or "",
+		})
+	return rows
 
 
 def _get_or_create_customer(name, phone=None):

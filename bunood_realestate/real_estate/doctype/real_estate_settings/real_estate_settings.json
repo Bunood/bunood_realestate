@@ -36,7 +36,10 @@
   "late_fee_cap",
   "notifications_section",
   "enable_auto_notifications",
-  "auto_draft_renewals"
+  "auto_draft_renewals",
+  "dimension_section",
+  "dimension_enforcement",
+  "require_mode_of_payment"
  ],
  "fields": [
   {
@@ -249,12 +252,33 @@
    "fieldname": "auto_draft_renewals",
    "fieldtype": "Check",
    "label": "Auto-draft Renewals (auto-renew leases)"
+  },
+  {
+   "description": "Data discipline for dimension-based reports (Owner Ledger, Property P&L, statements): financial rows on real-estate accounts must carry the Property dimension. Warn shows a message; Block prevents saving. Run the Missing Dimension Audit report clean before switching to Block.",
+   "fieldname": "dimension_section",
+   "fieldtype": "Section Break",
+   "label": "Dimension Enforcement"
+  },
+  {
+   "default": "Warn",
+   "fieldname": "dimension_enforcement",
+   "fieldtype": "Select",
+   "label": "Dimension Enforcement",
+   "options": "Off\nWarn\nBlock"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval:doc.dimension_enforcement != 'Off'",
+   "description": "Real-estate Payment Entries must state a Mode of Payment (طريقة الدفع) so statements and the Owner Ledger always show how the money moved.",
+   "fieldname": "require_mode_of_payment",
+   "fieldtype": "Check",
+   "label": "Require Mode of Payment on real-estate payments"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-07-20 00:00:00",
+ "modified": "2026-07-29 00:00:00",
  "modified_by": "Administrator",
  "module": "Real Estate",
  "name": "Real Estate Settings",

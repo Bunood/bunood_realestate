@@ -45,6 +45,8 @@ fixtures = [
     "RE Revenue Model",
     "RE Contract Kind",
     "RE Maintenance Category",
+    # Unit fixtures & furniture taxonomy (الأثاث والتجهيزات) — user-extensible.
+    "Inventory Item Type",
     # Phase 2+: Custom Fields (e.g. Lease/Property/Unit links on Sales Invoice) export here too.
     # {"dt": "Custom Field", "filters": [["module", "=", "Real Estate"]]},
 ]
@@ -85,6 +87,9 @@ scheduler_events = {
 # ------------------------------------------------------------------------------
 doc_events = {
     "Sales Invoice": {
+        # Phase 0 (plan-financial-reporting.md): dimension enforcement — RE rows must
+        # carry Property before they reach the GL. In-app validation, never a core edit.
+        "validate": "bunood_realestate.real_estate.dimension_guard.validate_dimensions",
         "on_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
         "on_update_after_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_invoice",
         "on_cancel": [
@@ -97,6 +102,9 @@ doc_events = {
         ],
     },
     "Payment Entry": {
+        # Phase 0: RE payments must carry the settled invoices' Property AND a Mode of
+        # Payment (طريقة الدفع) — statements/Owner Ledger show how every riyal moved.
+        "validate": "bunood_realestate.real_estate.dimension_guard.validate_dimensions",
         "on_submit": "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
         "on_cancel": [
             "bunood_realestate.real_estate.events.sync_rent_schedule_on_payment",
@@ -108,6 +116,7 @@ doc_events = {
     # refund Journal Entry is cancelled or deleted, reset the mirror so the app never
     # refunds/settles against a liability that no longer exists (no parallel ledger).
     "Journal Entry": {
+        "validate": "bunood_realestate.real_estate.dimension_guard.validate_dimensions",
         # An amended payout JE (cancel-then-resubmit) must re-attach its Owner Payout, or the
         # re-created owner credit would sit in the GL with no Posted payout guarding re-runs.
         "on_submit": "bunood_realestate.real_estate.events.relink_owner_payout_on_je_amend",
@@ -123,7 +132,12 @@ doc_events = {
     # If a Maintenance Work Order's contractor bill is cancelled/deleted, clear the work
     # order's link so a corrected bill can be re-posted (reset-on-cancel discipline).
     "Purchase Invoice": {
+        "validate": "bunood_realestate.real_estate.dimension_guard.validate_dimensions",
         "on_cancel": "bunood_realestate.real_estate.events.reset_work_order_on_pi_cancel",
         "on_trash": "bunood_realestate.real_estate.events.reset_work_order_on_pi_cancel",
+    },
+    # Phase 0 dimension guard also covers employee-claimed property expenses.
+    "Expense Claim": {
+        "validate": "bunood_realestate.real_estate.dimension_guard.validate_dimensions",
     },
 }

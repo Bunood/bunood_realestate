@@ -1,0 +1,79 @@
+[
+ {
+  "doctype": "Inventory Item Type",
+  "name": "مكيف",
+  "title": "مكيف",
+  "category": "Appliance",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "ثلاجة",
+  "title": "ثلاجة",
+  "category": "Appliance",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "فرن",
+  "title": "فرن",
+  "category": "Appliance",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "غسالة",
+  "title": "غسالة",
+  "category": "Appliance",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "سخان",
+  "title": "سخان",
+  "category": "Appliance",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "مطبخ",
+  "title": "مطبخ",
+  "category": "Fixture",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "ستارة",
+  "title": "ستارة",
+  "category": "Fixture",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "سرير",
+  "title": "سرير",
+  "category": "Furniture",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "كنب",
+  "title": "كنب",
+  "category": "Furniture",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "دولاب",
+  "title": "دولاب",
+  "category": "Furniture",
+  "is_active": 1
+ },
+ {
+  "doctype": "Inventory Item Type",
+  "name": "طاولة",
+  "title": "طاولة",
+  "category": "Furniture",
+  "is_active": 1
+ }
+]

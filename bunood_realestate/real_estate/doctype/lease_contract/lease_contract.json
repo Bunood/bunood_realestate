@@ -13,6 +13,7 @@
   "property",
   "company",
   "contract_type",
+  "rental_furnishing",
   "contract_subtype",
   "contract_kind",
   "revenue_model",
@@ -113,7 +114,9 @@
   "amended_from",
   "charges_section",
   "billing_policy",
-  "charges"
+  "charges",
+  "handover_section",
+  "handover"
  ],
  "fields": [
   {
@@ -755,6 +758,29 @@
    "fieldtype": "Percent",
    "label": "Annual Escalation %",
    "description": "Step-up applied to the rent at EACH lease anniversary (year 2 onward). 0 = flat rent. Standard for multi-year commercial leases; the schedule is generated year-by-year through the verified period builder."
+  },
+  {
+   "fieldname": "rental_furnishing",
+   "fieldtype": "Select",
+   "label": "Furnishing (rental attribute)",
+   "options": "Unfurnished\nSemi-furnished\nFully furnished",
+   "default": "Unfurnished",
+   "description": "How the unit is let — an attribute of THIS contract, not a unit/property type. The handover snapshot below records exactly what was delivered."
+  },
+  {
+   "fieldname": "handover_section",
+   "fieldtype": "Section Break",
+   "label": "Handover Snapshot (الأثاث والتجهيزات المسلّمة)",
+   "collapsible": 1,
+   "description": "Copied automatically from the unit inventory at submit — the immutable record of what was handed over. The live unit inventory may change later; this never does."
+  },
+  {
+   "fieldname": "handover",
+   "fieldtype": "Table",
+   "label": "Handover Items",
+   "options": "Lease Handover Item",
+   "read_only": 1,
+   "no_copy": 1
   }
  ],
  "is_submittable": 1,

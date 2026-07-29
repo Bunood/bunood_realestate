@@ -320,7 +320,53 @@ class LeaseTermination(Document):
 				)
 
 
-_AREA_TO_KIND = {"Keys": "Key Replacement", "Meters": "Unpaid Utilities"}
+def handover_checklist_rows(handover_rows):
+	"""Pure & testable: turn a lease's immutable handover snapshot into move-out checklist
+	rows. One row per snapshot line, area='Inventory', defaulted to Good — the inspector
+	flips items to Damaged/Missing and prices the charge; the money then flows through the
+	EXISTING pull_inspection_charges → deductions → settlement JE path (single money path)."""
+	rows = []
+	multi_unit = len({(h.get("source_unit") or "") for h in (handover_rows or [])}) > 1
+	for h in handover_rows or []:
+		qty = int(h.get("qty") or 0)
+		label = (h.get("item_label") or "").strip()
+		if not label or qty < 1:
+			continue
+		brand = (h.get("brand") or "").strip()
+		cond = (h.get("condition") or "").strip()
+		unit = (h.get("source_unit") or "").strip()
+		note = f"{qty} × {label}" + (f" ({brand})" if brand else "")
+		if multi_unit and unit:
+			# Multi-unit lease: identical items in different units must stay distinguishable.
+			note += f" — {unit}"
+		if cond:
+			note += f" — handed over: {cond}"
+		rows.append({"area": "Inventory", "condition": "Good", "note": note, "charge": 0})
+	return rows
+
+
+@frappe.whitelist()
+def load_handover_checklist(lease_termination):
+	"""Pre-fill the move-out inspection from the lease's HANDOVER SNAPSHOT (what was actually
+	delivered — not the live inventory, which may have changed). Idempotent: loads once; a
+	re-click never duplicates the checklist."""
+	doc = frappe.get_doc("Lease Termination", lease_termination)
+	doc.check_permission("write")
+	if doc.docstatus != 0:
+		frappe.throw(_("Only a draft termination can be edited."))
+	if any(r.area == "Inventory" for r in (doc.inspection or [])):
+		return {"added": 0}
+
+	lease = frappe.get_doc("Lease Contract", doc.lease_contract)
+	rows = handover_checklist_rows([h.as_dict() for h in (lease.get("handover") or [])])
+	for r in rows:
+		doc.append("inspection", r)
+	if rows:
+		doc.save()
+	return {"added": len(rows)}
+
+
+_AREA_TO_KIND = {"Keys": "Key Replacement", "Meters": "Unpaid Utilities", "Inventory": "Damage"}
 
 
 @frappe.whitelist()
