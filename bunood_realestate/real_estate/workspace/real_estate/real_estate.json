@@ -194,6 +194,17 @@
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 1,
+   "label": "RE VAT Summary",
+   "link_count": 0,
+   "link_to": "RE VAT Summary",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
    "label": "Owner Statement",
    "link_count": 0,
    "link_to": "Owner Statement",
@@ -220,6 +231,58 @@
    "link_count": 0,
    "link_to": "Collection Notification",
    "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Financial (ERPNext)",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "General Ledger",
+   "link_count": 0,
+   "link_to": "General Ledger",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Profit and Loss Statement",
+   "link_count": 0,
+   "link_to": "Profit and Loss Statement",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Trial Balance",
+   "link_count": 0,
+   "link_to": "Trial Balance",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Accounts Receivable",
+   "link_count": 0,
+   "link_to": "Accounts Receivable",
+   "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   },
@@ -347,7 +410,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-07-29 00:00:00",
+ "modified": "2026-07-30 00:00:00",
  "modified_by": "Administrator",
  "module": "Real Estate",
  "name": "Real Estate",
