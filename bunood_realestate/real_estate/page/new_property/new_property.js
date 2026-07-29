@@ -443,9 +443,37 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 			callback: (r) => {
 				if (r.message && r.message.property) {
 					frappe.show_alert({ message: __("Created {0} with {1} unit(s)", [r.message.property, r.message.units]), indicator: "green" });
-					frappe.set_route("Form", "Property", r.message.property);
+					successScreen(r.message.property, r.message.units);
 				}
 			},
+		});
+	}
+
+	// Reviewer package 2: instead of dumping the user back on a form, end the wizard with
+	// an ACTION CENTER — the property is a chain (units → deed → meters → photos → first
+	// lease), so offer the next links in that chain as one-click cards.
+	function successScreen(property, unitCount) {
+		const dir = frappe.utils.is_rtl && frappe.utils.is_rtl() ? "rtl" : "ltr";
+		const act = (icon, title, sub, route) =>
+			'<button type="button" class="np-cardsel np-act" data-route="' + esc(JSON.stringify(route)) + '">' +
+			'<div class="np-cardsel-ic">' + frappe.utils.icon(icon, "lg") + "</div>" +
+			'<div class="np-cardsel-t">' + esc(title) + '</div><div class="np-cardsel-s">' + esc(sub) + "</div></button>";
+		$root.html(
+			'<div class="np" dir="' + dir + '">' +
+			'<div class="np-success"><div class="np-success-ic">✓</div>' +
+			"<h2>" + esc(__("Property created successfully")) + "</h2>" +
+			"<p>" + esc(__("{0} — {1} unit(s) ready. What next?", [property, unitCount])) + "</p></div>" +
+			'<div class="np-cards np-actions">' +
+			act("file", __("Open the Property"), __("Review what was created"), ["Form", "Property", property]) +
+			act("assign", __("Create the first lease"), __("Lease wizard — vacant units of this property"), ["new-lease"]) +
+			act("image", __("Upload photos"), __("Photos feed the unit readiness indicator"), ["Form", "Property", property]) +
+			act("setting", __("Register meters & inventory"), __("Per-unit meters, furniture & fixtures"), ["List", "Real Estate Unit", { property: property }]) +
+			act("organization", __("Building view"), __("See the floors & units board"), ["property-building"]) +
+			"</div></div>"
+		);
+		$root.find(".np-act").on("click", function () {
+			const route = JSON.parse($(this).attr("data-route"));
+			frappe.set_route.apply(null, route);
 		});
 	}
 
@@ -482,6 +510,11 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 .np-cardsel{border:1px solid var(--bnd-border,#DCE6E2);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:.12s;}
 button.np-cardsel{width:100%;background:var(--bnd-surface,#fff);font:inherit;color:inherit;display:block;}
 .np-cardsel:focus-visible{outline:2px solid var(--bnd-gold,#C8923C);outline-offset:2px;}
+.np-success{text-align:center;padding:34px 12px 10px;}
+.np-success-ic{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;background:var(--bnd-primary,#1F5145);color:#fff;font-size:28px;line-height:56px;font-weight:800;}
+.np-success h2{color:var(--bnd-primary,#1F5145);margin:0 0 6px;}
+.np-success p{color:var(--bnd-muted,#5C6B66);margin:0 0 18px;}
+.np-actions{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));max-width:900px;margin:0 auto;}
 .np-sec{display:flex;align-items:center;gap:8px;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--bnd-border,#DCE6E2);font-weight:700;color:var(--bnd-primary,#1F5145);}
 .np-sec-ic{font-size:15px;}
 .np-inwrap{position:relative;display:flex;align-items:center;}
