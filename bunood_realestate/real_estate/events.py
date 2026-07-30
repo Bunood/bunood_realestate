@@ -187,3 +187,12 @@ def reconcile_deposit_on_je(doc, method=None):
 			lease_r,
 			{"deposit_refunded": max(0.0, refunded - amt), "deposit_refund_journal_entry": None},
 		)
+
+
+def zatca_original_for_credit_note(si):
+	"""bunood_zatca `zatca_original_invoice` hook: resolve the original rent invoice
+	for a STANDALONE lease-termination credit note (our credit notes carry no
+	return_against by design — the link lives in Lease Termination Credit)."""
+	return frappe.db.get_value(
+		"Lease Termination Credit", {"credit_note": si.name}, "sales_invoice"
+	)

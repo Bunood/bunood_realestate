@@ -21,6 +21,13 @@ web_include_css = [
     "/assets/bunood_realestate/css/bunood_portal.css",
 ]
 
+# ZATCA bridge (bunood_zatca `zatca_original_invoice` hook): our termination credit
+# notes are standalone (no return_against) — resolve their original invoice through
+# the Lease Termination Credit link so the e-invoice BillingReference is correct.
+zatca_original_invoice = [
+    "bunood_realestate.real_estate.events.zatca_original_for_credit_note",
+]
+
 # Wrapper doctrine (docs/plan-financial-reporting.md Phase 3): preset report entries
 # on the core party forms via the supported doctype_js hook — never a core file edit.
 doctype_js = {
