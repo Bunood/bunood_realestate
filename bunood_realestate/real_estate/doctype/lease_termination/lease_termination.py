@@ -216,6 +216,16 @@ class LeaseTermination(Document):
 		# lead-days invoice for a fully-future period posts at period_start).
 		cn.posting_date = max(getdate(self.termination_date), getdate(si.posting_date))
 		cn.is_return = 1
+		# ZATCA (ksa_compliance) bridge: our termination credit notes are STANDALONE
+		# (no return_against, by design — see events._block_cancel_with_live_credit).
+		# ksa_compliance reads the original invoice for the e-invoice BillingReference
+		# from `custom_return_against_additional_references` when return_against is
+		# empty (verified in its 0.61.7 source: child 'ZATCA Return Against Reference',
+		# row field 'sales_invoice' → billing_references). Populate it whenever the
+		# field exists so the credit note e-invoice references the rent invoice it
+		# reverses; a site without ksa_compliance is untouched.
+		if frappe.get_meta("Sales Invoice").has_field("custom_return_against_additional_references"):
+			cn.append("custom_return_against_additional_references", {"sales_invoice": si.name})
 		# Parent-level Property dimension: ERPNext stamps the receivable + tax GL rows from
 		# the PARENT doc, so mirror the original invoice or those GL rows lose the dimension.
 		cn.property = si.get("property")
