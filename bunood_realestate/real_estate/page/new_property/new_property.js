@@ -28,13 +28,15 @@ frappe.pages["new-property"].on_page_load = function (wrapper) {
 		sameAll: true,
 		kinds: [],
 	};
+	// Building kinds come from the RE Property Type MASTER (user-extensible taxonomy),
+	// never a hardcoded list — new kinds appear as cards automatically.
+	// NOTE: declared BEFORE the first render() call — a `const` read during render while
+	// still in its temporal dead zone throws and blanks the whole page.
+	const KIND_ICONS = { "عمارة": "organization", "برج": "organization", "فيلا": "home", "مجمع": "retail", "مبنى مكاتب": "project", "أرض": "map" };
+
 	applyPreset("residential");
 	render();
 	loadKinds();
-
-	// Building kinds come from the RE Property Type MASTER (user-extensible taxonomy),
-	// never a hardcoded list — new kinds appear as cards automatically.
-	const KIND_ICONS = { "عمارة": "organization", "برج": "organization", "فيلا": "home", "مجمع": "retail", "مبنى مكاتب": "project", "أرض": "map" };
 	function loadKinds() {
 		frappe.call({
 			method: "frappe.client.get_list",
