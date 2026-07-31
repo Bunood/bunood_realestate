@@ -283,7 +283,9 @@ class LeaseTermination(Document):
 		"""DR deposit liability (held) / CR refund (net) / CR each deduction income."""
 		if flt(self.deposit_held) <= 0:
 			return
-		settings = frappe.get_single("Real Estate Settings")
+		from bunood_realestate.real_estate.company_settings import require_company_config
+
+		settings = require_company_config(self.company, ["tenant_deposit_account"])
 		if not settings.tenant_deposit_account:
 			frappe.throw(_("Set the Tenant Security Deposit Account in Real Estate Settings."))
 
@@ -394,7 +396,11 @@ def pull_inspection_charges(lease_termination):
 	if not pending:
 		return {"added": 0}
 
-	income_account = frappe.db.get_single_value("Real Estate Settings", "deduction_income_account")
+	from bunood_realestate.real_estate.company_settings import require_company_config
+
+	income_account = require_company_config(
+		doc.company, ["deduction_income_account"]
+	).deduction_income_account
 	if not income_account:
 		frappe.throw(_("Set the Deposit Deduction Income Account in Real Estate Settings first."))
 

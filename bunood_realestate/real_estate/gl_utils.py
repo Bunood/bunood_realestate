@@ -40,7 +40,13 @@ def resolve_cost_center(company):
 	"""
 	if not company:
 		return None
-	settings_cc = frappe.db.get_single_value("Real Estate Settings", "default_cost_center")
+	# Multi-company: the configured default comes from THIS company's resolved config
+	# (profile → legacy Single). Nullable resolution on purpose — this helper legitimately
+	# serves companies with no Real Estate config at all (falls to the Company default).
+	from bunood_realestate.real_estate.company_settings import get_company_config
+
+	cfg = get_company_config(company)
+	settings_cc = cfg.default_cost_center if cfg else None
 	if settings_cc and frappe.db.get_value("Cost Center", settings_cc, "company") == company:
 		return settings_cc
 	return frappe.get_cached_value("Company", company, "cost_center") or None

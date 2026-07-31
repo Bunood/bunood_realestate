@@ -60,6 +60,22 @@ def re_account_set(settings):
 		)
 		if settings.get(f)
 	}
+	# Multi-company: every profile's accounts guard too (account names are site-unique
+	# in ERPNext, so the cross-company union only ADDS discipline, never mixes books).
+	try:
+		from bunood_realestate.real_estate.company_settings import all_configured_values
+
+		for f in (
+			"rent_income_account",
+			"maintenance_expense_account",
+			"owner_payout_expense_account",
+			"tenant_deposit_account",
+			"deduction_income_account",
+			"opening_balance_account",
+		):
+			accounts.update(all_configured_values(f))
+	except Exception:
+		pass  # guard must never break validation (mirrors the Charge Type try/except below)
 	try:
 		accounts.update(
 			frappe.get_all(

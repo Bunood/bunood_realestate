@@ -104,7 +104,8 @@ def generate_due_head_lease_bills(property=None, lead_days=None, companies=None)
 
 
 def _post_bill(schedule_name, settings=None):
-	settings = settings or frappe.get_single("Real Estate Settings")
+	from bunood_realestate.real_estate.company_settings import require_company_config
+
 	# Read the idempotency fields UNDER the row lock (a locking read returns the latest
 	# committed values, so a concurrent run that waited sees our committed purchase_invoice
 	# and stops; a plain re-read could return a stale snapshot → double-bill).
@@ -114,8 +115,8 @@ def _post_bill(schedule_name, settings=None):
 	if not guard or guard.status != "Planned" or guard.purchase_invoice:
 		return False
 	row = frappe.get_doc("Head Lease Schedule", schedule_name)
-	if not settings.head_lease_item:
-		frappe.throw(_("Set a Head-Lease Item in Real Estate Settings."))
+	# Multi-company: resolve THIS row's company config (profile → legacy Single).
+	cfg = require_company_config(row.company, ["head_lease_item"], single=settings)
 	if not row.head_landlord:
 		frappe.throw(_("Head Lease Schedule {0} has no head landlord.").format(row.name))
 
@@ -129,7 +130,7 @@ def _post_bill(schedule_name, settings=None):
 	pi.bill_no = f"HL-{row.name}"
 	pi.bill_date = row.due_date
 	item = pi.append("items", {})
-	item.item_code = settings.head_lease_item
+	item.item_code = cfg.head_lease_item
 	item.qty = 1
 	item.rate = flt(row.amount)
 	item.description = _("Head-lease {0} ({1} to {2})").format(row.property, row.period_start, row.period_end)

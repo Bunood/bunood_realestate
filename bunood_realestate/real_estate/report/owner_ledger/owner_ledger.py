@@ -111,13 +111,15 @@ def _revenue_rows(properties, companies, from_date, to_date):
 	"""Cash settlements (PLE frame, identical constraints to management.py) against the
 	properties' invoices, split Rent vs Charges by the Default Rent Item, with the
 	payment's Mode of Payment (طريقة الدفع)."""
-	settings = frappe.get_cached_doc("Real Estate Settings")
-	rent_item = settings.default_rent_item or ""
+	from bunood_realestate.real_estate.company_settings import all_configured_values
+
+	# Multi-company: rent items across the Single + every company profile.
+	rent_items = tuple(all_configured_values("default_rent_item")) or ("",)
 	date_cond = ""
 	values = {
 		"props": _props_tuple(properties),
 		"companies": _companies_tuple(companies),
-		"rent_item": rent_item,
+		"rent_items": rent_items,
 		"rent_label": _("Rent"),
 		"charge_label": _("Service Charges"),
 	}
@@ -139,7 +141,7 @@ def _revenue_rows(properties, companies, from_date, to_date):
 		JOIN `tabSales Invoice` si ON si.name = ple.against_voucher_no
 		JOIN (
 			SELECT parent, property,
-			       CASE WHEN item_code = %(rent_item)s THEN 'Rent' ELSE 'Charges' END AS kind,
+			       CASE WHEN item_code IN %(rent_items)s THEN 'Rent' ELSE 'Charges' END AS kind,
 			       SUM(base_net_amount) AS net_p
 			FROM `tabSales Invoice Item`
 			WHERE property IN %(props)s
@@ -176,9 +178,12 @@ def _expense_rows(properties, companies, from_date, to_date):
 		"acc.root_type = 'Expense'",
 	]
 	values = {"props": _props_tuple(properties), "companies": _companies_tuple(companies)}
-	if settings.owner_payout_expense_account:
-		conditions.append("gle.account <> %(payout_account)s")
-		values["payout_account"] = settings.owner_payout_expense_account
+	from bunood_realestate.real_estate.company_settings import all_configured_values
+
+	payout_accounts = tuple(all_configured_values("owner_payout_expense_account"))
+	if payout_accounts:
+		conditions.append("gle.account NOT IN %(payout_accounts)s")
+		values["payout_accounts"] = payout_accounts
 	if from_date:
 		conditions.append("gle.posting_date >= %(from_date)s")
 		values["from_date"] = from_date

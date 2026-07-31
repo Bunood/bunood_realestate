@@ -17,9 +17,7 @@ from bunood_realestate.real_estate.gl_utils import assert_company_access
 @frappe.whitelist()
 def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 	frappe.only_for(["Accounts Manager", "System Manager"])
-	settings = frappe.get_single("Real Estate Settings")
-	if not settings.tenant_deposit_account:
-		frappe.throw(_("Set the Tenant Security Deposit Account in Real Estate Settings."))
+	from bunood_realestate.real_estate.company_settings import require_company_config
 
 	amount = flt(amount)
 	if amount <= 0:
@@ -35,6 +33,8 @@ def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 	assert_company_access(state.company)  # ignore_permissions post → verify company scope first
 	if state.deposit_received:
 		frappe.throw(_("A deposit has already been recorded for this lease."))
+	# Multi-company: resolve AFTER the lease's company is known (profile → legacy Single).
+	settings = require_company_config(state.company, ["tenant_deposit_account"])
 
 	je = _make_journal(
 		company=state.company,
@@ -59,9 +59,7 @@ def record_deposit(lease_contract, amount, paid_to_account, posting_date=None):
 @frappe.whitelist()
 def refund_deposit(lease_contract, amount, paid_from_account, posting_date=None):
 	frappe.only_for(["Accounts Manager", "System Manager"])
-	settings = frappe.get_single("Real Estate Settings")
-	if not settings.tenant_deposit_account:
-		frappe.throw(_("Set the Tenant Security Deposit Account in Real Estate Settings."))
+	from bunood_realestate.real_estate.company_settings import require_company_config
 
 	amount = flt(amount)
 	if amount <= 0:
@@ -78,6 +76,8 @@ def refund_deposit(lease_contract, amount, paid_from_account, posting_date=None)
 	held = flt(state.deposit_received) - flt(state.deposit_refunded)
 	if amount > held:
 		frappe.throw(_("Refund exceeds the held deposit balance."))
+	# Multi-company: resolve AFTER the lease's company is known (profile → legacy Single).
+	settings = require_company_config(state.company, ["tenant_deposit_account"])
 
 	je = _make_journal(
 		company=state.company,

@@ -86,16 +86,15 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 	if not guard or guard.status != "Planned" or guard.sales_invoice:
 		return False
 	row = frappe.get_doc("Rent Schedule", schedule_name)
-	if not settings.default_rent_item or not settings.rent_income_account:
-		frappe.throw(_("Set Default Rent Item and Rent Income Account in Real Estate Settings."))
-	# Single settings holds company-specific accounts → guard against wrong-company use
-	# (one site = one company for now; see README "known limitations").
-	if settings.company and row.company and settings.company != row.company:
-		frappe.throw(
-			_("Real Estate Settings is set for company {0} but this lease is for {1}; one site currently supports a single company.").format(
-				settings.company, row.company
-			)
-		)
+	# Multi-company: resolve THIS document's company config through the single choke
+	# point (profile → legacy Single fallback). Replaces the old per-field checks AND
+	# the "one site = one company" hard-throw: a company with no profile and a
+	# mismatched Single still fails loud, but with an actionable message.
+	from bunood_realestate.real_estate.company_settings import require_company_config
+
+	cfg = require_company_config(
+		row.company, ["default_rent_item", "rent_income_account"], single=settings
+	)
 
 	lease = frappe.get_doc("Lease Contract", row.lease_contract)
 	# Never invoice a lease that is not currently Active (cancelled / terminated / renewed).
@@ -114,8 +113,8 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 	si.set_posting_time = 1
 	si.posting_date = row.due_date  # accrual: recognise revenue on the due date
 	si.due_date = row.due_date
-	if settings.receivable_account:
-		si.debit_to = settings.receivable_account
+	if cfg.receivable_account:
+		si.debit_to = cfg.receivable_account
 	si.remarks = _("Rent for lease {0}, period {1} to {2}").format(
 		lease.name, row.period_start, row.period_end
 	)
@@ -128,7 +127,7 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 		for u, share in zip(units, shares):
 			unit_property = frappe.db.get_value("Real Estate Unit", u.unit, "property")
 			_append_rent_line(
-				si, settings, share,
+				si, cfg, share,
 				unit=u.unit,
 				property=lease.property or unit_property,
 				period_start=row.period_start,
@@ -136,7 +135,7 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 			)
 	else:
 		_append_rent_line(
-			si, settings, row.base_amount,
+			si, cfg, row.base_amount,
 			unit=None, property=lease.property,
 			period_start=row.period_start, period_end=row.period_end,
 		)
@@ -148,13 +147,13 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 	# A Commercial lease MUST carry a tax template — otherwise we'd silently issue a
 	# 0-VAT (ZATCA-non-compliant) invoice. Residential is legitimately exempt/untaxed.
 	if lease.contract_type == "Commercial":
-		template = settings.commercial_tax_template
+		template = cfg.commercial_tax_template
 		if not template:
 			frappe.throw(
-				_("Set a Commercial Tax Template in Real Estate Settings before invoicing a commercial lease (ZATCA requires 15% VAT).")
+				_("Set a Commercial Tax Template for company {0} before invoicing a commercial lease (ZATCA requires 15% VAT).").format(row.company)
 			)
 	else:
-		template = settings.residential_tax_template
+		template = cfg.residential_tax_template
 	if template:
 		from erpnext.controllers.accounts_controller import get_taxes_and_charges
 
@@ -164,7 +163,7 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 
 	si.flags.ignore_permissions = True
 	si.insert()
-	if settings.auto_submit_invoices:
+	if cfg.auto_submit_invoices:
 		si.submit()  # becomes «معلّق» (Unpaid) → shows on the tenant Statement of Account
 
 	frappe.db.set_value(

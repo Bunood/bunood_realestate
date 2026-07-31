@@ -213,7 +213,12 @@ def generate_owner_payout(property, from_date, to_date):
 	if fee_pct <= 0:
 		frappe.throw(_("Set a positive Management Fee % on the property (a managed property keeps a fee)."))
 
-	settings = frappe.get_single("Real Estate Settings")
+	from bunood_realestate.real_estate.company_settings import require_company_config
+
+	settings = require_company_config(
+		p.company,
+		["owner_payout_expense_account", "rent_income_account", "default_rent_item"],
+	)
 	if not settings.owner_payout_expense_account:
 		frappe.throw(_("Set the Owner Payout Expense Account in Real Estate Settings."))
 	if not settings.rent_income_account:

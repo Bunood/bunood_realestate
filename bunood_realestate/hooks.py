@@ -143,6 +143,11 @@ doc_events = {
             "bunood_realestate.real_estate.events.owner_payout_unlink_on_je_trash",
         ],
     },
+    # A renamed Company must carry its Real Estate Company Profile with it (the profile is
+    # autonamed by company; link propagation updates the field but not the doc name).
+    "Company": {
+        "after_rename": "bunood_realestate.real_estate.events.rename_company_profile",
+    },
     # If a Maintenance Work Order's contractor bill is cancelled/deleted, clear the work
     # order's link so a corrected bill can be re-posted (reset-on-cancel discipline).
     "Purchase Invoice": {

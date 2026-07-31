@@ -101,7 +101,12 @@ def seed_charges_for_lease(lease, settings=None, cutoff=None):
 	Lease Charge. Idempotent per (lease_charge_row, period_no). Honors import_historical_seed like
 	rent (an imported mid-term lease bills only future periods). An explicit ``cutoff`` overrides
 	that (the migration passes today so a mid-term lease is never back-billed for utilities)."""
+	from bunood_realestate.real_estate.company_settings import get_company_config
+
 	settings = settings or frappe.get_single("Real Estate Settings")
+	# Multi-company: seed with the LEASE company's resolved config (nullable — seeding
+	# isn't posting, and the generator re-resolves live at invoice time anyway).
+	cfg = get_company_config(lease.company, single=settings) or frappe._dict()
 	if cutoff is None:
 		cutoff = nowdate() if lease.get("import_historical_seed") else None
 	created = 0
@@ -117,7 +122,7 @@ def seed_charges_for_lease(lease, settings=None, cutoff=None):
 			continue
 		periods = seed_future_periods(build_periods(start, end, cycle, annual_equiv), cutoff)
 		timing = "Arrears" if metered else (charge.get("billing_timing") or "Arrears")
-		tax_template = _resolve_tax_template(lease, charge, settings)
+		tax_template = _resolve_tax_template(lease, charge, cfg)
 		unit = charge.get("unit")
 		unit_property = frappe.db.get_value("Real Estate Unit", unit, "property") if unit else None
 		for p in periods:
@@ -291,9 +296,14 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 	)
 	if not lease_info or lease_info.status != "Active":
 		return False
-	if settings.company and first["company"] and settings.company != first["company"]:
-		frappe.throw(_("Real Estate Settings is set for company {0} but this charge is for {1}.").format(
-			settings.company, first["company"]))
+	# Multi-company: resolve THIS bucket's company config (profile → legacy Single);
+	# fails loud for an unconfigured company — the successor of the old mismatch throw.
+	from bunood_realestate.real_estate.company_settings import (
+		all_configured_values,
+		require_company_config,
+	)
+
+	cfg = require_company_config(first["company"], single=settings)
 
 	si = frappe.new_doc("Sales Invoice")
 	si.customer = first["customer"]
@@ -303,8 +313,8 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 	si.set_posting_time = 1
 	si.posting_date = first["due_date"]
 	si.due_date = first["due_date"]
-	if settings.receivable_account:
-		si.debit_to = settings.receivable_account
+	if cfg.receivable_account:
+		si.debit_to = cfg.receivable_account
 	si.remarks = _("Charges for lease {0}").format(first["lease_contract"])
 
 	cost_center = resolve_cost_center(si.company)
@@ -315,9 +325,9 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 		# The rent Service Item is the POSITIVE discriminator the cash-basis owner payout
 		# uses to tell rent cash from charge cash. A charge line must therefore never use
 		# it — otherwise its cash would be folded into the owner's rent base (over-pay).
-		if settings.default_rent_item and item_code == settings.default_rent_item:
+		if item_code in all_configured_values("default_rent_item"):
 			frappe.throw(
-				_("Charge Type {0} uses the Rent Service Item ({1}). Charges must carry their own Service Item so charge cash is never counted as rent for the owner payout.").format(
+				_("Charge Type {0} uses a Rent Service Item ({1}). Charges must carry their own Service Item so charge cash is never counted as rent for the owner payout.").format(
 					r["charge_type"], item_code
 				)
 			)
@@ -341,15 +351,15 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 		# Re-resolve LIVE (mirror of the rent path): a row seeded before the tax templates
 		# were configured must not stay 0-VAT forever — later configuration is honored.
 		tax_template = (
-			settings.commercial_tax_template
+			cfg.commercial_tax_template
 			if lease_info.contract_type == "Commercial"
-			else settings.residential_tax_template
+			else cfg.residential_tax_template
 		)
 	# A Commercial charge MUST carry a tax template — otherwise we'd silently issue a
 	# 0-VAT (ZATCA-non-compliant) invoice. Residential is legitimately exempt/untaxed.
 	if lease_info.contract_type == "Commercial" and not tax_template:
 		frappe.throw(
-			_("Set a Commercial Tax Template in Real Estate Settings before billing charges on a commercial lease (ZATCA requires 15% VAT).")
+			_("Set a Commercial Tax Template for company {0} before billing charges on a commercial lease (ZATCA requires 15% VAT).").format(first["company"])
 		)
 	if tax_template:
 		from erpnext.controllers.accounts_controller import get_taxes_and_charges
@@ -360,7 +370,7 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 
 	si.flags.ignore_permissions = True
 	si.insert()
-	if settings.auto_submit_invoices:
+	if cfg.auto_submit_invoices:
 		si.submit()
 
 	for r in live:

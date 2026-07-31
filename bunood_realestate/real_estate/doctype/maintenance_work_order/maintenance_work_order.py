@@ -62,7 +62,11 @@ def post_contractor_bill(work_order):
 	if locked:
 		return {"purchase_invoice": locked, "already": True}
 
-	settings = frappe.get_single("Real Estate Settings")
+	from bunood_realestate.real_estate.company_settings import require_company_config
+
+	settings = require_company_config(
+		doc.company, ["maintenance_item", "maintenance_expense_account"]
+	)
 	if not settings.maintenance_item:
 		frappe.throw(_("Set a Maintenance Item in Real Estate Settings before billing a work order."))
 	# Set the expense head EXPLICITLY (like every other GL path in the app) rather than

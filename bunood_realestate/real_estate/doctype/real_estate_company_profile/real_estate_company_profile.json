@@ -1,0 +1,182 @@
+{
+ "actions": [],
+ "autoname": "field:company",
+ "creation": "2026-07-31 00:00:00",
+ "description": "Per-company financial configuration for multi-company sites (one doc per Company). Fieldnames mirror Real Estate Settings exactly — a profile OVERRIDES the Settings page for its company (whole-block, never field-by-field). The Settings page remains the live config for its own (default) company; sites with one company need no profile at all.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "track_changes": 1,
+ "field_order": [
+  "company",
+  "enabled",
+  "accounting_section",
+  "default_cost_center",
+  "rent_income_account",
+  "receivable_account",
+  "tenant_deposit_account",
+  "items_section",
+  "default_rent_item",
+  "head_lease_item",
+  "maintenance_item",
+  "col_items",
+  "maintenance_expense_account",
+  "owner_payout_expense_account",
+  "opening_balance_account",
+  "deduction_income_account",
+  "tax_section",
+  "commercial_tax_template",
+  "residential_tax_template"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "description": "Untick to park a dormant portfolio company without deleting its configuration (its documents then fail loud instead of posting).",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "accounting_section",
+   "fieldtype": "Section Break",
+   "label": "Accounts"
+  },
+  {
+   "fieldname": "default_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "rent_income_account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Rent Income Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "receivable_account",
+   "fieldtype": "Link",
+   "label": "Receivable Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "tenant_deposit_account",
+   "fieldtype": "Link",
+   "label": "Tenant Security Deposit Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "items_section",
+   "fieldtype": "Section Break",
+   "label": "Items & Posting Accounts"
+  },
+  {
+   "fieldname": "default_rent_item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Default Rent Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "head_lease_item",
+   "fieldtype": "Link",
+   "label": "Head-Lease Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "maintenance_item",
+   "fieldtype": "Link",
+   "label": "Maintenance Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "col_items",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "maintenance_expense_account",
+   "fieldtype": "Link",
+   "label": "Maintenance Expense Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "owner_payout_expense_account",
+   "fieldtype": "Link",
+   "label": "Owner Payout Expense Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "opening_balance_account",
+   "fieldtype": "Link",
+   "label": "Opening Balance Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "deduction_income_account",
+   "fieldtype": "Link",
+   "label": "Deposit Deduction Income Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "tax_section",
+   "fieldtype": "Section Break",
+   "label": "VAT Templates"
+  },
+  {
+   "fieldname": "commercial_tax_template",
+   "fieldtype": "Link",
+   "label": "Commercial Tax Template",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "fieldname": "residential_tax_template",
+   "fieldtype": "Link",
+   "label": "Residential Tax Template",
+   "options": "Sales Taxes and Charges Template"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-31 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Real Estate Company Profile",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

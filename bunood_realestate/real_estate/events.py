@@ -73,6 +73,18 @@ def _revert_schedule_rows(si_name):
 		)
 
 
+def rename_company_profile(doc, method=None, old=None, new=None, merge=False):
+	"""Company after_rename doc_event. The profile is autonamed by its company field —
+	Frappe's link propagation updates the FIELD but not the document NAME, leaving
+	name != company forever. Rename the profile document to follow, and drop the
+	resolver's request cache."""
+	if not (old and new):
+		return
+	if frappe.db.exists("Real Estate Company Profile", old):
+		frappe.rename_doc("Real Estate Company Profile", old, new, force=True)
+	frappe.local.__dict__.pop("_bnd_company_profiles", None)
+
+
 def reconcile_owner_payout_on_je(doc, method=None):
 	"""Journal Entry ON_CANCEL doc_event. If this JE backs a Posted Owner Payout, mark that
 	payout Cancelled so it stops acting as an idempotency block — the GL was just reversed, so

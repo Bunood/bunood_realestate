@@ -184,12 +184,14 @@ class LeaseContract(Document):
 		internal _apply (the submitter may lack Charge-create rights) and tags each charge
 		with the correct VAT template (residential exempt / commercial 15%)."""
 		from bunood_realestate.core import charge
+		from bunood_realestate.real_estate.company_settings import get_company_config
 
-		settings = frappe.get_single("Real Estate Settings")
+		# Nullable on purpose: a lease with no fees must never throw over missing config.
+		cfg = get_company_config(self.company) or frappe._dict()
 		tax_template = (
-			settings.commercial_tax_template
+			cfg.commercial_tax_template
 			if self.contract_type == "Commercial"
-			else settings.residential_tax_template
+			else cfg.residential_tax_template
 		)
 		for field, ctype in FEE_CHARGES.items():
 			amt = flt(self.get(field))
@@ -220,13 +222,11 @@ class LeaseContract(Document):
 		amount = flt(self.import_contract_total)
 		if amount <= 0:
 			return
-		settings = frappe.get_single("Real Estate Settings")
-		if not settings.opening_balance_account:
-			frappe.throw(
-				_("Set an Opening Balance Account in Real Estate Settings before importing a contract with an outstanding balance.")
-			)
-		if not settings.default_rent_item:
-			frappe.throw(_("Set a Default Rent Item in Real Estate Settings first."))
+		from bunood_realestate.real_estate.company_settings import require_company_config
+
+		settings = require_company_config(
+			self.company, ["opening_balance_account", "default_rent_item"]
+		)
 
 		si = frappe.new_doc("Sales Invoice")
 		si.customer = self.customer

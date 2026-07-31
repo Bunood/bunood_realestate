@@ -55,13 +55,21 @@ def create_property_with_units(data):
 	if not (b.get("property_name") or "").strip():
 		frappe.throw(_("Property name is required."))
 
+	# Regression-gate order preserved: payload → Settings company → user default.
 	company = (
 		b.get("company")
 		or frappe.db.get_single_value("Real Estate Settings", "company")
 		or frappe.defaults.get_user_default("Company")
 	)
 	if not company:
-		frappe.throw(_("No company configured — set one in Real Estate Settings."))
+		# Multi-company: if exactly one enabled profile exists, its company is unambiguous.
+		profiles = frappe.get_all(
+			"Real Estate Company Profile", filters={"enabled": 1}, pluck="company"
+		) if frappe.db.table_exists("Real Estate Company Profile") else []
+		if len(profiles) == 1:
+			company = profiles[0]
+	if not company:
+		frappe.throw(_("Select a company (this site serves multiple companies)."))
 
 	# Usage (residential/commercial/mixed → VAT business type) is SEPARATE from the
 	# building kind (عمارة/فيلا/… from the RE Property Type master). Old payloads sent
