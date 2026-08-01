@@ -12,17 +12,26 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, flt, nowdate
 
+from bunood_realestate.real_estate import invoicing_policy
 from bunood_realestate.real_estate.apportion import split_amount  # re-exported for back-compat
 from bunood_realestate.real_estate.gl_utils import resolve_cost_center
 
 __all__ = ["split_amount", "generate_due_rent_invoices", "generate_now"]
 
 
-def generate_due_rent_invoices(lease_contract=None, lead_days=None):
-	"""Scheduler entrypoint (daily). Idempotent, per-row transaction, fail-loud-per-row."""
+def generate_due_rent_invoices(lease_contract=None, lead_days=None, force=False):
+	"""Scheduler entrypoint (daily). Idempotent, per-row transaction, fail-loud-per-row.
+
+	Honors the site's Invoice Issuance Policy: under Manual / On Payment the daily job
+	issues NOTHING (the Operations Center or «استلام الدفعة» does it on demand). An
+	explicit operator action passes ``force=True`` — a human asking for the invoice is
+	always allowed, whatever the automation policy says."""
 	settings = frappe.get_single("Real Estate Settings")
+	policy, policy_lead = invoicing_policy.current(settings)
+	if not force and not invoicing_policy.auto_issues(policy):
+		return 0
 	if lead_days is None:
-		lead_days = int(settings.invoice_lead_days or 0)
+		lead_days = policy_lead
 	cutoff = add_days(nowdate(), lead_days)
 
 	filters = {
@@ -49,13 +58,27 @@ def generate_due_rent_invoices(lease_contract=None, lead_days=None):
 			# Terminal, visible state so a persistently-failing row (e.g. a closed
 			# accounting period) is not retried forever and silently un-invoiced.
 			# An operator fixes the cause and resets the row to Planned.
-			frappe.db.set_value(
-				"Rent Schedule",
-				name,
-				{"status": "Failed", "invoice_status": str(e)[:140]},
-				update_modified=False,
-			)
-			frappe.db.commit()
+			# Re-read UNDER A LOCK first: our exception may be a lost lock race whose
+			# winner already invoiced this row, and stamping Failed over a live invoice
+			# would strand it (the generator skips non-Planned rows forever).
+			try:
+				guard = frappe.db.get_value(
+					"Rent Schedule", name, ["status", "sales_invoice"], for_update=True, as_dict=True
+				)
+				if guard and guard.status == "Planned" and not guard.sales_invoice:
+					frappe.db.set_value(
+						"Rent Schedule",
+						name,
+						{"status": "Failed", "invoice_status": str(e)[:140]},
+						update_modified=False,
+					)
+				frappe.db.commit()
+			except Exception:
+				frappe.db.rollback()
+				frappe.log_error(
+					title="Bunood: could not record rent-invoice failure",
+					message=f"Rent Schedule {name}\n\n{frappe.get_traceback()}",
+				)
 	return created
 
 
@@ -148,8 +171,9 @@ def _create_invoice_for_schedule(schedule_name, settings=None):
 
 	si.flags.ignore_permissions = True
 	si.insert()
-	if cfg.auto_submit_invoices:
-		si.submit()  # becomes «معلّق» (Unpaid) → shows on the tenant Statement of Account
+	# Issuance always submits: a draft reaches neither the GL nor ZATCA, so "issued but
+	# draft" has no business meaning. WHEN to issue is the Invoice Issuance Policy's job.
+	si.submit()  # becomes «معلّق» (Unpaid) → shows on the tenant Statement of Account
 
 	frappe.db.set_value(
 		"Rent Schedule",
@@ -180,6 +204,7 @@ def _append_rent_line(si, settings, rate, unit, property, period_start, period_e
 
 @frappe.whitelist()
 def generate_now(lease_contract=None):
-	"""Manual trigger (button). Same due-date rules as the scheduled job."""
+	"""Manual trigger (button). Same due-date rules as the scheduled job, but an explicit
+	human request overrides a non-auto policy (force=True)."""
 	frappe.only_for(["Accounts Manager", "System Manager"])
-	return generate_due_rent_invoices(lease_contract=lease_contract)
+	return generate_due_rent_invoices(lease_contract=lease_contract, force=True)

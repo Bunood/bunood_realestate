@@ -110,6 +110,22 @@ def run_overdue_reminders_now():
 	return _run_overdue_reminders()
 
 
+def _unissued_overdue(lease_contract, today):
+	"""Rent that is past due but has no invoice yet (non-auto issuance policies). Ex-VAT
+	by nature — it is an installment, not yet a tax document."""
+	value = frappe.db.sql(
+		"""
+		SELECT COALESCE(SUM(base_amount), 0)
+		FROM `tabRent Schedule`
+		WHERE lease_contract = %s AND status = 'Planned'
+		  AND (sales_invoice IS NULL OR sales_invoice = '')
+		  AND due_date < %s
+		""",
+		(lease_contract, today),
+	)
+	return flt(value[0][0]) if value else 0.0
+
+
 def _run_overdue_reminders(today=None):
 	from bunood_realestate.real_estate.collections import _tenant_outstanding
 
@@ -123,7 +139,17 @@ def _run_overdue_reminders(today=None):
 	)
 	for lease in leases:
 		try:
-			outstanding = _tenant_outstanding(lease.customer, lease.company)
+			# Invoiced-and-unpaid (the GL truth) PLUS anything past due but not yet issued
+			# (under Manual / On Payment the tenant genuinely owes it), MINUS receipts the
+			# operator already recorded and that are only awaiting approval — dunning a
+			# tenant for money sitting in the till is the fastest way to lose them.
+			from bunood_realestate.real_estate.operations import pending_receipts_for_customer
+
+			outstanding = (
+				_tenant_outstanding(lease.customer, lease.company)
+				+ _unissued_overdue(lease.name, today)
+				- pending_receipts_for_customer(lease.customer, lease.company)
+			)
 			if outstanding <= 0:
 				continue
 			if frappe.db.exists(

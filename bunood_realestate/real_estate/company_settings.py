@@ -43,8 +43,9 @@ PROFILE_FIELDS = (
 
 # Site-wide policy — stays on the Single by design (hard rule from the blueprint).
 GLOBAL_FIELDS = (
-	"auto_submit_invoices",
+	"invoice_issuance_policy",
 	"invoice_lead_days",
+	"due_soon_days",
 	"enable_late_fees",
 	"late_fee_charge_type",
 	"late_fee_grace_days",

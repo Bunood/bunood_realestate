@@ -24,8 +24,9 @@
   "commercial_tax_template",
   "residential_tax_template",
   "invoicing_section",
-  "auto_submit_invoices",
+  "invoice_issuance_policy",
   "invoice_lead_days",
+  "due_soon_days",
   "late_fees_section",
   "enable_late_fees",
   "late_fee_charge_type",
@@ -167,18 +168,26 @@
    "label": "Invoicing Policy"
   },
   {
-   "default": "1",
-   "description": "Accrual policy: submit the rent invoice on its due date so the tenant shows as a debtor in the Statement of Account until paid. Turn off only for a cash (draft-until-paid) policy.",
-   "fieldname": "auto_submit_invoices",
-   "fieldtype": "Check",
-   "label": "Auto-submit rent invoices on due date (accrual)"
+   "default": "Manual",
+   "description": "WHEN a tenant tax invoice is created (rent + charges). A submitted invoice is reported to ZATCA and can no longer be cancelled — only credited — so this is a tax decision.<br><b>Manual</b>: nothing auto-issues; issue from the lease's Operations Center.<br><b>On Due Date</b>: the daily job issues on the due date (accrual — tenant becomes a debtor immediately).<br><b>Days Before Due</b>: same, a few days early.<br><b>On Payment</b>: nothing auto-issues; «استلام الدفعة» creates the invoice at collection time (suits residential).",
+   "fieldname": "invoice_issuance_policy",
+   "fieldtype": "Select",
+   "label": "Invoice Issuance Policy",
+   "options": "Manual\nOn Due Date\nDays Before Due\nOn Payment"
   },
   {
    "default": "0",
-   "description": "Generate the invoice this many days before its due date (0 = on the due date).",
+   "description": "Lead time in days. Used by the <b>Days Before Due</b> issuance policy, and always by head-lease (owner) bill generation — so it stays editable under every policy.",
    "fieldname": "invoice_lead_days",
    "fieldtype": "Int",
    "label": "Invoice Lead Days"
+  },
+  {
+   "default": "5",
+   "description": "An unissued installment shows as 🟠 \"due soon\" in the Operations Center this many days before its due date.",
+   "fieldname": "due_soon_days",
+   "fieldtype": "Int",
+   "label": "Due-Soon Window (days)"
   },
   {
    "fieldname": "late_fees_section",

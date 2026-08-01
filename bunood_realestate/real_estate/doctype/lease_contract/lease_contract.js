@@ -20,41 +20,26 @@ frappe.ui.form.on("Lease Contract", {
 		}
 
 		if (frm.doc.docstatus === 1) {
+			// Bulk issuance is irreversible (each invoice is submitted and reported to
+			// ZATCA), so it asks first — the single-row action in the Operations Center
+			// already does, and the button that can issue dozens must not be quieter.
 			frm.add_custom_button(
 				__("Generate Due Invoices"),
-				() => {
-					frappe.call({
-						method: "bunood_realestate.real_estate.tasks.generate_now",
-						args: { lease_contract: frm.doc.name },
-						freeze: true,
-						freeze_message: __("Generating invoices..."),
-						callback: (r) => {
-							frappe.show_alert({
-								message: __("Created {0} invoice(s)", [r.message || 0]),
-								indicator: "green",
-							});
-						},
-					});
-				},
+				() => bnd_confirm_bulk_issue(
+					frm,
+					"bunood_realestate.real_estate.tasks.generate_now",
+					__("Generating invoices...")
+				),
 				__("Rent")
 			);
 
 			frm.add_custom_button(
 				__("Generate Charge Invoices"),
-				() => {
-					frappe.call({
-						method: "bunood_realestate.real_estate.charge_engine.generate_charges_now",
-						args: { lease_contract: frm.doc.name },
-						freeze: true,
-						freeze_message: __("Generating charge invoices..."),
-						callback: (r) => {
-							frappe.show_alert({
-								message: __("Created {0} charge invoice(s)", [r.message || 0]),
-								indicator: "green",
-							});
-						},
-					});
-				},
+				() => bnd_confirm_bulk_issue(
+					frm,
+					"bunood_realestate.real_estate.charge_engine.generate_charges_now",
+					__("Generating charge invoices...")
+				),
 				__("Charges")
 			);
 
@@ -329,4 +314,30 @@ function bnd_render_lease_snapshot(frm, s) {
 		row(__("Security Deposit"), deposit);
 
 	frm.dashboard.add_section(html, __("Financial Snapshot"));
+}
+
+
+// Bulk issuance guard: these buttons submit every due installment at once, and a
+// submitted invoice is reported to ZATCA — it can never be cancelled, only credited.
+function bnd_confirm_bulk_issue(frm, method, freeze_message) {
+	frappe.confirm(
+		__(
+			"Issue tax invoices for ALL due installments of this lease?<br><br>Each one is submitted and reported to ZATCA — they cannot be cancelled afterwards, only corrected with a credit note.<br><br>To issue a single installment instead, use the Operations Center panel below."
+		),
+		() => {
+			frappe.call({
+				method,
+				args: { lease_contract: frm.doc.name },
+				freeze: true,
+				freeze_message,
+				callback: (r) => {
+					frappe.show_alert({
+						message: __("Created {0} invoice(s)", [r.message || 0]),
+						indicator: (r.message || 0) > 0 ? "green" : "blue",
+					});
+					frm.reload_doc();
+				},
+			});
+		}
+	);
 }

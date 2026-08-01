@@ -42,9 +42,17 @@ def apply_late_fees(lease_contract=None):
 	grace = int(settings.late_fee_grace_days or 0)
 	cutoff = add_days(nowdate(), -grace)
 
+	# Lateness is a fact about the DUE DATE, not about paperwork. Under a non-auto
+	# issuance policy (Manual / On Payment) an overdue installment may legitimately have
+	# no invoice yet — fining only invoiced rows would mean a tenant who is never
+	# invoiced is never charged for being late. So Planned rows are eligible too.
+	from bunood_realestate.real_estate import invoicing_policy
+
+	policy, _lead = invoicing_policy.current(settings)
+	eligible_statuses = ["Invoiced"] if invoicing_policy.auto_issues(policy) else ["Invoiced", "Planned"]
+
 	filters = {
-		"status": "Invoiced",
-		"sales_invoice": ["is", "set"],
+		"status": ["in", eligible_statuses],
 		"late_fee_charge": ["in", [None, ""]],
 		"due_date": ["<=", cutoff],
 	}
@@ -77,19 +85,50 @@ def _charge_late_fee(schedule_name, settings):
 	row = frappe.db.get_value(
 		"Rent Schedule",
 		schedule_name,
-		["late_fee_charge", "status", "sales_invoice", "customer", "company", "period_no", "due_date"],
+		[
+			"late_fee_charge", "status", "sales_invoice", "customer", "company",
+			"period_no", "due_date", "base_amount", "lease_contract",
+		],
 		for_update=True,
 		as_dict=True,
 	)
-	if not row or row.late_fee_charge or row.status != "Invoiced" or not row.sales_invoice:
+	if not row or row.late_fee_charge or row.status not in ("Invoiced", "Planned"):
 		return False
 
-	# Only fee a genuinely-unpaid invoice (never a settled one).
-	outstanding = flt(frappe.db.get_value("Sales Invoice", row.sales_invoice, "outstanding_amount"))
-	if outstanding <= 0:
+	if row.sales_invoice:
+		from bunood_realestate.real_estate.operations import pending_receipt_amount
+
+		inv = frappe.db.get_value(
+			"Sales Invoice",
+			row.sales_invoice,
+			["outstanding_amount", "base_net_total", "base_grand_total", "docstatus"],
+			as_dict=True,
+		)
+		if not inv or inv.docstatus != 1:
+			return False
+		# Cash already RECORDED but awaiting the accountant's approval still means the
+		# tenant paid. `outstanding_amount` cannot see a draft receipt, and a late fee is
+		# an irreversible tax document — so never fine (and never stamp) on that blind spot.
+		unpaid = flt(inv.outstanding_amount) - pending_receipt_amount(row.sales_invoice)
+		if unpaid <= 0.005:
+			return False
+		# Fine the RENT, not the tax: scale the unpaid balance back to its ex-VAT share so
+		# the penalty is identical whether or not the invoice has been issued yet.
+		grand = flt(inv.base_grand_total)
+		net_ratio = (flt(inv.base_net_total) / grand) if grand else 1.0
+		overdue_base = unpaid * net_ratio
+	else:
+		# Not issued yet (non-auto policy): the unpaid amount IS the installment, already
+		# ex-VAT — the same base the invoiced branch scales back to.
+		if row.status != "Planned":
+			return False
+		if frappe.db.get_value("Lease Contract", row.lease_contract, "status") != "Active":
+			return False
+		overdue_base = flt(row.base_amount)
+	if overdue_base <= 0:
 		return False
 
-	fee = compute_late_fee(outstanding, settings.late_fee_type, settings.late_fee_value, settings.late_fee_cap)
+	fee = compute_late_fee(overdue_base, settings.late_fee_type, settings.late_fee_value, settings.late_fee_cap)
 	if fee <= 0:
 		return False
 

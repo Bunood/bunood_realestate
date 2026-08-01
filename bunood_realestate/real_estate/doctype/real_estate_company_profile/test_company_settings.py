@@ -21,7 +21,7 @@ SINGLE = {
 	"rent_income_account": "Rent - A",
 	"default_rent_item": "RENT-A",
 	"receivable_account": "AR - A",
-	"auto_submit_invoices": 1,
+	"invoice_issuance_policy": "Days Before Due",
 	"invoice_lead_days": 5,
 }
 PROFILE_B = {
@@ -35,7 +35,7 @@ class TestResolveConfig(unittest.TestCase):
 	def test_legacy_parity_matching_company(self):
 		cfg = resolve_config("Alpha", {}, SINGLE)
 		self.assertEqual(cfg["rent_income_account"], "Rent - A")
-		self.assertEqual(cfg["auto_submit_invoices"], 1)
+		self.assertEqual(cfg["invoice_issuance_policy"], "Days Before Due")
 		self.assertEqual(cfg["_source"], "settings")
 
 	def test_legacy_parity_blank_single_company_serves_anyone(self):
@@ -65,8 +65,8 @@ class TestResolveConfig(unittest.TestCase):
 		)
 
 	def test_global_fields_always_from_single(self):
-		cfg = resolve_config("Beta", {"Beta": dict(PROFILE_B, auto_submit_invoices=0)}, SINGLE)
-		self.assertEqual(cfg["auto_submit_invoices"], 1)  # profile's value ignored
+		cfg = resolve_config("Beta", {"Beta": dict(PROFILE_B, invoice_issuance_policy="Manual")}, SINGLE)
+		self.assertEqual(cfg["invoice_issuance_policy"], "Days Before Due")  # profile's value ignored
 		self.assertEqual(cfg["invoice_lead_days"], 5)
 
 	def test_unknown_company_among_profiles_is_none(self):

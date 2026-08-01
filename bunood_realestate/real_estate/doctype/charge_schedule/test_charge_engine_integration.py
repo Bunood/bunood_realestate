@@ -44,8 +44,10 @@ class TestChargeEngine(FrappeTestCase):
 				"charge_kind": "Utility", "item": item, "is_active": 1, "is_recurring": 1,
 			}).insert(ignore_permissions=True)
 
+		# The generator only runs unattended under an auto-issuing policy; setting a
+		# retired flag here would silently no-op and void the whole test.
 		settings = frappe.get_single("Real Estate Settings")
-		settings.auto_submit_invoices = 1
+		settings.invoice_issuance_policy = "On Due Date"
 		settings.flags.ignore_permissions = True
 		settings.save(ignore_permissions=True)
 

@@ -2,3 +2,4 @@
 
 [post_model_sync]
 bunood_realestate.real_estate.patches.migrate_utility_scalars_to_charges
+bunood_realestate.real_estate.patches.migrate_invoicing_policy

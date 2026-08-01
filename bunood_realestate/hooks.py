@@ -33,6 +33,9 @@ zatca_original_invoice = [
 doctype_js = {
     "Customer": "public/js/bnd_customer.js",
     "Supplier": "public/js/bnd_supplier.js",
+    # Operations Center (docs/plan-invoicing-automation.md): the installment journey +
+    # its contextual actions, layered onto our own Lease Contract form.
+    "Lease Contract": "public/js/bnd_operations_center.js",
 }
 
 # ------------------------------------------------------------------------------

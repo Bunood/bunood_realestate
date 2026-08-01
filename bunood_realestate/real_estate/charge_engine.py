@@ -214,11 +214,20 @@ def restore_future_charges(lease_contract, from_date):
 # --------------------------------------------------------------------------------------
 # Phase 3 — generator + Billing Policy grouping (mirror tasks.generate_due_rent_invoices)
 # --------------------------------------------------------------------------------------
-def generate_due_charge_invoices(lease_contract=None, lead_days=None):
-	"""Scheduler entrypoint (daily). Idempotent, per-bucket transaction, fail-loud-per-bucket."""
+def generate_due_charge_invoices(lease_contract=None, lead_days=None, force=False):
+	"""Scheduler entrypoint (daily). Idempotent, per-bucket transaction, fail-loud-per-bucket.
+
+	Honors the site's Invoice Issuance Policy exactly like the rent generator: under
+	Manual / On Payment the daily job issues nothing; an explicit operator action
+	(``force=True``) always may."""
+	from bunood_realestate.real_estate import invoicing_policy
+
 	settings = frappe.get_single("Real Estate Settings")
+	policy, policy_lead = invoicing_policy.current(settings)
+	if not force and not invoicing_policy.auto_issues(policy):
+		return 0
 	if lead_days is None:
-		lead_days = int(settings.invoice_lead_days or 0)
+		lead_days = policy_lead
 	cutoff = add_days(nowdate(), lead_days)
 
 	filters = {"status": "Planned", "sales_invoice": ["in", [None, ""]], "due_date": ["<=", cutoff]}
@@ -370,8 +379,8 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 
 	si.flags.ignore_permissions = True
 	si.insert()
-	if cfg.auto_submit_invoices:
-		si.submit()
+	# Issuance always submits (see invoicing_policy): a draft is not a tax document.
+	si.submit()
 
 	for r in live:
 		frappe.db.set_value(
@@ -383,9 +392,10 @@ def _create_charge_invoice_for_bucket(bucket, settings):
 
 @frappe.whitelist()
 def generate_charges_now(lease_contract=None):
-	"""Manual trigger (button). Same due-date rules as the scheduled job."""
+	"""Manual trigger (button). Same due-date rules as the scheduled job; an explicit
+	human request overrides a non-auto policy."""
 	frappe.only_for(["Accounts Manager", "System Manager"])
-	return generate_due_charge_invoices(lease_contract=lease_contract)
+	return generate_due_charge_invoices(lease_contract=lease_contract, force=True)
 
 
 # --------------------------------------------------------------------------------------
