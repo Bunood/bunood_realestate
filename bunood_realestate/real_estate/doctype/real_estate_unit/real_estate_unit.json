@@ -33,7 +33,9 @@
   "water_meter",
   "utilities_col",
   "furniture_details",
-  "current_lease"
+  "current_lease",
+  "cam_weight",
+  "cam_exclude"
  ],
  "fields": [
   {
@@ -198,6 +200,20 @@
    "label": "Current Lease",
    "options": "Lease Contract",
    "read_only": 1
+  },
+  {
+   "fieldname": "cam_weight",
+   "fieldtype": "Float",
+   "label": "CAM Weight",
+   "default": "1",
+   "description": "Custom weight for CAM 'Custom Weight' allocation basis."
+  },
+  {
+   "fieldname": "cam_exclude",
+   "fieldtype": "Check",
+   "label": "Exclude from CAM",
+   "default": "0",
+   "description": "Omit this unit entirely from the CAM denominator (plant / common / owner-occupied space)."
   }
  ],
  "links": [

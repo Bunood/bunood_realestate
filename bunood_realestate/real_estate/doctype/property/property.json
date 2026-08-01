@@ -57,7 +57,9 @@
   "geo_col",
   "longitude",
   "notes_section",
-  "description"
+  "description",
+  "cam_section",
+  "service_charges"
  ],
  "fields": [
   {
@@ -368,6 +370,19 @@
    "default": "Ready",
    "in_standard_filter": 1,
    "description": "Operational readiness of the building itself (separate from Active/Inactive)."
+  },
+  {
+   "fieldname": "cam_section",
+   "fieldtype": "Section Break",
+   "label": "Service Charges (CAM)",
+   "collapsible": 1,
+   "description": "Shared common-area costs split across this property's units and billed to tenants through the Charge Engine."
+  },
+  {
+   "fieldname": "service_charges",
+   "fieldtype": "Table",
+   "label": "Service Charges",
+   "options": "Property Service Charge"
   }
  ],
  "links": [

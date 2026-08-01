@@ -37,6 +37,29 @@ frappe.ui.form.on("Property", {
 			__("Units")
 		);
 
+		// CAM: materialize due service-charge periods now (the charge generator then bills
+		// them). Only surfaced once the property actually defines a service charge.
+		if ((frm.doc.service_charges || []).length) {
+			frm.add_custom_button(
+				__("Generate CAM"),
+				() => {
+					frappe.call({
+						method: "bunood_realestate.real_estate.cam.generate_cam_now",
+						args: { property: frm.doc.name },
+						freeze: true,
+						freeze_message: __("Materializing service-charge periods…"),
+						callback: (r) => {
+							frappe.show_alert({
+								message: __("{0} CAM period line(s) materialized.", [r.message || 0]),
+								indicator: "green",
+							});
+						},
+					});
+				},
+				__("Units")
+			);
+		}
+
 		if (frm.doc.management_behavior === "managed") {
 			frm.add_custom_button(
 				__("Owner Payout"),

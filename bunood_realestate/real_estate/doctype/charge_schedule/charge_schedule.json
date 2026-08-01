@@ -11,6 +11,7 @@
   "charge_type",
   "category",
   "billing_method",
+  "is_cam",
   "column_break_head",
   "customer",
   "property",
@@ -38,7 +39,8 @@
   "tax_template",
   "invoice_section",
   "sales_invoice",
-  "invoice_status"
+  "invoice_status",
+  "cam_pool"
  ],
  "fields": [
   {
@@ -51,7 +53,7 @@
    "search_index": 1
   },
   {
-   "description": "The parent Lease Charge child-row name — idempotency key: at most one Charge Schedule per (lease_charge_row, period_no).",
+   "description": "The parent Lease Charge child-row name (idempotency key: at most one Charge Schedule per (lease_charge_row, period_no)). DUAL MEANING: on CAM rows (is_cam=1) this holds the Property Service Charge child-row name instead; CAM idempotency uses the natural key (property, charge_type, unit, period_start, is_cam), never this field.",
    "fieldname": "lease_charge_row",
    "fieldtype": "Data",
    "label": "Lease Charge Row",
@@ -261,6 +263,21 @@
    "fieldtype": "Data",
    "label": "Invoice Status",
    "read_only": 1
+  },
+  {
+   "fieldname": "is_cam",
+   "fieldtype": "Check",
+   "label": "Is CAM",
+   "default": "0",
+   "read_only": 1,
+   "description": "A common-area service charge materialized from a Property Service Charge line (not a Lease Charge)."
+  },
+  {
+   "fieldname": "cam_pool",
+   "fieldtype": "Currency",
+   "label": "CAM Pool",
+   "read_only": 1,
+   "description": "Snapshot of the whole-property pool this share was split from (for reconciliation)."
   }
  ],
  "links": [],

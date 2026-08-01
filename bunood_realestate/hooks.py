@@ -89,6 +89,11 @@ scheduler_events = {
         "bunood_realestate.real_estate.notifications.send_overdue_reminders",
         # Prepare Draft renewals for auto-renew leases nearing expiry (reuses renew_lease).
         "bunood_realestate.real_estate.notifications.auto_draft_renewals",
+        # CAM / service charges: read LIVE occupancy, split each property's shared pools
+        # across its units, and MATERIALIZE Planned Charge Schedule rows (is_cam=1). Runs
+        # IMMEDIATELY BEFORE the charge generator so a period materialized today is billed
+        # the same day through the one verified invoicing path.
+        "bunood_realestate.real_estate.cam.generate_cam_schedule",
         # Charge Engine: turn due Planned Charge Schedule rows (utilities/services) into
         # native Sales Invoices, grouped by each lease's Billing Policy. Rent-independent.
         "bunood_realestate.real_estate.charge_engine.generate_due_charge_invoices",

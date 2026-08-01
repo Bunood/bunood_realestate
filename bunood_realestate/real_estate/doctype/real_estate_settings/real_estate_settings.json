@@ -39,7 +39,8 @@
   "auto_draft_renewals",
   "dimension_section",
   "dimension_enforcement",
-  "require_mode_of_payment"
+  "require_mode_of_payment",
+  "cam_default_vacant_policy"
  ],
  "fields": [
   {
@@ -273,6 +274,13 @@
    "fieldname": "require_mode_of_payment",
    "fieldtype": "Check",
    "label": "Require Mode of Payment on real-estate payments"
+  },
+  {
+   "fieldname": "cam_default_vacant_policy",
+   "fieldtype": "Select",
+   "label": "Default CAM Vacant Policy",
+   "options": "Owner Absorbs\nRedistribute to Occupied",
+   "default": "Owner Absorbs"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "creation": "2026-07-31 00:00:00",
+ "description": "One shared (common-area) cost pool of a property, split across its units and billed to tenants as a service charge (CAM) through the existing Charge Engine.",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "charge_type",
+  "pool_amount",
+  "allocation_basis",
+  "billing_cycle",
+  "billing_timing",
+  "col_break_psc",
+  "vacant_policy",
+  "charge_start_date",
+  "charge_end_date",
+  "is_active",
+  "revenue_account",
+  "tax_template"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "charge_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Charge Type",
+   "options": "Charge Type",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "description": "Whole-property amount PER PERIOD (ex-VAT) to split across units.",
+   "fieldname": "pool_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Pool / Period",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "default": "Area",
+   "description": "How each unit's share is weighted. Area = by area_sqm; Equal = one share each; Custom Weight = unit.cam_weight; Rent Share = unit's active-lease annual rent.",
+   "fieldname": "allocation_basis",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Allocation Basis",
+   "options": "Area\nEqual\nCustom Weight\nRent Share"
+  },
+  {
+   "columns": 1,
+   "default": "Monthly",
+   "fieldname": "billing_cycle",
+   "fieldtype": "Select",
+   "label": "Cycle",
+   "options": "Monthly\nQuarterly\nSemi-Annual\nAnnual"
+  },
+  {
+   "default": "Arrears",
+   "fieldname": "billing_timing",
+   "fieldtype": "Select",
+   "label": "Timing",
+   "options": "Advance\nArrears"
+  },
+  {
+   "fieldname": "col_break_psc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Blank = inherit the company default (Real Estate Settings → Default CAM Vacant Policy). Owner Absorbs = a vacant unit's slice stays with the owner (tenants pay only their own fair share). Redistribute = the whole pool is split across occupied units.",
+   "fieldname": "vacant_policy",
+   "fieldtype": "Select",
+   "label": "Vacant Unit Policy",
+   "options": "\nOwner Absorbs\nRedistribute to Occupied"
+  },
+  {
+   "description": "The single anchor for the billing schedule (defaults to today — CAM never back-bills).",
+   "fieldname": "charge_start_date",
+   "fieldtype": "Date",
+   "label": "Start Date"
+  },
+  {
+   "description": "Optional. Blank = open-ended.",
+   "fieldname": "charge_end_date",
+   "fieldtype": "Date",
+   "label": "End Date"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Active"
+  },
+  {
+   "description": "Optional income account override (recommend a dedicated CAM / Service Charge Income account). Else the Charge Type's Service Item income account. MUST NOT be a rent income account.",
+   "fieldname": "revenue_account",
+   "fieldtype": "Link",
+   "label": "Revenue Account",
+   "options": "Account"
+  },
+  {
+   "description": "Optional VAT template override; else resolved from each tenant lease's contract type (commercial 15% / residential exempt).",
+   "fieldname": "tax_template",
+   "fieldtype": "Link",
+   "label": "Tax Template",
+   "options": "Sales Taxes and Charges Template"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-31 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Property Service Charge",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

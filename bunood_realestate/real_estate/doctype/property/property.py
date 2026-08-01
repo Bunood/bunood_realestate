@@ -23,6 +23,69 @@ class Property(Document):
 				frappe.throw(
 					_("Property {0} already uses deed number {1}.").format(dupe, self.deed_number)
 				)
+		self._validate_service_charges()
+
+	def _validate_service_charges(self):
+		"""CAM lines must never bill as rent (defense-in-depth at DEFINITION, not just at
+		posting): reject a Charge Type whose Service Item is a configured rent item, and a
+		revenue account override that equals a rent income account. Also: unique Charge Type
+		per property (the CAM idempotency key), positive pool, area basis needs unit areas."""
+		lines = self.get("service_charges") or []
+		if not lines:
+			return
+		from bunood_realestate.real_estate.company_settings import all_configured_values
+
+		rent_items = all_configured_values("default_rent_item")
+		rent_accounts = all_configured_values("rent_income_account")
+		seen = set()
+		for line in lines:
+			if not line.charge_type:
+				continue
+			if line.charge_type in seen:
+				frappe.throw(_("Charge Type {0} appears twice in Service Charges — one line per type.").format(line.charge_type))
+			seen.add(line.charge_type)
+			if flt(line.pool_amount) <= 0:
+				frappe.throw(_("Service Charge {0}: Pool / Period must be greater than zero.").format(line.charge_type))
+			item = frappe.db.get_value("Charge Type", line.charge_type, "item")
+			if item and item in rent_items:
+				frappe.throw(
+					_("Service Charge {0} uses a Rent Service Item ({1}) — CAM must use its own item so its cash is never counted as rent.").format(line.charge_type, item)
+				)
+			if line.revenue_account and line.revenue_account in rent_accounts:
+				frappe.throw(
+					_("Service Charge {0}: revenue account {1} is a Rent Income Account — pick a dedicated CAM income account.").format(line.charge_type, line.revenue_account)
+				)
+
+	def on_update(self):
+		"""A CAM definition change discards the current-period Planned CAM cache so it
+		re-materializes with the fresh pool/occupancy (invoiced periods are immutable).
+		Only fires when the service_charges table actually changed — an unrelated Property
+		save (owner phone, description…) must NOT churn/re-price not-yet-billed CAM."""
+		if self._service_charges_changed():
+			from bunood_realestate.real_estate.cam import resync_cam_line
+
+			resync_cam_line(self.name)
+
+	def _service_charges_changed(self):
+		before = self.get_doc_before_save()
+		if before is None:
+			# First insert: only meaningful if it already carries CAM lines.
+			return bool(self.get("service_charges"))
+		return _cam_snapshot(self.get("service_charges")) != _cam_snapshot(before.get("service_charges"))
+
+
+# The CAM-relevant fields of a service-charge line: a change to any of these re-prices the
+# pool, so it must trigger a resync; a change to anything else (or an unrelated Property field)
+# must not.
+_CAM_FIELDS = (
+	"charge_type", "pool_amount", "allocation_basis", "billing_cycle", "billing_timing",
+	"vacant_policy", "charge_start_date", "charge_end_date", "is_active", "revenue_account",
+	"tax_template",
+)
+
+
+def _cam_snapshot(lines):
+	return [tuple(str(l.get(f)) for f in _CAM_FIELDS) for l in (lines or [])]
 
 
 # Card value -> master record resolvers (the wizard shows friendly cards; we map

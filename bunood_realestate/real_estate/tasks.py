@@ -12,25 +12,10 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, flt, nowdate
 
+from bunood_realestate.real_estate.apportion import split_amount  # re-exported for back-compat
 from bunood_realestate.real_estate.gl_utils import resolve_cost_center
 
-
-def split_amount(base, weights):
-	"""Split `base` across `weights` (per-unit annual rents); last line absorbs rounding.
-	Pure & testable — keeps per-unit invoice lines summing exactly to the period rent."""
-	base = flt(base)
-	total = sum(flt(w) for w in weights)
-	n = len(weights)
-	shares = []
-	running = 0.0
-	for i, w in enumerate(weights):
-		if i == n - 1:
-			shares.append(flt(base - running, 2))
-		else:
-			s = flt(base * flt(w) / total, 2) if total else flt(base / n, 2)
-			shares.append(s)
-			running += s
-	return shares
+__all__ = ["split_amount", "generate_due_rent_invoices", "generate_now"]
 
 
 def generate_due_rent_invoices(lease_contract=None, lead_days=None):
