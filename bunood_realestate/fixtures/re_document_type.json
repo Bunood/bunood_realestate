@@ -1,0 +1,15 @@
+[
+ {"doctype": "RE Document Type", "name": "Title Deed", "document_type_name": "Title Deed", "name_ar": "صك", "is_perpetual": 1, "renewal_authority": "Ministry of Justice", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Commercial Registration", "document_type_name": "Commercial Registration", "name_ar": "السجل التجاري", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Ministry of Commerce", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Municipal / Rental License", "document_type_name": "Municipal / Rental License", "name_ar": "رخصة البلدية", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Baladiya", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Business Activity License", "document_type_name": "Business Activity License", "name_ar": "رخصة النشاط", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Baladiya", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "National ID / Iqama", "document_type_name": "National ID / Iqama", "name_ar": "الهوية / الإقامة", "is_perpetual": 0, "renewal_authority": "Jawazat / Ahwal", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Civil Defense Certificate", "document_type_name": "Civil Defense Certificate", "name_ar": "شهادة الدفاع المدني", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Civil Defense", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Chamber of Commerce Membership", "document_type_name": "Chamber of Commerce Membership", "name_ar": "عضوية الغرفة التجارية", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Chamber of Commerce", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Building / Fire Insurance", "document_type_name": "Building / Fire Insurance", "name_ar": "تأمين المبنى", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Insurer", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "VAT Registration Certificate", "document_type_name": "VAT Registration Certificate", "name_ar": "شهادة التسجيل الضريبي", "is_perpetual": 1, "renewal_authority": "ZATCA", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Zakat / Income Tax Certificate", "document_type_name": "Zakat / Income Tax Certificate", "name_ar": "شهادة الزكاة والدخل", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "ZATCA", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "REGA / Fal Brokerage License", "document_type_name": "REGA / Fal Brokerage License", "name_ar": "رخصة فال — الهيئة العامة للعقار", "is_perpetual": 0, "default_validity_months": 36, "renewal_authority": "REGA", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "Occupancy Certificate", "document_type_name": "Occupancy Certificate", "name_ar": "شهادة إشغال", "is_perpetual": 0, "renewal_authority": "Baladiya", "is_active": 1},
+ {"doctype": "RE Document Type", "name": "National Address", "document_type_name": "National Address", "name_ar": "العنوان الوطني", "is_perpetual": 0, "default_validity_months": 12, "renewal_authority": "Saudi Post (SPL)", "is_active": 1}
+]

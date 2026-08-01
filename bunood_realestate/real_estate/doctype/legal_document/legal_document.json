@@ -1,0 +1,191 @@
+{
+ "actions": [],
+ "autoname": "LD-.YYYY.-.#####",
+ "creation": "2026-08-01 00:00:00",
+ "description": "A physical legal/compliance document (Commercial Registration, Municipal License, Iqama, Civil Defense certificate…) belonging to a company, party, property, lease, or land, tracked so operators are reminded before it expires. Perpetual documents (Title Deed, VAT) carry no expiry and never trigger a reminder.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "is_perpetual",
+  "document_number",
+  "issuer",
+  "column_break_1",
+  "issue_date",
+  "expiry_date",
+  "hijri_expiry_date",
+  "section_link",
+  "link_doctype",
+  "link_name",
+  "company",
+  "column_break_2",
+  "responsible_user",
+  "status",
+  "section_attach",
+  "attachment",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Document Type",
+   "options": "RE Document Type",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "default": "0",
+   "description": "Fetched from the Document Type — a perpetual document (deed / VAT) never expires and is excluded from reminders.",
+   "fetch_from": "document_type.is_perpetual",
+   "fieldname": "is_perpetual",
+   "fieldtype": "Check",
+   "label": "Perpetual",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "document_number",
+   "fieldtype": "Data",
+   "label": "Document Number",
+   "in_list_view": 1
+  },
+  {
+   "description": "Issuing authority (Ministry of Commerce, Baladiya, Ejar, Jawazat, Civil Defense…).",
+   "fieldname": "issuer",
+   "fieldtype": "Data",
+   "label": "Issuer"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date"
+  },
+  {
+   "description": "Gregorian expiry — the single source of truth for reminders. Required unless the document type is perpetual.",
+   "depends_on": "eval:!doc.is_perpetual",
+   "fieldname": "expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date",
+   "mandatory_depends_on": "eval:!doc.is_perpetual",
+   "search_index": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "description": "Optional Hijri expiry as printed on the document (display only — no date math runs on it).",
+   "depends_on": "eval:!doc.is_perpetual",
+   "fieldname": "hijri_expiry_date",
+   "fieldtype": "Data",
+   "label": "Hijri Expiry (display)"
+  },
+  {
+   "fieldname": "section_link",
+   "fieldtype": "Section Break",
+   "label": "Belongs To"
+  },
+  {
+   "description": "The kind of entity this document belongs to.",
+   "fieldname": "link_doctype",
+   "fieldtype": "Select",
+   "label": "Entity Type",
+   "options": "Company\nCustomer\nSupplier\nProperty\nLease Contract\nLand",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "link_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Entity",
+   "options": "link_doctype",
+   "in_standard_filter": 1
+  },
+  {
+   "description": "The company that owns this document — the scoping / permission anchor (a Dynamic Link does not cascade permissions).",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional — the person responsible for renewing this document.",
+   "fieldname": "responsible_user",
+   "fieldtype": "Link",
+   "label": "Responsible",
+   "options": "User"
+  },
+  {
+   "default": "Active",
+   "description": "Only Active documents are swept for expiry. Set Superseded when a renewed copy replaces this one.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nSuperseded\nCancelled",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "section_attach",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach",
+   "label": "Scanned Copy"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2026-08-01 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "Legal Document",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

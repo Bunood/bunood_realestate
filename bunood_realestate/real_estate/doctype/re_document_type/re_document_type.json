@@ -1,0 +1,100 @@
+{
+ "actions": [],
+ "autoname": "field:document_type_name",
+ "creation": "2026-08-01 00:00:00",
+ "description": "A kind of legal/compliance document tracked in the register (Commercial Registration, Iqama, Municipal License…). Perpetual types (Title Deed, VAT) never expire and are excluded from expiry reminders.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type_name",
+  "name_ar",
+  "is_perpetual",
+  "column_break_dt",
+  "default_validity_months",
+  "renewal_authority",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type_name",
+   "fieldtype": "Data",
+   "label": "Document Type",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "name_ar",
+   "fieldtype": "Data",
+   "label": "Arabic Name",
+   "in_list_view": 1
+  },
+  {
+   "default": "0",
+   "description": "A perpetual document never expires (e.g. Title Deed صك, VAT registration). Register rows of this type carry no expiry date and never trigger a renewal reminder.",
+   "fieldname": "is_perpetual",
+   "fieldtype": "Check",
+   "label": "Perpetual (never expires)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_dt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional convenience: default validity in months, used to pre-fill a register row's expiry from its issue date.",
+   "fieldname": "default_validity_months",
+   "fieldtype": "Int",
+   "label": "Default Validity (months)"
+  },
+  {
+   "fieldname": "renewal_authority",
+   "fieldtype": "Data",
+   "label": "Renewal Authority"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Active"
+  }
+ ],
+ "links": [],
+ "modified": "2026-08-01 00:00:00",
+ "modified_by": "Administrator",
+ "module": "Real Estate",
+ "name": "RE Document Type",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

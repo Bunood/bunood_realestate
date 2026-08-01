@@ -38,6 +38,7 @@
   "notifications_section",
   "enable_auto_notifications",
   "auto_draft_renewals",
+  "enable_document_expiry_alerts",
   "dimension_section",
   "dimension_enforcement",
   "require_mode_of_payment",
@@ -262,6 +263,13 @@
    "fieldname": "auto_draft_renewals",
    "fieldtype": "Check",
    "label": "Auto-draft Renewals (auto-renew leases)"
+  },
+  {
+   "default": "0",
+   "description": "When on, a daily job alerts on Legal Documents (Commercial Registration, licenses, Iqama, Civil Defense…) expiring soon (T-90/30/7/today). Each alert is logged once (Document Reminder Log) so it never repeats; perpetual documents (deed, VAT) are never alerted.",
+   "fieldname": "enable_document_expiry_alerts",
+   "fieldtype": "Check",
+   "label": "Enable Document-Expiry Alerts"
   },
   {
    "description": "Data discipline for dimension-based reports (Owner Ledger, Property P&L, statements): financial rows on real-estate accounts must carry the Property dimension. Warn shows a message; Block prevents saving. Run the Missing Dimension Audit report clean before switching to Block.",

@@ -15,7 +15,13 @@ from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import (
 )
 from bunood_realestate.real_estate.collections import compute_late_fee
 from bunood_realestate.real_estate.management import compute_owner_payout
-from bunood_realestate.real_estate.notifications import expiry_milestone
+from bunood_realestate.real_estate.notifications import (
+	current_milestone,
+	document_reminder_detail,
+	document_should_alert,
+	document_status,
+	expiry_milestone,
+)
 from bunood_realestate.real_estate.tasks import split_amount
 
 
@@ -109,6 +115,63 @@ class TestExpiryMilestone(unittest.TestCase):
 		self.assertIsNone(expiry_milestone("2025-01-01", "2026-01-15", "2026-01-01"))  # 14 days
 		self.assertIsNone(expiry_milestone("2025-01-01", "2025-12-31", "2026-01-01"))  # already past
 		self.assertIsNone(expiry_milestone("2025-01-01", "2026-01-01", "2026-01-01"))  # today
+
+
+class TestDocumentExpiry(unittest.TestCase):
+	"""Pure core of Phase-1 #4 — the document-expiry milestone/predicate/key/status functions.
+	The deed-never-expires regression (constraint #4) is executable here."""
+
+	def test_current_milestone_buckets(self):
+		# today = 2026-01-01. Exactly on a milestone boundary picks that milestone.
+		self.assertEqual(current_milestone("2026-04-01", "2026-01-01"), 90)  # 90 days out
+		self.assertEqual(current_milestone("2026-01-31", "2026-01-01"), 30)  # 30
+		self.assertEqual(current_milestone("2026-01-08", "2026-01-01"), 7)   # 7
+		self.assertEqual(current_milestone("2026-01-01", "2026-01-01"), 0)   # expires today
+
+	def test_current_milestone_tightest_bucket_is_catch_up_safe(self):
+		# 25 days out is inside the 30 window (not exactly 30) → still fires the 30 bucket, so a
+		# missed scheduler day never permanently skips a milestone. Returns the TIGHTEST bucket.
+		self.assertEqual(current_milestone("2026-01-26", "2026-01-01"), 30)  # 25 days → 30
+		self.assertEqual(current_milestone("2026-01-06", "2026-01-01"), 7)   # 5 days → 7
+		self.assertEqual(current_milestone("2026-02-15", "2026-01-01"), 90)  # 45 days → 90
+
+	def test_current_milestone_outside_window_or_past(self):
+		self.assertIsNone(current_milestone("2026-05-01", "2026-01-01"))  # 120 days → outside 90
+		self.assertIsNone(current_milestone("2025-12-31", "2026-01-01"))  # already expired
+
+	def test_should_alert_short_circuits(self):
+		# perpetual → never; blank expiry → never; non-Active → never.
+		self.assertIsNone(document_should_alert({"is_perpetual": 1, "expiry_date": "2026-01-08"}, "2026-01-01"))
+		self.assertIsNone(document_should_alert({"is_perpetual": 0, "expiry_date": None}, "2026-01-01"))
+		self.assertIsNone(
+			document_should_alert({"is_perpetual": 0, "status": "Cancelled", "expiry_date": "2026-01-08"}, "2026-01-01")
+		)
+
+	def test_should_alert_active_returns_milestone(self):
+		self.assertEqual(
+			document_should_alert({"is_perpetual": 0, "status": "Active", "expiry_date": "2026-01-08"}, "2026-01-01"), 7
+		)
+
+	def test_deed_never_alerts_regression(self):
+		# Constraint #4: a perpetual document (deed / VAT) can NEVER produce a milestone, on any
+		# date, even with an (erroneously) populated expiry — the sweep can never remind on a deed.
+		for day in ("2026-01-01", "2026-06-30", "2027-01-01"):
+			self.assertIsNone(document_should_alert({"is_perpetual": 1, "expiry_date": "2026-01-01"}, day))
+
+	def test_reminder_detail_embeds_expiry_for_renewal_rearm(self):
+		# Same document, two different expiries → two different keys, so renewing (new expiry)
+		# re-arms the alert instead of being suppressed by last cycle's log row.
+		a = document_reminder_detail("LD-2026-00001", "2026-01-08", 7)
+		b = document_reminder_detail("LD-2026-00001", "2027-01-08", 7)
+		self.assertNotEqual(a, b)
+		self.assertEqual(a, "LD-2026-00001|2026-01-08|T-7")
+
+	def test_document_status(self):
+		self.assertEqual(document_status("2026-01-08", "2026-01-01", is_perpetual=True), "Perpetual")
+		self.assertEqual(document_status(None, "2026-01-01", is_perpetual=False), "Perpetual")
+		self.assertEqual(document_status("2025-12-31", "2026-01-01", is_perpetual=False), "Expired")
+		self.assertEqual(document_status("2026-01-20", "2026-01-01", is_perpetual=False), "Due Soon")
+		self.assertEqual(document_status("2026-06-01", "2026-01-01", is_perpetual=False), "OK")
 
 
 class TestSeedFuturePeriods(unittest.TestCase):

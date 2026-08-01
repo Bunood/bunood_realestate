@@ -33,6 +33,9 @@ zatca_original_invoice = [
 doctype_js = {
     "Customer": "public/js/bnd_customer.js",
     "Supplier": "public/js/bnd_supplier.js",
+    # Document-expiry (Phase-1 #4): a "Legal Documents" shortcut on the Company form,
+    # routing to the register filtered to this company's documents. Never a core edit.
+    "Company": "public/js/bnd_company.js",
     # Operations Center (docs/plan-invoicing-automation.md): the installment journey +
     # its contextual actions, layered onto our own Lease Contract form.
     "Lease Contract": "public/js/bnd_operations_center.js",
@@ -62,6 +65,9 @@ fixtures = [
     "RE Revenue Model",
     "RE Contract Kind",
     "RE Maintenance Category",
+    # Document-expiry (Phase-1 #4): seed the Saudi legal-document taxonomy (CR, licenses,
+    # Iqama, Civil Defense…; deed & VAT flagged perpetual). User-extensible.
+    "RE Document Type",
     # Unit fixtures & furniture taxonomy (الأثاث والتجهيزات) — user-extensible.
     "Inventory Item Type",
     # Phase 2+: Custom Fields (e.g. Lease/Property/Unit links on Sales Invoice) export here too.
@@ -92,6 +98,9 @@ scheduler_events = {
         "bunood_realestate.real_estate.notifications.send_overdue_reminders",
         # Prepare Draft renewals for auto-renew leases nearing expiry (reuses renew_lease).
         "bunood_realestate.real_estate.notifications.auto_draft_renewals",
+        # Document expiry (no-op unless enabled): alert on Legal Documents (CR, licenses,
+        # Iqama, Civil Defense…) expiring soon (T-90/30/7/today). Idempotent (logged once).
+        "bunood_realestate.real_estate.notifications.notify_expiring_documents",
         # CAM / service charges: read LIVE occupancy, split each property's shared pools
         # across its units, and MATERIALIZE Planned Charge Schedule rows (is_cam=1). Runs
         # IMMEDIATELY BEFORE the charge generator so a period materialized today is billed

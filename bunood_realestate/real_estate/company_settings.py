@@ -54,6 +54,7 @@ GLOBAL_FIELDS = (
 	"late_fee_cap",
 	"enable_auto_notifications",
 	"auto_draft_renewals",
+	"enable_document_expiry_alerts",
 	"dimension_enforcement",
 	"require_mode_of_payment",
 )
