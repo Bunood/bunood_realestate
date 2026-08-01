@@ -56,13 +56,30 @@ def execute(filters=None):
 	)
 
 	labels = _resolve_entity_labels(rows)
+	grace_by_type = _grace_by_type(rows)
 	for r in rows:
 		r["entity"] = labels.get((r.link_doctype, r.link_name), r.link_name)
 		r["days_left"] = date_diff(r.expiry_date, today)
 		r["has_attachment"] = 1 if r.attachment else 0
-		r["expiry_status"] = document_status(r.expiry_date, today, is_perpetual=False)
+		r["expiry_status"] = document_status(
+			r.expiry_date, today, is_perpetual=False, grace_days=grace_by_type.get(r.document_type, 0)
+		)
 
 	return _columns(), rows
+
+
+def _grace_by_type(rows):
+	"""One batched lookup of grace_days per distinct document type (never per-row) so an
+	expired-but-still-in-grace document shows 'In Grace' rather than 'Expired'."""
+	types = {r.document_type for r in rows if r.document_type}
+	if not types:
+		return {}
+	return {
+		d.name: int(d.grace_days or 0)
+		for d in frappe.get_all(
+			"RE Document Type", filters={"name": ["in", list(types)]}, fields=["name", "grace_days"]
+		)
+	}
 
 
 def _resolve_entity_labels(rows):

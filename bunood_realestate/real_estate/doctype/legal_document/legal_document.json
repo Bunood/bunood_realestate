@@ -21,6 +21,7 @@
   "column_break_2",
   "responsible_user",
   "status",
+  "supersedes",
   "section_attach",
   "attachment",
   "notes"
@@ -126,12 +127,20 @@
   },
   {
    "default": "Active",
-   "description": "Only Active documents are swept for expiry. Set Superseded when a renewed copy replaces this one.",
+   "description": "Only Active documents are swept for expiry. 'Renewal In Progress' silences the reminder while the operator renews it; 'Superseded' is set automatically when a renewed copy replaces this one.",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Active\nSuperseded\nCancelled",
+   "options": "Active\nRenewal In Progress\nSuperseded\nCancelled",
    "in_standard_filter": 1
+  },
+  {
+   "description": "The earlier document this one renewed/replaced — forms a version chain (walk back to see every prior copy). Set automatically by the Renew action.",
+   "fieldname": "supersedes",
+   "fieldtype": "Link",
+   "label": "Supersedes",
+   "options": "Legal Document",
+   "read_only": 1
   },
   {
    "fieldname": "section_attach",

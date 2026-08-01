@@ -100,7 +100,7 @@ class TestDocumentExpiryEngine(FrappeTestCase):
 		if not frappe.db.exists("RE Document Type", name):
 			frappe.get_doc({
 				"doctype": "RE Document Type", "document_type_name": name,
-				"is_perpetual": perpetual, "is_active": 1,
+				"is_perpetual": perpetual, "renewable": 0 if perpetual else 1, "is_active": 1,
 			}).insert(ignore_permissions=True)
 		return name
 
@@ -140,7 +140,9 @@ class TestDocumentExpiryEngine(FrappeTestCase):
 		self.assertEqual(len(frappe.get_all("Document Reminder Log", {"legal_document": doc.name})), 1)
 
 		# Renewal-in-place: a new expiry changes the idempotency key → a fresh alert fires.
-		doc.expiry_date = add_days(nowdate(), 7 + 365)
+		# Keep it INSIDE a milestone window (80 ≤ 90) and distinct from the first +7, so the new
+		# key hits the 90 bucket and re-arms rather than falling outside all windows.
+		doc.expiry_date = add_days(nowdate(), 80)
 		doc.save(ignore_permissions=True)
 		# Now inside the 90 (not 7) bucket for the new expiry → alerts again.
 		self.assertTrue(notifications._emit_document_alert(self._row(doc), today), "renewal re-arms the alert")
@@ -165,3 +167,26 @@ class TestDocumentExpiryEngine(FrappeTestCase):
 		self.assertIsInstance(notifications._run_document_expiry_alerts(), int)
 		self.assertIsInstance(notifications.upcoming_document_expiries(90), list)
 		self.assertIsInstance(notifications.expiring_documents_count(30), int)
+
+	def test_renew_creates_version_chain(self):
+		from bunood_realestate.real_estate.doctype.legal_document.legal_document import renew_document
+
+		old = self._legal_doc(self.dtype, add_days(nowdate(), 30), number="CR-CHAIN")
+		new_name = renew_document(old.name, new_expiry_date=add_days(nowdate(), 395), new_document_number="CR-CHAIN")
+		self.addCleanup(self._purge, new_name)
+
+		self.assertEqual(frappe.db.get_value("Legal Document", old.name, "status"), "Superseded")
+		new = frappe.get_doc("Legal Document", new_name)
+		self.assertEqual(new.status, "Active")
+		self.assertEqual(new.supersedes, old.name)              # version chain links back
+		self.assertEqual(new.link_name, self.company)           # entity copied
+		self.assertEqual(str(new.expiry_date), str(add_days(nowdate(), 395)))
+
+	def test_renew_rejected_for_non_renewable(self):
+		from bunood_realestate.real_estate.doctype.legal_document.legal_document import renew_document
+
+		# The perpetual type is not renewable → renew must refuse (and never supersede the row).
+		doc = self._legal_doc(self.ptype, None, number="DEED-NR")
+		with self.assertRaises(Exception):
+			renew_document(doc.name, new_expiry_date=add_days(nowdate(), 365))
+		self.assertEqual(frappe.db.get_value("Legal Document", doc.name, "status"), "Active")

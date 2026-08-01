@@ -16,11 +16,14 @@ from bunood_realestate.real_estate.doctype.rent_schedule.rent_schedule import (
 from bunood_realestate.real_estate.collections import compute_late_fee
 from bunood_realestate.real_estate.management import compute_owner_payout
 from bunood_realestate.real_estate.notifications import (
+	DOC_EXPIRY_MILESTONES,
+	GRACE_MILESTONE,
 	current_milestone,
 	document_reminder_detail,
 	document_should_alert,
 	document_status,
 	expiry_milestone,
+	parse_reminder_days,
 )
 from bunood_realestate.real_estate.tasks import split_amount
 
@@ -172,6 +175,49 @@ class TestDocumentExpiry(unittest.TestCase):
 		self.assertEqual(document_status("2025-12-31", "2026-01-01", is_perpetual=False), "Expired")
 		self.assertEqual(document_status("2026-01-20", "2026-01-01", is_perpetual=False), "Due Soon")
 		self.assertEqual(document_status("2026-06-01", "2026-01-01", is_perpetual=False), "OK")
+
+
+class TestDocTypePolicy(unittest.TestCase):
+	"""Per-type policy: Reminder Days parsing, per-type milestones, and the grace-period beat."""
+
+	def test_parse_reminder_days(self):
+		self.assertEqual(parse_reminder_days("120,60,30,7"), (120, 60, 30, 7))
+		self.assertEqual(parse_reminder_days("7, 30 ,90"), (90, 30, 7))       # order + spaces
+		self.assertEqual(parse_reminder_days("30,30,7"), (30, 7))              # de-dupe
+		self.assertEqual(parse_reminder_days(""), DOC_EXPIRY_MILESTONES)        # blank → default
+		self.assertEqual(parse_reminder_days(None), DOC_EXPIRY_MILESTONES)
+		self.assertEqual(parse_reminder_days("abc,-5"), DOC_EXPIRY_MILESTONES)  # all-invalid → default
+		self.assertEqual(parse_reminder_days("60,oops,7"), (60, 7))            # drop junk, keep valid
+
+	def test_per_type_milestones_override_default(self):
+		ms = parse_reminder_days("120,60")
+		# 100 days out is inside a 120 window but OUTSIDE the default 90 — the per-type spec fires.
+		self.assertEqual(current_milestone("2026-04-11", "2026-01-01", ms), 120)  # 100 days
+		self.assertIsNone(current_milestone("2026-04-11", "2026-01-01"))          # default: outside 90
+		# document_should_alert honours the passed milestones.
+		row = {"is_perpetual": 0, "status": "Active", "expiry_date": "2026-04-11"}
+		self.assertEqual(document_should_alert(row, "2026-01-01", milestones=ms), 120)
+
+	def test_grace_beat_fires_once_after_expiry(self):
+		# Expired 5 days ago, 30-day grace → the GRACE beat (one escalated alert), not None.
+		row = {"is_perpetual": 0, "status": "Active", "expiry_date": "2025-12-27"}
+		self.assertEqual(document_should_alert(row, "2026-01-01", grace_days=30), GRACE_MILESTONE)
+		# No grace configured → expired document stops alerting.
+		self.assertIsNone(document_should_alert(row, "2026-01-01", grace_days=0))
+		# Past the grace window → None.
+		self.assertIsNone(document_should_alert(row, "2026-01-01", grace_days=3))
+
+	def test_grace_status(self):
+		# Within grace → In Grace; past grace → Expired; grace does not affect pre-expiry states.
+		self.assertEqual(document_status("2025-12-27", "2026-01-01", is_perpetual=False, grace_days=30), "In Grace")
+		self.assertEqual(document_status("2025-12-27", "2026-01-01", is_perpetual=False, grace_days=3), "Expired")
+		self.assertEqual(document_status("2026-01-20", "2026-01-01", is_perpetual=False, grace_days=30), "Due Soon")
+
+	def test_grace_detail_key_distinct_from_milestone(self):
+		# The GRACE beat has its own idempotency key, so it fires once and never collides with T-7.
+		grace_key = document_reminder_detail("LD-1", "2025-12-27", GRACE_MILESTONE)
+		self.assertEqual(grace_key, "LD-1|2025-12-27|T-GRACE")
+		self.assertNotEqual(grace_key, document_reminder_detail("LD-1", "2025-12-27", 7))
 
 
 class TestSeedFuturePeriods(unittest.TestCase):

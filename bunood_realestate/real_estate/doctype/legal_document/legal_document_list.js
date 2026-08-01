@@ -9,6 +9,8 @@ frappe.listview_settings["Legal Document"] = {
 	get_indicator(doc) {
 		if (doc.status === "Cancelled") return [__("Cancelled"), "gray", "status,=,Cancelled"];
 		if (doc.status === "Superseded") return [__("Superseded"), "gray", "status,=,Superseded"];
+		if (doc.status === "Renewal In Progress")
+			return [__("Renewal In Progress"), "purple", "status,=,Renewal In Progress"];
 		if (doc.is_perpetual) return [__("Perpetual"), "blue", "is_perpetual,=,1"];
 		if (!doc.expiry_date) return [__("No Expiry"), "orange"];
 		const days = frappe.datetime.get_day_diff(doc.expiry_date, frappe.datetime.get_today());

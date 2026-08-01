@@ -9,8 +9,12 @@
   "document_type_name",
   "name_ar",
   "is_perpetual",
+  "renewable",
+  "applies_to",
   "column_break_dt",
   "default_validity_months",
+  "reminder_days",
+  "grace_days",
   "renewal_authority",
   "is_active"
  ],
@@ -38,6 +42,21 @@
    "in_list_view": 1
   },
   {
+   "default": "1",
+   "depends_on": "eval:!doc.is_perpetual",
+   "description": "This document is renewed periodically (enables the Renew action on register rows).",
+   "fieldname": "renewable",
+   "fieldtype": "Check",
+   "label": "Renewable"
+  },
+  {
+   "description": "The entity this document normally belongs to — pre-selects the register row's Entity Type. Blank = any.",
+   "fieldname": "applies_to",
+   "fieldtype": "Select",
+   "label": "Applies To",
+   "options": "\nCompany\nCustomer\nSupplier\nProperty\nLease Contract\nLand"
+  },
+  {
    "fieldname": "column_break_dt",
    "fieldtype": "Column Break"
   },
@@ -46,6 +65,22 @@
    "fieldname": "default_validity_months",
    "fieldtype": "Int",
    "label": "Default Validity (months)"
+  },
+  {
+   "default": "90,30,7,0",
+   "depends_on": "eval:!doc.is_perpetual",
+   "description": "Reminder lead days before expiry, comma-separated (e.g. '90,30,7,0'; 0 = on the expiry day). Blank uses the system default (90,30,7,0).",
+   "fieldname": "reminder_days",
+   "fieldtype": "Data",
+   "label": "Reminder Days"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.is_perpetual",
+   "description": "Grace period (days) a document stays legally usable AFTER expiry (e.g. Iqama). During grace the register shows 'In Grace' and a single grace alert is sent. 0 = no grace.",
+   "fieldname": "grace_days",
+   "fieldtype": "Int",
+   "label": "Grace Period (days)"
   },
   {
    "fieldname": "renewal_authority",

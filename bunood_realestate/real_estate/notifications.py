@@ -37,31 +37,58 @@ def expiry_milestone(start, end, today):
 # 0-day "expires today" beat. All four functions are DB-free so they run in the shim runner.
 # ---------------------------------------------------------------------------
 
-DOC_EXPIRY_MILESTONES = (90, 30, 7, 0)  # days before expiry_date
+DOC_EXPIRY_MILESTONES = (90, 30, 7, 0)  # days before expiry_date (system default)
+GRACE_MILESTONE = "GRACE"  # sentinel beat: one alert while a lapsed doc is still within grace
+
+
+def parse_reminder_days(spec, default=DOC_EXPIRY_MILESTONES):
+	"""Pure: a per-type Reminder Days spec ('90,30,7,0') -> a descending, de-duped tuple of
+	non-negative ints. Blank / all-invalid falls back to the system default, so a bad or empty
+	value can never leave a document with no reminder milestones."""
+	if not spec:
+		return default
+	out = set()
+	for part in str(spec).replace(" ", "").split(","):
+		if not part:
+			continue
+		try:
+			v = int(part)
+		except ValueError:
+			continue
+		if v >= 0:
+			out.add(v)
+	return tuple(sorted(out, reverse=True)) if out else default
 
 
 def current_milestone(expiry, today, milestones=DOC_EXPIRY_MILESTONES):
 	"""Catch-up-safe: the TIGHTEST milestone bucket `today` falls into for a document expiring
 	on `expiry` — the smallest m with 0 <= days_left <= m — or None if still outside the widest
 	window (or already past). Depends on days_left, never on hitting an exact day, so a missed
-	scheduler day cannot skip a positive milestone (T-90/30/7); the T-0 "expires today" beat is
-	the exception — an already-past row is intentionally dropped (no false "expires today" on a
-	lapsed document), and T-7 already fired within the prior week. Each bucket fires once (the log
+	scheduler day cannot skip a positive milestone (e.g. T-90/30/7); the T-0 "expires today" beat
+	is the exception — an already-past row is intentionally dropped (no false "expires today" on a
+	lapsed document), and the tightest positive beat already fired. Each bucket fires once (the log
 	key embeds the milestone), so returning the same tightest bucket on consecutive days is deduped."""
 	days_left = (getdate(expiry) - getdate(today)).days
 	reached = [m for m in milestones if 0 <= days_left <= m]
 	return min(reached) if reached else None
 
 
-def document_should_alert(row, today):
+def document_should_alert(row, today, milestones=None, grace_days=0):
 	"""The single tested 'which documents expire' predicate. row: {is_perpetual, expiry_date,
-	status}. Perpetual / blank-expiry / non-Active short-circuit to None (the deed guard —
-	constraint #4). Otherwise returns the current milestone bucket or None."""
+	status}. Perpetual / blank-expiry / non-Active short-circuit to None (the deed guard). Before
+	expiry: the per-type milestone bucket (or None). After expiry but still within grace_days:
+	the GRACE sentinel (one escalated alert). Past grace: None."""
 	if row.get("is_perpetual") or not row.get("expiry_date"):
 		return None
 	if (row.get("status") or "Active") != "Active":
 		return None
-	return current_milestone(row["expiry_date"], today)
+	milestones = milestones or DOC_EXPIRY_MILESTONES
+	days_left = (getdate(row["expiry_date"]) - getdate(today)).days
+	if days_left >= 0:
+		return current_milestone(row["expiry_date"], today, milestones)
+	if grace_days and -days_left <= int(grace_days):
+		return GRACE_MILESTONE
+	return None
 
 
 def document_reminder_detail(legal_document, expiry, m):
@@ -71,13 +98,15 @@ def document_reminder_detail(legal_document, expiry, m):
 	return f"{legal_document}|{getdate(expiry)}|T-{m}"
 
 
-def document_status(expiry, today, is_perpetual):
-	"""Report/chip status chip — pure. Perpetual / blank -> Perpetual; past -> Expired;
-	within 30 days -> Due Soon; else OK."""
+def document_status(expiry, today, is_perpetual, grace_days=0):
+	"""Report/chip status chip — pure. Perpetual / blank -> Perpetual; expired but within grace
+	-> In Grace; past grace -> Expired; within 30 days -> Due Soon; else OK."""
 	if is_perpetual or not expiry:
 		return "Perpetual"
 	d = (getdate(expiry) - getdate(today)).days
-	return "Expired" if d < 0 else "Due Soon" if d <= 30 else "OK"
+	if d < 0:
+		return "In Grace" if grace_days and -d <= int(grace_days) else "Expired"
+	return "Due Soon" if d <= 30 else "OK"
 
 
 # ---------------------------------------------------------------------------
@@ -319,24 +348,46 @@ def run_document_expiry_alerts_now():
 	return _run_document_expiry_alerts()
 
 
+# The sweep query bounds. Reminder leads and grace periods are per-type, so the window is
+# widened generously on both sides; the per-row predicate then decides using each type's policy.
+# A type configured beyond these caps still gets its tighter beats — only an extreme (>180-day)
+# lead/grace beyond the window would be missed, which no real Saudi document uses.
+DOC_EXPIRY_MAX_LEAD = 180
+DOC_EXPIRY_MAX_GRACE = 180
+
+
+def _doc_type_policy(document_type, cache):
+	"""(milestones, grace_days) for a document type, resolved from RE Document Type and cached
+	per run. Blank Reminder Days falls back to the system default; a missing type is default/0."""
+	if document_type not in cache:
+		row = frappe.db.get_value(
+			"RE Document Type", document_type, ["reminder_days", "grace_days"], as_dict=True
+		) or frappe._dict()
+		cache[document_type] = (parse_reminder_days(row.get("reminder_days")), int(row.get("grace_days") or 0))
+	return cache[document_type]
+
+
 def _run_document_expiry_alerts(today=None):
 	"""Windowed (not exact-date) so a missed scheduler day is caught up: every Active,
-	non-perpetual register row whose expiry falls in the [today, today+90] horizon is
-	re-evaluated; document_should_alert picks the milestone and the log key dedups."""
+	non-perpetual register row whose expiry falls in the widened horizon is re-evaluated with
+	its TYPE's reminder-days + grace policy; document_should_alert picks the beat and the log
+	key dedups. The window spans grace (past) to the longest lead (future)."""
 	today = getdate(today or nowdate())
-	horizon = add_days(today, max(DOC_EXPIRY_MILESTONES))
+	lo = add_days(today, -DOC_EXPIRY_MAX_GRACE)
+	hi = add_days(today, DOC_EXPIRY_MAX_LEAD)
 	rows = frappe.get_all(
 		"Legal Document",
-		filters={"is_perpetual": 0, "status": "Active", "expiry_date": ["between", [today, horizon]]},
+		filters={"is_perpetual": 0, "status": "Active", "expiry_date": ["between", [lo, hi]]},
 		fields=[
 			"name", "document_type", "link_doctype", "link_name", "company",
 			"expiry_date", "document_number", "is_perpetual", "status",
 		],
 	)
+	policy_cache = {}
 	created = 0
 	for r in rows:
 		try:
-			if _emit_document_alert(r, today):
+			if _emit_document_alert(r, today, policy_cache):
 				created += 1
 			frappe.db.commit()
 		except (frappe.UniqueValidationError, frappe.exceptions.DuplicateEntryError):
@@ -353,8 +404,9 @@ def _run_document_expiry_alerts(today=None):
 	return created
 
 
-def _emit_document_alert(row, today):
-	m = document_should_alert(row, today)
+def _emit_document_alert(row, today, policy_cache=None):
+	milestones, grace_days = _doc_type_policy(row.document_type, policy_cache if policy_cache is not None else {})
+	m = document_should_alert(row, today, milestones=milestones, grace_days=grace_days)
 	if m is None:
 		return False
 	detail = document_reminder_detail(row.name, row.expiry_date, m)
@@ -364,7 +416,12 @@ def _emit_document_alert(row, today):
 	# Report the ACTUAL days remaining (not the milestone bucket) so the message is truthful
 	# even when a document enters the register already inside a tighter window.
 	days_left = (getdate(row.expiry_date) - getdate(today)).days
-	when = _("today") if days_left <= 0 else _("in {0} days").format(days_left)
+	if m == GRACE_MILESTONE:
+		when = _("expired {0} days ago — within its grace period").format(-days_left)
+	elif days_left <= 0:
+		when = _("today")
+	else:
+		when = _("in {0} days").format(days_left)
 	msg = _("{0} ({1}) for {2} {3} expires {4} — on {5}. Renew before it lapses.").format(
 		type_label, row.document_number or "-", row.link_doctype or "-", row.link_name or "-", when, row.expiry_date,
 	)
